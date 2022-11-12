@@ -1,9 +1,10 @@
-package com.hrghs.xycb.services;
+package com.hrghs.xycb.services.impl;
 
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
+import com.hrghs.xycb.services.StoreService;
 import org.joda.time.DateTime;
 
-public interface StoreService {
+public class StoreServiceImpl implements StoreService {
 
     /**
      * 查询店铺列表
@@ -19,23 +20,18 @@ public interface StoreService {
      * @param sortBy        排序方式，具体值参见:SortBy
      * @return
      */
-    BanmaErpResponseDTO getStoretList(
-            String ids,
-            String name,
-            String platform,
-            int pageNumber,
-            int pageSize,
-            DateTime searchTimeStart,
-            DateTime searchTimeEnd,
-            String searchTimeField,
-            String sortField,
-            String sortBy
-    );
+    @Override
+    public BanmaErpResponseDTO getStoretList(String ids, String name, String platform, int pageNumber, int pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+        return null;
+    }
 
     /**
      * 查询单个店铺
      * @param spuId 店铺ID（必填）
      * @return
      */
-    BanmaErpResponseDTO getStoreById(String spuId);
+    @Override
+    public BanmaErpResponseDTO getStoreById(String spuId) {
+        return null;
+    }
 }

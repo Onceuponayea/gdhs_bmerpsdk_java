@@ -1,11 +1,10 @@
-package com.hrghs.xycb.services;
+package com.hrghs.xycb.services.impl;
 
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
+import com.hrghs.xycb.services.CategoryService;
 import org.joda.time.DateTime;
 
-public interface CategoryService {
-//todo 接口全部定义好。
-// implementation 逻辑也一起用伪代码的方式去描述下
+public class CategoryServiceImpl implements CategoryService {
 
     /**
      * 查询类目列表
@@ -20,22 +19,20 @@ public interface CategoryService {
      * @param sortBy 排序字段名，具体值参见:SortField
      * @return 排序方式，具体值参见:SortBy
      */
-    BanmaErpResponseDTO getCategoryList(
-            String ids,
-            String name,
-            String parentId,
-            int pageNumber,
-            DateTime SearchTimeStart,
-            DateTime SearchTimeEnd,
-            String searchTimeField,
-            String sortField,
-            String sortBy
-    );
+    @Override
+    public BanmaErpResponseDTO getCategoryList(String ids, String name, String parentId, int pageNumber, DateTime SearchTimeStart, DateTime SearchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+
+        return null;
+    }
 
     /**
      * 查询单个类目
      * @param id 	类目ID（必填）
      * @return
      */
-    BanmaErpResponseDTO getCategoryById(String id);
+    @Override
+    public BanmaErpResponseDTO getCategoryById(String id) {
+
+        return null;
+    }
 }

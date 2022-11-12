@@ -7,15 +7,11 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Data
-public class StoreDTO {
-    @JsonProperty(value = "ID")
-    private String id;
-    @JsonProperty(value = "Name")
-    private String name;
-    @JsonProperty(value = "Platform")
-    private String platform;
+public class OrderRemarksDTO {
+    @JsonProperty(value = "Category")
+    private String category;
+    @JsonProperty(value = "Content")
+    private String content;
     @JsonProperty(value = "CreateTime")
     private DateTime createTime;
-    @JsonProperty(value = "UpdateTime")
-    private DateTime updateTime;
 }

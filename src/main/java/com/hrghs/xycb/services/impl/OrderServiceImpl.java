@@ -1,9 +1,10 @@
-package com.hrghs.xycb.services;
+package com.hrghs.xycb.services.impl;
 
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
+import com.hrghs.xycb.services.OrderService;
 import org.joda.time.DateTime;
 
-public interface OrderService {
+public class OrderServiceImpl implements OrderService {
 
     /**
      * 查询订单列表
@@ -25,29 +26,18 @@ public interface OrderService {
      * @param sortBy   排序方式，具体值参见:SortBy
      * @return
      */
-    BanmaErpResponseDTO getOrderList(
-            String ids,
-            long storeId,
-            String platform,
-            String status,
-            String payStatus,
-            String holdStatus,
-            String refundStatus,
-            String inventoryStatus,
-            String countryCode,
-            int pageNumber,
-            int pageSize,
-            DateTime searchTimeStart,
-            DateTime searchTimeEnd,
-            String searchTimeField,
-            String sortField,
-            String sortBy
-    );
+    @Override
+    public BanmaErpResponseDTO getOrderList(String ids, long storeId, String platform, String status, String payStatus, String holdStatus, String refundStatus, String inventoryStatus, String countryCode, int pageNumber, int pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+        return null;
+    }
 
     /**
      * 查询单个订单
      * @param id 	订单ID（必填）
      * @return
      */
-    BanmaErpResponseDTO getOrderById(String id);
+    @Override
+    public BanmaErpResponseDTO getOrderById(String id) {
+        return null;
+    }
 }

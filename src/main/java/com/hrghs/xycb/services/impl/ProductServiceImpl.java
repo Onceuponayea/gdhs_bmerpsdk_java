@@ -1,10 +1,11 @@
-package com.hrghs.xycb.services;
+package com.hrghs.xycb.services.impl;
 
 import com.hrghs.xycb.domains.banmaerpDTO.ProductDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
+import com.hrghs.xycb.services.ProductService;
 import org.joda.time.DateTime;
 
-public interface ProductService {
+public class ProductServiceImpl implements ProductService {
 
     /**
      * 查询产品列表
@@ -25,30 +26,20 @@ public interface ProductService {
      * @param sortBy    排序方式，具体值参见:SortBy
      * @return
      */
-    BanmaErpResponseDTO getProductList(
-            String spuIds,
-            long source,
-            String spu,
-            String categoryId,
-            String title,
-            String supplier,
-            String costPriceStart,
-            String costPriceEnd,
-            int pageNumber,
-            int pageSize,
-            DateTime searchTimeStart,
-            DateTime searchTimeEnd,
-            String searchTimeField,
-            String sortField,
-            String sortBy
-    );
+    @Override
+    public BanmaErpResponseDTO getProductList(String spuIds, long source, String spu, String categoryId, String title, String supplier, String costPriceStart, String costPriceEnd, int pageNumber, int pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+        return null;
+    }
 
     /**
      * 查询单个产品
      * @param spuId 	SPUID（必填）
      * @return
      */
-    BanmaErpResponseDTO getProductById(String spuId);
+    @Override
+    public BanmaErpResponseDTO getProductById(String spuId) {
+        return null;
+    }
 
     /**
      * 添加产品
@@ -56,7 +47,10 @@ public interface ProductService {
      * 必填： Spu(描述信息)，Skus（sku信息）,Options（选项）,Images（图片）
      * @return
      */
-    BanmaErpResponseDTO insertProduct(ProductDTO productDto);
+    @Override
+    public BanmaErpResponseDTO insertProduct(ProductDTO productDto) {
+        return null;
+    }
 
     /**
      * 更新产品
@@ -64,7 +58,10 @@ public interface ProductService {
      * 必填： Spu(描述信息)，Skus（sku信息）,Options（选项）,Images（图片）
      * @return
      */
-    BanmaErpResponseDTO updateProductById(ProductDTO productDto);
+    @Override
+    public BanmaErpResponseDTO updateProductById(ProductDTO productDto) {
+        return null;
+    }
 
     /**
      * 查询SKU列表
@@ -82,27 +79,20 @@ public interface ProductService {
      * @param sortBy    	排序方式，具体值参见:SortBy
      * @return
      */
-    BanmaErpResponseDTO getProductSkuList(
-            String skuIds,
-            String code,
-            long spuId,
-            String costPriceStart,
-            String costPriceEnd,
-            int pageNumber,
-            int pageSize,
-            DateTime searchTimeStart,
-            DateTime searchTimeEnd,
-            String searchTimeField,
-            String sortField,
-            String sortBy
-    );
+    @Override
+    public BanmaErpResponseDTO getProductSkuList(String skuIds, String code, long spuId, String costPriceStart, String costPriceEnd, int pageNumber, int pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+        return null;
+    }
 
     /**
      * 查询单个SKU
      * @param skuid 	SkuID（必填）
      * @return
      */
-    BanmaErpResponseDTO getProductSkuById(String skuid);
+    @Override
+    public BanmaErpResponseDTO getProductSkuById(String skuid) {
+        return null;
+    }
 
     /**
      * 查询Tag列表
@@ -116,16 +106,10 @@ public interface ProductService {
      * @param sortBy        	排序方式，具体值参见:SortBy
      * @return
      */
-    BanmaErpResponseDTO getProductTagsList(
-            String name,
-            int pageNumber,
-            int pageSize,
-            DateTime searchTimeStart,
-            DateTime searchTimeEnd,
-            String searchTimeField,
-            String sortField,
-            String sortBy
-    );
+    @Override
+    public BanmaErpResponseDTO getProductTagsList(String name, int pageNumber, int pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+        return null;
+    }
 
     /**
      * 查询供应商列表
@@ -139,15 +123,8 @@ public interface ProductService {
      * @param sortBy        	排序方式，具体值参见:SortBy
      * @return
      */
-    BanmaErpResponseDTO getProductSuppliersList(
-            String name,
-            int pageNumber,
-            int pageSize,
-            DateTime searchTimeStart,
-            DateTime searchTimeEnd,
-            String searchTimeField,
-            String sortField,
-            String sortBy
-    );
-
+    @Override
+    public BanmaErpResponseDTO getProductSuppliersList(String name, int pageNumber, int pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+        return null;
+    }
 }
