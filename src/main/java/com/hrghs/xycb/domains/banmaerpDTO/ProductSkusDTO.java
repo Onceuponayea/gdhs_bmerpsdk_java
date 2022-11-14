@@ -27,6 +27,8 @@ public class ProductSkusDTO {
     private int height;
     @JsonProperty(value = "IsValid")
     private boolean isValid;
+    @JsonProperty(value = "Status")
+    private String status;
     @JsonProperty(value = "Remark")
     private String remark;
     @JsonProperty(value = "Sort")
@@ -34,9 +36,9 @@ public class ProductSkusDTO {
     @JsonProperty(value = "Type")
     private String type;
     @JsonProperty(value = "CombineData")
-    private ProductSkusCombineDataDTO combineData;
+    private ProductSkusCombineDataDTO[] combineData;
     @JsonProperty(value = "Options")
-    private ProductSkusOptionsDTO options;
+    private ProductSkusOptionsDTO[] options;
 
 
 

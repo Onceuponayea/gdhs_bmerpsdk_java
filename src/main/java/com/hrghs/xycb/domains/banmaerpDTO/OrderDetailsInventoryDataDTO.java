@@ -16,5 +16,5 @@ public class OrderDetailsInventoryDataDTO {
     @JsonProperty(value = "LockQuantity")
     private int lockQuantity;
     @JsonProperty(value = "SPUID")
-    private long spuID;
+    private long spuId;
 }

@@ -13,11 +13,11 @@ import org.springframework.stereotype.Component;
 public class PageDTO {
     @JsonProperty(value = "PageNumber")
     int pageNumber;
-    @JsonProperty(value = "PageCoun")
-    int pageCoun;
+    @JsonProperty(value = "PageCount")
+    int pageCount;
     @JsonProperty(value = "PageSize")
     int pageSize;
-    @JsonProperty(value = "totalCount")
+    @JsonProperty(value = "TotalCount")
     int totalCount;
     @JsonProperty(value = "HasMore")
     boolean hasMore;

@@ -10,11 +10,13 @@ public class OrderDetailsDTO {
     @JsonProperty(value = "ID")
     private String id;
     @JsonProperty(value = "PackageID")
-    private String packageID;
+    private String packageId;
+    @JsonProperty("OriginalOrderID")
+    private String originalOrderId;
     @JsonProperty(value = "OriginalDetailID")
-    private String originalDetailID;
+    private String originalDetailId;
     @JsonProperty(value = "OriginalSKU")
-    private String originalSKU;
+    private String originalSku;
     @JsonProperty(value = "SPUID")
     private long spuId;
     @JsonProperty(value = "SKUID")
@@ -42,13 +44,13 @@ public class OrderDetailsDTO {
     @JsonProperty(value = "PriceCurrency")
     private String priceCurrency;
     @JsonProperty(value = "Properties")
-    private String properties;
+    private String[] properties;
     @JsonProperty(value = "OriginalProductID")
-    private String originalProductID;
+    private String originalProductId;
     @JsonProperty(value = "OriginalSKUID")
     private String originalSkuId;
     @JsonProperty(value = "WarehouseID")
-    private String warehouseID;
+    private String warehouseId;
     @JsonProperty(value = "InventoryStatus")
     private String inventoryStatus;
     @JsonProperty(value = "InventoryLockQuantity")
@@ -58,7 +60,7 @@ public class OrderDetailsDTO {
     @JsonProperty(value = "OriginalSpecification")
     private String originalSpecification;
     @JsonProperty(value = "SKUImage")
-    private int skuImage;
+    private String skuImage;
     @JsonProperty(value = "InventoryData")
     private OrderDetailsInventoryDataDTO[] inventoryData;
     @JsonProperty(value = "Sort")
@@ -70,7 +72,7 @@ public class OrderDetailsDTO {
     @JsonProperty(value = "QuantityStatus")
     private String quantityStatus;
     @JsonProperty(value = "RelationDetailID")
-    private String relationDetailID;
+    private String relationDetailId;
     @JsonProperty(value = "DeliveryInstructions")
     private String deliveryInstructions;
     @JsonProperty(value = "Priority")

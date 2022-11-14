@@ -1,8 +1,9 @@
-package com.hrghs.xycb.services;
+package com.hrghs.xycb.services.impl;
 
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
+import com.hrghs.xycb.services.SsoService;
 
-public interface SsoService {
+public class SsoServiceImpl implements SsoService {
 
     /**
      * 获取认证令牌
@@ -14,11 +15,8 @@ public interface SsoService {
      * 1=浏览器直接跳转
      * @return
      */
-
-    BanmaErpResponseDTO ssoPassport(
-            String account,
-            String clientIp,
-            int mode
-    );
-
+    @Override
+    public BanmaErpResponseDTO ssoPassport(String account, String clientIp, int mode) {
+        return null;
+    }
 }
