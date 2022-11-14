@@ -10,17 +10,17 @@ import org.springframework.stereotype.Component;
 @AllArgsConstructor
 @NoArgsConstructor
 @Component
-public class BanmaErpResponseDTO {
+public class BanmaErpResponseDTO<T> {
     @JsonProperty(value = "Code")
-    private int code;
+    private Integer code;
     @JsonProperty(value = "Time")
     private String time;
     @JsonProperty(value = "Success")
-    private boolean success;
+    private Boolean success;
     @JsonProperty(value = "Message")
     private String message;
     @JsonProperty(value = "Data")
-    private Object data;
+    private T data;
     @JsonProperty(value = "Tick")
-    private long tick;
+    private Long tick;
 }
