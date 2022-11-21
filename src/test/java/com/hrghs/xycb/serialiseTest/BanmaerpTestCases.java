@@ -1,14 +1,12 @@
-package com.hrghs.xycb;
+package com.hrghs.xycb.serialiseTest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.hrghs.xycb.domains.GetTokenResponse;
-import com.hrghs.xycb.domains.banmaerpDTO.CategoryDTO;
-import com.hrghs.xycb.domains.banmaerpDTO.ProductDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.ProductSuppliersInfoDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.TokenResponseDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
-import com.hrghs.xycb.domains.common.BanmaErpResponseDateDTO;
 
 public class BanmaerpTestCases {
     public static void main(String[] args) throws JsonProcessingException {
@@ -31,7 +29,7 @@ public class BanmaerpTestCases {
                 "}";
 
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JodaModule());
-        BanmaErpResponseDTO<GetTokenResponse> banmaErpResponseDTO = objectMapper.readValue(getTokenResp, new TypeReference<BanmaErpResponseDTO<GetTokenResponse>>() {});
+        BanmaErpResponseDTO<TokenResponseDTO> banmaErpResponseDTO = objectMapper.readValue(getTokenResp, new TypeReference<BanmaErpResponseDTO<TokenResponseDTO>>() {});
         System.out.println(banmaErpResponseDTO.getData().getAccessToken());
 
 

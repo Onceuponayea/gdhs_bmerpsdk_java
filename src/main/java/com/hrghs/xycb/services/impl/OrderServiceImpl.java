@@ -1,11 +1,15 @@
 package com.hrghs.xycb.services.impl;
 
+import com.hrghs.xycb.config.BanmaerpProperties;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
+import com.hrghs.xycb.repositories.OrderRepository;
 import com.hrghs.xycb.services.OrderService;
 import org.joda.time.DateTime;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class OrderServiceImpl implements OrderService {
-
+    @Autowired
+    private OrderRepository orderRepository;
     /**
      * 查询订单列表
      * @param ids 	订单ID，用逗号分隔
@@ -27,7 +31,11 @@ public class OrderServiceImpl implements OrderService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO getOrderList(String ids, long storeId, String platform, String status, String payStatus, String holdStatus, String refundStatus, String inventoryStatus, String countryCode, int pageNumber, int pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+    public BanmaErpResponseDTO getOrderList(String ids, long storeId, String platform, String status, String payStatus,
+                                            String holdStatus, String refundStatus, String inventoryStatus, String countryCode,
+                                            int pageNumber, int pageSize, DateTime searchTimeStart, DateTime searchTimeEnd,
+                                            String searchTimeField, String sortField, String sortBy,
+                                            BanmaerpProperties banmaerpProperties) {
         return null;
     }
 
@@ -37,7 +45,8 @@ public class OrderServiceImpl implements OrderService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO getOrderById(String id) {
+    public BanmaErpResponseDTO getOrderById(String id,
+                                            BanmaerpProperties banmaerpProperties) {
         return null;
     }
 }

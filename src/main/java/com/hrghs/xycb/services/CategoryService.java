@@ -1,11 +1,10 @@
 package com.hrghs.xycb.services;
 
+import com.hrghs.xycb.config.BanmaerpProperties;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import org.joda.time.DateTime;
 
 public interface CategoryService {
-//todo 接口全部定义好。
-// implementation 逻辑也一起用伪代码的方式去描述下
 
     /**
      * 查询类目列表
@@ -18,6 +17,7 @@ public interface CategoryService {
      * @param searchTimeField 	查询的结束时间
      * @param sortField 查询的时间字段名，具体值参见:SearchTimeField
      * @param sortBy 排序字段名，具体值参见:SortField
+     * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return 排序方式，具体值参见:SortBy
      */
     BanmaErpResponseDTO getCategoryList(
@@ -29,13 +29,16 @@ public interface CategoryService {
             DateTime SearchTimeEnd,
             String searchTimeField,
             String sortField,
-            String sortBy
+            String sortBy,
+            BanmaerpProperties banmaerpProperties
     );
 
     /**
      * 查询单个类目
      * @param id 	类目ID（必填）
+     * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO getCategoryById(String id);
+    BanmaErpResponseDTO getCategoryById(String id,
+                                        BanmaerpProperties banmaerpProperties);
 }

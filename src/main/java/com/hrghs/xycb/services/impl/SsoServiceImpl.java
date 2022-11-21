@@ -1,5 +1,6 @@
 package com.hrghs.xycb.services.impl;
 
+import com.hrghs.xycb.config.BanmaerpProperties;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.services.SsoService;
 
@@ -16,7 +17,8 @@ public class SsoServiceImpl implements SsoService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO ssoPassport(String account, String clientIp, int mode) {
+    public BanmaErpResponseDTO ssoPassport(String account, String clientIp, int mode,
+                                           BanmaerpProperties banmaerpProperties) {
         return null;
     }
 }

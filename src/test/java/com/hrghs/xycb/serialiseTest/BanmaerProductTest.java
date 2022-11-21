@@ -1,4 +1,4 @@
-package com.hrghs.xycb;
+package com.hrghs.xycb.serialiseTest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -6,7 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.hrghs.xycb.domains.banmaerpDTO.ProductDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
-import com.hrghs.xycb.domains.common.BanmaErpResponseDateDTO;
+
+import java.util.List;
+
 
 /**
  * 2022.11.14 jzx
@@ -836,8 +838,8 @@ public class BanmaerProductTest {
 
 //        BanmaErpResponseDTO<GetTokenResponse> banmaErpResponseDTO = objectMapper.readValue(getTokenResp, new TypeReference<BanmaErpResponseDTO<GetTokenResponse>>() {});
 //        System.out.println(banmaErpResponseDTO.getData().getAccessToken());
-        BanmaErpResponseDTO<BanmaErpResponseDateDTO> banmaErpResponseDTO = objectMapper.readValue(getProductSuppliersList, new TypeReference<BanmaErpResponseDTO<BanmaErpResponseDateDTO>>() {
+        BanmaErpResponseDTO<List<ProductDTO>> banmaErpResponseDTO = objectMapper.readValue(getProductSuppliersList, new TypeReference<BanmaErpResponseDTO<List<ProductDTO>>>() {
         });
-        System.out.println(banmaErpResponseDTO.getData().getSuppliers()[0].getId());
+        System.out.println(banmaErpResponseDTO.getData().get(0).getSuppliers()[0].getId());
     }
 }

@@ -1,7 +1,13 @@
 package com.hrghs.xycb.services;
 
+import com.hrghs.xycb.config.BanmaerpProperties;
+import com.hrghs.xycb.domains.banmaerpDTO.StoreDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
+import com.hrghs.xycb.domains.enums.BanmaerpPlatformEnums;
 import org.joda.time.DateTime;
+import org.springframework.lang.Nullable;
+import reactor.core.publisher.Mono;
+import java.util.List;
 
 public interface StoreService {
 
@@ -17,25 +23,32 @@ public interface StoreService {
      * @param searchTimeField   查询的时间字段名，具体值参见:SearchTimeField
      * @param sortField     	排序字段名，具体值参见:SortField
      * @param sortBy        排序方式，具体值参见:SortBy
+     * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO getStoretList(
-            String ids,
-            String name,
-            String platform,
+    Mono<BanmaErpResponseDTO<List<StoreDTO>>> getStoretListMono(
+            @Nullable String ids,
+            @Nullable String name,
+            @Nullable BanmaerpPlatformEnums.Platform platform,
             int pageNumber,
-            int pageSize,
-            DateTime searchTimeStart,
-            DateTime searchTimeEnd,
-            String searchTimeField,
-            String sortField,
-            String sortBy
+            @Nullable int pageSize,
+            @Nullable DateTime searchTimeStart,
+            @Nullable DateTime searchTimeEnd,
+            @Nullable String searchTimeField,
+            @Nullable String sortField,
+            @Nullable String sortBy,
+            BanmaerpProperties banmaerpProperties
     );
+    List<StoreDTO> getStoretList(@Nullable String ids, @Nullable String name,
+                                                      @Nullable BanmaerpPlatformEnums.Platform platform, int pageNumber, @Nullable int pageSize, @Nullable DateTime searchTimeStart,
+                                                      @Nullable DateTime searchTimeEnd, @Nullable String searchTimeField, @Nullable String sortField, @Nullable String sortBy,
+                                                      BanmaerpProperties banmaerpProperties);
 
     /**
      * 查询单个店铺
      * @param spuId 店铺ID（必填）
+     * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO getStoreById(String spuId);
+    BanmaErpResponseDTO getStoreById(String spuId,BanmaerpProperties banmaerpProperties);
 }

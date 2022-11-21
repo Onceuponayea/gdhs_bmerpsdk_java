@@ -1,11 +1,19 @@
-package com.hrghs.xycb;
+package com.hrghs.xycb.serialiseTest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.hrghs.xycb.domains.banmaerpDTO.StoreDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
-import com.hrghs.xycb.domains.common.BanmaErpResponseDateDTO;
+
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.List;
+
+import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_STORES;
 
 /**
  * 2022.11.14 jzx
@@ -34,14 +42,14 @@ public class BanmaerStoreTest {
                 "                \"CreateTime\": \"2019-03-18 14:16:04\",\n" +
                 "                \"UpdateTime\": \"2020-08-19 16:58:07\"\n" +
                 "            }\n" +
-                "        ],\n" +
-                "        \"Page\": {\n" +
-                "            \"PageNumber\": 1,\n" +
-                "            \"PageCount\": 1,\n" +
-                "            \"PageSize\": 20,\n" +
-                "            \"TotalCount\": 6,\n" +
-                "            \"HasMore\": false\n" +
-                "        }\n" +
+                "        ]\n" +
+//                "        \"Page\": {\n" +
+//                "            \"PageNumber\": 1,\n" +
+//                "            \"PageCount\": 1,\n" +
+//                "            \"PageSize\": 20,\n" +
+//                "            \"TotalCount\": 6,\n" +
+//                "            \"HasMore\": false\n" +
+//                "        }\n" +
                 "    },\n" +
                 "    \"Success\": true,\n" +
                 "    \"Message\": \"成功\"\n" +
@@ -63,10 +71,29 @@ public class BanmaerStoreTest {
                 "    \"Success\": true,\n" +
                 "    \"Message\": \"成功\"\n" +
                 "}\n";
-
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JodaModule());
-        BanmaErpResponseDTO<BanmaErpResponseDateDTO> banmaErpResponseDTO = objectMapper.readValue(getStoreById, new TypeReference<BanmaErpResponseDTO<BanmaErpResponseDateDTO>>() {
-        });
-        System.out.println(banmaErpResponseDTO.getData().getStore().getId());
+
+        BanmaErpResponseDTO<StoreDTO> banmaErpResponseDTO = objectMapper.readValue(getStoreById, new TypeReference<BanmaErpResponseDTO<StoreDTO>>() {});
+        System.out.println(banmaErpResponseDTO.getData().getName());
+
+       // https://dzone.com/articles/custom-json-deserialization-with-jackson
+
+//        BanmaErpResponseDTO<BanmaErpResponseDataDTO> storeList = objectMapper.readValue(getStoretList, new TypeReference<BanmaErpResponseDTO<BanmaErpResponseDataDTO>>() {});
+//        System.out.println(storeList.getData().getStores().length);
+
+//        BanmaErpResponseDTO<List<StoreDTO>> storeList =objectMapper.readValue(getStoretList, new TypeReference<BanmaErpResponseDTO<List<StoreDTO>>>() {
+//        });
+
+        BanmaErpResponseDTO<JsonNode> storeListRaw =objectMapper.readValue(getStoretList, new TypeReference<BanmaErpResponseDTO<JsonNode>>() {});
+        JsonNode storesNode = storeListRaw.getData();
+        storeListRaw.toDataList(StoreDTO.class,BANMAERP_FIELD_STORES);
+        //storesNode.iterator().forEachRemaining(jsonNode -> System.out.println(jsonNode.toPrettyString()));
+//        System.out.println(storesNode.toPrettyString());
+//        try {
+//           List<StoreDTO> storeDTOList =  objectMapper.readValue(storesNode.toPrettyString(),new TypeReference<List<StoreDTO>>() {});
+//
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
     }
 }

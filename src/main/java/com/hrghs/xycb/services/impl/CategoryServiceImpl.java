@@ -1,11 +1,17 @@
 package com.hrghs.xycb.services.impl;
 
+import com.hrghs.xycb.config.BanmaerpProperties;
+import com.hrghs.xycb.utils.HttpClientsUtils;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.services.CategoryService;
 import org.joda.time.DateTime;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+@Service
 public class CategoryServiceImpl implements CategoryService {
-
+    @Autowired
+    private HttpClientsUtils httpClients;
     /**
      * 查询类目列表
      * @param ids 类目ID，用逗号分隔
@@ -20,18 +26,21 @@ public class CategoryServiceImpl implements CategoryService {
      * @return 排序方式，具体值参见:SortBy
      */
     @Override
-    public BanmaErpResponseDTO getCategoryList(String ids, String name, String parentId, int pageNumber, DateTime SearchTimeStart, DateTime SearchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+    public BanmaErpResponseDTO getCategoryList(String ids, String name, String parentId, int pageNumber, DateTime SearchTimeStart,
+                                               DateTime SearchTimeEnd, String searchTimeField, String sortField, String sortBy,
+                                               BanmaerpProperties banmaerpProperties) {
 
         return null;
     }
 
     /**
-     * 查询单个类目
-     * @param id 	类目ID（必填）
+     *
+     * @param idv
+     * @param banmaerpProperties
      * @return
      */
     @Override
-    public BanmaErpResponseDTO getCategoryById(String id) {
+    public BanmaErpResponseDTO getCategoryById(String idv,BanmaerpProperties banmaerpProperties) {
 
         return null;
     }

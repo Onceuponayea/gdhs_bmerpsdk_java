@@ -1,14 +1,20 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT,use = JsonTypeInfo.Id.NAME)
+@JsonTypeName("Order")
 public class OrderDTO {
-    // 变量不要大写开头
-    // 枚举enum也要建
     @JsonProperty(value = "Master")
     private OrderMasterDTO master;
     @JsonProperty(value = "Details")

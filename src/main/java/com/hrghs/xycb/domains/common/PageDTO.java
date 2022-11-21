@@ -1,15 +1,20 @@
 package com.hrghs.xycb.domains.common;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Data
+@Component
+
 @AllArgsConstructor
 @NoArgsConstructor
-@Component
+@JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT,visible = true,use = JsonTypeInfo.Id.NAME)
+@JsonTypeName("Page")
 public class PageDTO {
     @JsonProperty(value = "PageNumber")
     int pageNumber;

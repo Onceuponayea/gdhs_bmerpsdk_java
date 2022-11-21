@@ -1,4 +1,4 @@
-package com.hrghs.xycb;
+package com.hrghs.xycb.serialiseTest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.hrghs.xycb.domains.GetSsoPassportResponse;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
-import com.hrghs.xycb.domains.common.BanmaErpResponseDateDTO;
 
 /**
  * 2022.11.14 jzx

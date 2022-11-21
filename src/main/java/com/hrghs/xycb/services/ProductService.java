@@ -1,5 +1,6 @@
 package com.hrghs.xycb.services;
 
+import com.hrghs.xycb.config.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.ProductDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import org.joda.time.DateTime;
@@ -23,6 +24,7 @@ public interface ProductService {
      * @param searchTimeField 查询的时间字段名，具体值参见:SearchTimeField
      * @param sortField 排序字段名，具体值参见:SortField
      * @param sortBy    排序方式，具体值参见:SortBy
+     * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
     BanmaErpResponseDTO getProductList(
@@ -40,31 +42,38 @@ public interface ProductService {
             DateTime searchTimeEnd,
             String searchTimeField,
             String sortField,
-            String sortBy
+            String sortBy,
+            BanmaerpProperties banmaerpProperties
     );
 
     /**
      * 查询单个产品
      * @param spuId 	SPUID（必填）
+     * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO getProductById(String spuId);
+    BanmaErpResponseDTO getProductById(String spuId,
+                                       BanmaerpProperties banmaerpProperties);
 
     /**
      * 添加产品
      * @param productDto
+     * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * 必填： Spu(描述信息)，Skus（sku信息）,Options（选项）,Images（图片）
      * @return
      */
-    BanmaErpResponseDTO insertProduct(ProductDTO productDto);
+    BanmaErpResponseDTO insertProduct(ProductDTO productDto,
+                                      BanmaerpProperties banmaerpProperties);
 
     /**
      * 更新产品
      * @param productDto
+     * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * 必填： Spu(描述信息)，Skus（sku信息）,Options（选项）,Images（图片）
      * @return
      */
-    BanmaErpResponseDTO updateProductById(ProductDTO productDto);
+    BanmaErpResponseDTO updateProductById(ProductDTO productDto,
+                                          BanmaerpProperties banmaerpProperties);
 
     /**
      * 查询SKU列表
@@ -80,6 +89,7 @@ public interface ProductService {
      * @param searchTimeField 查询的时间字段名，具体值参见:SearchTimeField
      * @param sortField     排序字段名，具体值参见:SortField
      * @param sortBy    	排序方式，具体值参见:SortBy
+     * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
     BanmaErpResponseDTO getProductSkuList(
@@ -94,15 +104,18 @@ public interface ProductService {
             DateTime searchTimeEnd,
             String searchTimeField,
             String sortField,
-            String sortBy
+            String sortBy,
+            BanmaerpProperties banmaerpProperties
     );
 
     /**
      * 查询单个SKU
      * @param skuid 	SkuID（必填）
+     * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO getProductSkuById(String skuid);
+    BanmaErpResponseDTO getProductSkuById(String skuid,
+                                          BanmaerpProperties banmaerpProperties);
 
     /**
      * 查询Tag列表
@@ -114,6 +127,7 @@ public interface ProductService {
      * @param searchTimeField    查询的时间字段名，具体值参见:SearchTimeField
      * @param sortField     排序字段名，具体值参见:SortField
      * @param sortBy        	排序方式，具体值参见:SortBy
+     * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
     BanmaErpResponseDTO getProductTagsList(
@@ -124,7 +138,8 @@ public interface ProductService {
             DateTime searchTimeEnd,
             String searchTimeField,
             String sortField,
-            String sortBy
+            String sortBy,
+            BanmaerpProperties banmaerpProperties
     );
 
     /**
@@ -137,6 +152,7 @@ public interface ProductService {
      * @param searchTimeField    查询的时间字段名，具体值参见:SearchTimeField
      * @param sortField     排序字段名，具体值参见:SortField
      * @param sortBy        	排序方式，具体值参见:SortBy
+     * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
     BanmaErpResponseDTO getProductSuppliersList(
@@ -147,7 +163,8 @@ public interface ProductService {
             DateTime searchTimeEnd,
             String searchTimeField,
             String sortField,
-            String sortBy
+            String sortBy,
+            BanmaerpProperties banmaerpProperties
     );
 
 }

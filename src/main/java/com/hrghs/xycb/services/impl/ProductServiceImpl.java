@@ -1,12 +1,16 @@
 package com.hrghs.xycb.services.impl;
 
+import com.hrghs.xycb.config.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.ProductDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
+import com.hrghs.xycb.repositories.ProductRepository;
 import com.hrghs.xycb.services.ProductService;
 import org.joda.time.DateTime;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class ProductServiceImpl implements ProductService {
-
+    @Autowired
+    private ProductRepository productRepository;
     /**
      * 查询产品列表
      * @param spuIds spuID，用逗号分隔
@@ -27,7 +31,10 @@ public class ProductServiceImpl implements ProductService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO getProductList(String spuIds, long source, String spu, String categoryId, String title, String supplier, String costPriceStart, String costPriceEnd, int pageNumber, int pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+    public BanmaErpResponseDTO getProductList(String spuIds, long source, String spu, String categoryId, String title, String supplier,
+                                              String costPriceStart, String costPriceEnd, int pageNumber, int pageSize,
+                                              DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField,
+                                              String sortBy,BanmaerpProperties banmaerpProperties) {
         return null;
     }
 
@@ -37,7 +44,8 @@ public class ProductServiceImpl implements ProductService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO getProductById(String spuId) {
+    public BanmaErpResponseDTO getProductById(String spuId,
+                                              BanmaerpProperties banmaerpProperties) {
         return null;
     }
 
@@ -48,7 +56,9 @@ public class ProductServiceImpl implements ProductService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO insertProduct(ProductDTO productDto) {
+    public BanmaErpResponseDTO insertProduct(ProductDTO productDto,
+                                             BanmaerpProperties banmaerpProperties) {
+        productRepository.save(productDto);
         return null;
     }
 
@@ -59,7 +69,8 @@ public class ProductServiceImpl implements ProductService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO updateProductById(ProductDTO productDto) {
+    public BanmaErpResponseDTO updateProductById(ProductDTO productDto,
+                                                 BanmaerpProperties banmaerpProperties) {
         return null;
     }
 
@@ -80,7 +91,10 @@ public class ProductServiceImpl implements ProductService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO getProductSkuList(String skuIds, String code, long spuId, String costPriceStart, String costPriceEnd, int pageNumber, int pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+    public BanmaErpResponseDTO getProductSkuList(String skuIds, String code, long spuId, String costPriceStart, String costPriceEnd,
+                                                 int pageNumber, int pageSize, DateTime searchTimeStart, DateTime searchTimeEnd,
+                                                 String searchTimeField, String sortField, String sortBy,
+                                                 BanmaerpProperties banmaerpProperties) {
         return null;
     }
 
@@ -90,7 +104,8 @@ public class ProductServiceImpl implements ProductService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO getProductSkuById(String skuid) {
+    public BanmaErpResponseDTO getProductSkuById(String skuid,
+                                                 BanmaerpProperties banmaerpProperties) {
         return null;
     }
 
@@ -107,7 +122,9 @@ public class ProductServiceImpl implements ProductService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO getProductTagsList(String name, int pageNumber, int pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+    public BanmaErpResponseDTO getProductTagsList(String name, int pageNumber, int pageSize, DateTime searchTimeStart, DateTime searchTimeEnd,
+                                                  String searchTimeField, String sortField, String sortBy,
+                                                  BanmaerpProperties banmaerpProperties) {
         return null;
     }
 
@@ -124,7 +141,9 @@ public class ProductServiceImpl implements ProductService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO getProductSuppliersList(String name, int pageNumber, int pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+    public BanmaErpResponseDTO getProductSuppliersList(String name, int pageNumber, int pageSize, DateTime searchTimeStart,
+                                                       DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy,
+                                                       BanmaerpProperties banmaerpProperties) {
         return null;
     }
 }

@@ -1,5 +1,7 @@
 package com.hrghs.xycb.domains.enums;
 
+import org.springframework.util.StringUtils;
+
 public class BanmaerpPlatformEnums {
 
     public enum Platform {
@@ -10,8 +12,16 @@ public class BanmaerpPlatformEnums {
         Shoplus("Shoplus"),LeadongShop("LeadongShop"),Shoprises("Shoprises"),Qoo10("Qoo10"),
         ShopExpress("ShopExpress"),TwoCshop("TwoCshop"),Self("Self");
         private String platform;
-        private Platform(String _platform){
+        Platform(String _platform){
             this.platform = _platform;
+        }
+
+        @Override
+        public String toString() {
+            return StringUtils.hasText(platform)?platform:"";
+//            return "Platform{" +
+//                    "platform='" + platform + '\'' +
+//                    '}';
         }
     }
 

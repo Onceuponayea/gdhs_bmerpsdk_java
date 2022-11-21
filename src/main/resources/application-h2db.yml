@@ -1,0 +1,71 @@
+spring:
+  profiles:
+    active: dev
+  redis:
+    host: rds.xmsuodi.com
+    port: 46379
+    password:
+    database: 0
+#    cluster:
+#      nodes:
+    lettuce:
+      pool:
+        max-wait: 1000
+        max-idle: 20
+        min-idle: 10
+        max-active: 2000
+
+  datasource:
+    banmaerp:
+      username: root
+      password: lilishop
+      url: jdbc:mysql://rds.xmsuodi.com:49906/lilishop?characterEncoding=utf8&autoReconnect=true&useUnicode=true&tcpKeepAlive=true&useSSL=false&allowPublicKeyRetrieval=true&useLegacyDateTimeCode=false&serverTimezone=Asia/Shanghai&
+      druid:
+        username: ${spring.datasource.banmaerp.username}
+        password: ${spring.datasource.banmaerp.password}
+        url: ${spring.datasource.banmaerp.url}
+        initial-size: 100
+        min-idle: 100
+        maxActive: 600
+        maxWait: 60000
+        timeBetweenEvictionRunsMillis: 30000
+        minEvictableIdleTimeMillis: 300000
+        validationQuery: SELECT 1 FROM DUAL
+        testWhileIdle: true
+        testOnBorrow: false
+        testOnReturn: false
+        poolPreparedStatements: true
+        maxPoolPreparedStatementPerConnectionSize: 20
+        connection-error-retry-attempts: 3
+        keep-alive: true
+        keep-alive-between-time-millis: 60000
+        connectionProperties: druid.stat.mergeSql\=true;druid.stat.slowSqlMillis\=5000
+
+      hikari:
+        maximum-pool-size: 200
+        max-lifetime: 21600000
+        minimum-idle: 50
+        idle-timeout: 600000
+        connection-timeout: 10000
+        keepaliveTime: 60000
+        jdbc-url: ${spring.datasource.banmaerp.url}
+
+
+jdbc:
+  property:
+    cachePrepStmts: true
+    prepStmtCacheSize: 200
+    prepStmtCacheSqlLimit: 6535
+
+
+#1、先配置好mysql, atomikos 代理ali druid,先用H2DB测试,不需要开启,项目一启动就把实体类导入到h2db
+#2、配置好redisson + lettuce
+h2server:
+  enabled: true
+  port: 7777
+
+erp:
+  banmaerp:
+    enabled: true
+
+

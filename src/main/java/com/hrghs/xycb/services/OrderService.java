@@ -1,5 +1,6 @@
 package com.hrghs.xycb.services;
 
+import com.hrghs.xycb.config.BanmaerpProperties;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import org.joda.time.DateTime;
 
@@ -23,6 +24,7 @@ public interface OrderService {
      * @param searchTimeField 查询的时间字段名，具体值参见:SearchTimeField
      * @param sortField	   排序字段名，具体值参见:SortField
      * @param sortBy   排序方式，具体值参见:SortBy
+     * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
     BanmaErpResponseDTO getOrderList(
@@ -41,13 +43,16 @@ public interface OrderService {
             DateTime searchTimeEnd,
             String searchTimeField,
             String sortField,
-            String sortBy
+            String sortBy,
+            BanmaerpProperties banmaerpProperties
     );
 
     /**
      * 查询单个订单
      * @param id 	订单ID（必填）
+     * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO getOrderById(String id);
+    BanmaErpResponseDTO getOrderById(String id,
+                                     BanmaerpProperties banmaerpProperties);
 }

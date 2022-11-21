@@ -1,12 +1,15 @@
-package com.hrghs.xycb;
+package com.hrghs.xycb.serialiseTest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.hrghs.xycb.domains.banmaerpDTO.ProductDTO;
-import com.hrghs.xycb.domains.common.BanmaErpResponseDateDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.CategoryDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
+
+
+import java.util.List;
 
 /**
  * 2022.11.14 jzx
@@ -75,7 +78,15 @@ public class BanmaerpCategoryTest {
                 "}\n";
 
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JodaModule());
-        BanmaErpResponseDTO<BanmaErpResponseDateDTO> banmaErpResponseDTO = objectMapper.readValue(getCategoryById, new TypeReference<BanmaErpResponseDTO<BanmaErpResponseDateDTO>>() {});
-        System.out.println(banmaErpResponseDTO.getData().getCategory().getId());
+//        BanmaErpResponseDTO<BanmaErpResponseDataDTO> banmaErpResponseDTO = objectMapper.readValue(getCategoryById, new TypeReference<BanmaErpResponseDTO<BanmaErpResponseDataDTO>>() {});
+//        System.out.println(banmaErpResponseDTO.getData().getCategory().getId());
+//        BanmaErpResponseDTO<BanmaErpResponseDataDTO> banmaErpResponseDTOs =objectMapper.readValue(getCategoryList,new TypeReference<BanmaErpResponseDTO<BanmaErpResponseDataDTO>>() {});
+//        banmaErpResponseDTOs.getData();
+
+        //objectMapper.configure(SerializationFeature.WRAP_ROOT_VALUE,true);
+        BanmaErpResponseDTO<CategoryDTO> banmaErpResponseDTO = objectMapper.readValue(getCategoryById, new TypeReference<BanmaErpResponseDTO<CategoryDTO>>() {});
+        System.out.println(banmaErpResponseDTO.getData().getId());
+        BanmaErpResponseDTO<List<CategoryDTO>> banmaErpResponseDTOs =objectMapper.readValue(getCategoryList,new TypeReference<BanmaErpResponseDTO<List<CategoryDTO>>>() {});
+        banmaErpResponseDTOs.getData();
     }
 }

@@ -1,11 +1,13 @@
 package com.hrghs.xycb.services.impl;
 
+import com.hrghs.xycb.config.BanmaerpProperties;
+import com.hrghs.xycb.utils.HttpClientsUtils;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.services.StorageService;
 import org.joda.time.DateTime;
 
 public class StorageServiceImpl implements StorageService {
-
+    private HttpClientsUtils httpClients;
     /**
      * 查询文件列表
      * @param ids   存储ID，用逗号分隔
@@ -22,7 +24,9 @@ public class StorageServiceImpl implements StorageService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO getStoragetList(String ids, String name, String fileType, String fileCategoryId, int pageNumber, int pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+    public BanmaErpResponseDTO getStoragetList(String ids, String name, String fileType, String fileCategoryId, int pageNumber, int pageSize,
+                                               DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField,
+                                               String sortBy,BanmaerpProperties banmaerpProperties) {
         return null;
     }
 
@@ -32,7 +36,8 @@ public class StorageServiceImpl implements StorageService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO getStorageById(String id) {
+    public BanmaErpResponseDTO getStorageById(String id,
+                                              BanmaerpProperties banmaerpProperties) {
         return null;
     }
 
@@ -44,7 +49,8 @@ public class StorageServiceImpl implements StorageService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO uploadTheFileToStream(String contentType, String name, String file) {
+    public BanmaErpResponseDTO uploadTheFileToStream(String contentType, String name, String file,
+                                                     BanmaerpProperties banmaerpProperties) {
         return null;
     }
 
@@ -56,7 +62,8 @@ public class StorageServiceImpl implements StorageService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO uploadTheFileToBase64(String contentType, String name, String file) {
+    public BanmaErpResponseDTO uploadTheFileToBase64(String contentType, String name, String file,
+                                                     BanmaerpProperties banmaerpProperties) {
         return null;
     }
 
@@ -67,7 +74,8 @@ public class StorageServiceImpl implements StorageService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO uploadTheFileToForm(String contentType, String file) {
+    public BanmaErpResponseDTO uploadTheFileToForm(String contentType, String file,
+                                                   BanmaerpProperties banmaerpProperties) {
         return null;
     }
 }
