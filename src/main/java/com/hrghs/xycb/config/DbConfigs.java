@@ -3,6 +3,8 @@ package com.hrghs.xycb.config;
 
 import com.atomikos.icatch.jta.UserTransactionImp;
 import com.atomikos.icatch.jta.UserTransactionManager;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hrghs.xycb.domains.banmaerpDTO.TokenResponseDTO;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import net.javacrumbs.shedlock.core.LockProvider;
@@ -19,6 +21,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.data.redis.core.ReactiveRedisOperations;
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -29,6 +40,7 @@ import javax.sql.DataSource;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Properties;
@@ -48,9 +60,34 @@ public class DbConfigs {
     public ReactiveRedisConnectionFactory redisConnectionFactory(@Value("${spring.redis.host:localhost}") String host,
                                                                  @Value("${spring.redis.port:3306}")int port,
                                                                  @Value("${spring.redis.password}")String password,
-                                                                 @Value("${spring.redis.database:0}")int db){
-        return null;
+                                                                 @Value("${spring.redis.database:1}")int db){
+        LettuceClientConfiguration clientConfiguration = LettuceClientConfiguration.builder()
+                .commandTimeout(Duration.ofSeconds(1))
+                .shutdownTimeout(Duration.ZERO)
+                .build();
+        //todo add suuport for redis cluster
+        RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration(host,port);
+        if (!password.isEmpty()){
+            redisConfig.setPassword(password);
+        }
+        LettuceConnectionFactory lettuceConnectionFactory = new LettuceConnectionFactory(redisConfig,clientConfiguration);
+        lettuceConnectionFactory.setDatabase(db);
+        return lettuceConnectionFactory;
     }
+    @Bean
+    @ConditionalOnMissingBean
+    public ReactiveRedisOperations<String,String> stringReactiveRedisOperations(ReactiveRedisConnectionFactory redisConnectionFactory){
+        return new ReactiveStringRedisTemplate(redisConnectionFactory);
+    }
+    @Bean(name = "tokenRespReactiveRedisOperations")
+    public ReactiveRedisOperations<String, TokenResponseDTO> tokenRespReactiveRedisOperations(ReactiveRedisConnectionFactory redisConnectionFactory, ObjectMapper objectMapper){
+        RedisSerializationContext.RedisSerializationContextBuilder<String,TokenResponseDTO> builder=
+                RedisSerializationContext.newSerializationContext(new StringRedisSerializer());
+        Jackson2JsonRedisSerializer<TokenResponseDTO> jsonRedisSerializer = new Jackson2JsonRedisSerializer(TokenResponseDTO.class);
+        jsonRedisSerializer.setObjectMapper(objectMapper);
+        return new ReactiveRedisTemplate<>(redisConnectionFactory,builder.value(jsonRedisSerializer).build());
+    }
+    @Bean
     public LockProvider lockProvider(ReactiveRedisConnectionFactory connectionFactory){
         return new ReactiveRedisLockProvider.Builder(connectionFactory).build();
     }
@@ -173,7 +210,9 @@ public class DbConfigs {
 
     @PreDestroy
     public void shutdownH2DB(){
-        this.h2DBServer.shutdown();
+        if (this.h2DBServer!=null){
+            this.h2DBServer.shutdown();
+        }
         //todo kill whatever process that possess port 7777
     }
 }

@@ -8,9 +8,11 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.hrghs.xycb.domains.banmaerpDTO.StoreDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
+import org.joda.time.format.ISODateTimeFormat;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_STORES;
@@ -33,14 +35,14 @@ public class BanmaerStoreTest {
                 "                \"Name\": \"test1\",\n" +
                 "                \"Platform\": \"Wish\",\n" +
                 "                \"CreateTime\": \"2019-01-10 16:57:58\",\n" +
-                "                \"UpdateTime\": \"2020-06-13 09:59:25\"\n" +
+                "                \"UpdateTime\": \"2020-06-13T09:59:25\"\n" +
                 "            },\n" +
                 "            {\n" +
                 "                \"ID\": \"400025423071000141\",\n" +
                 "                \"Name\": \"test2\",\n" +
                 "                \"Platform\": \"Wish\",\n" +
                 "                \"CreateTime\": \"2019-03-18 14:16:04\",\n" +
-                "                \"UpdateTime\": \"2020-08-19 16:58:07\"\n" +
+                "                \"UpdateTime\": \"2020-08-19T16:58:07\"\n" +
                 "            }\n" +
                 "        ]\n" +
 //                "        \"Page\": {\n" +
@@ -74,26 +76,19 @@ public class BanmaerStoreTest {
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JodaModule());
 
         BanmaErpResponseDTO<StoreDTO> banmaErpResponseDTO = objectMapper.readValue(getStoreById, new TypeReference<BanmaErpResponseDTO<StoreDTO>>() {});
-        System.out.println(banmaErpResponseDTO.getData().getName());
-
-       // https://dzone.com/articles/custom-json-deserialization-with-jackson
-
-//        BanmaErpResponseDTO<BanmaErpResponseDataDTO> storeList = objectMapper.readValue(getStoretList, new TypeReference<BanmaErpResponseDTO<BanmaErpResponseDataDTO>>() {});
-//        System.out.println(storeList.getData().getStores().length);
-
-//        BanmaErpResponseDTO<List<StoreDTO>> storeList =objectMapper.readValue(getStoretList, new TypeReference<BanmaErpResponseDTO<List<StoreDTO>>>() {
-//        });
+       System.out.println(banmaErpResponseDTO.getData().getName());
 
         BanmaErpResponseDTO<JsonNode> storeListRaw =objectMapper.readValue(getStoretList, new TypeReference<BanmaErpResponseDTO<JsonNode>>() {});
         JsonNode storesNode = storeListRaw.getData();
-        storeListRaw.toDataList(StoreDTO.class,BANMAERP_FIELD_STORES);
-        //storesNode.iterator().forEachRemaining(jsonNode -> System.out.println(jsonNode.toPrettyString()));
-//        System.out.println(storesNode.toPrettyString());
-//        try {
-//           List<StoreDTO> storeDTOList =  objectMapper.readValue(storesNode.toPrettyString(),new TypeReference<List<StoreDTO>>() {});
-//
-//        } catch (IOException e) {
-//            e.printStackTrace();
+        //java.lang.ClassCastException
+//        StoreDTO[] storeDTOS = (StoreDTO[]) storeListRaw.toDataList(StoreDTO.class,BANMAERP_FIELD_STORES);
+//        for (StoreDTO storeDTO :storeDTOS){
+//            System.out.println(storeDTO.getName());
 //        }
+
+        Object[] objects = storeListRaw.toDataList(BANMAERP_FIELD_STORES);
+        for (Object o :objects){
+            System.out.println(((StoreDTO)o).getName());
+        }
     }
 }

@@ -74,7 +74,7 @@ public class StoreServiceImpl implements StoreService {
                .header(BANMA_HEADER_SIGN,encryptionUtils.banmaerpSigning(banmaerpSigningVO))
                .accept(MediaType.APPLICATION_JSON).accept(APPLICATION_JSON_UTF8).acceptCharset(Charset.defaultCharset())
                .retrieve().bodyToMono(new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
-               .map(responseDTO -> responseDTO.toDataList(StoreDTO.class,BANMAERP_FIELD_STORES))
+               .map(responseDTO -> responseDTO.toDataList(BANMAERP_FIELD_STORES))
                              //   .map(objects -> )
                 );
         //return responseDTOMono;
@@ -88,18 +88,19 @@ public class StoreServiceImpl implements StoreService {
                                         BanmaerpProperties banmaerpProperties) {
         String apiUrl = String.format(BanmaerpURL.banmaerp_storelist_GET,ids,name,platform==null?"":platform.toString(),pageNumber,pageSize,
                 searchTimeStart, searchTimeEnd,searchTimeField,sortField,sortBy);
-        String apiUrl2 = "/v1/store?PageNumber=1&PageSize=100&Platform=Lazada";
+        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
         HttpHeaders httpHeaders = new HttpHeaders();
         BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
         //todo signing
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
         HttpEntity requestBody = new HttpEntity(null,httpHeaders);
-        List<StoreDTO> storeDTOList =
-        Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-        .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl2),HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
-        .getBody()
-        .toDataList(StoreDTO.class,BANMAERP_FIELD_STORES)
-        ).map(o -> (StoreDTO)o).collect(Collectors.toList());
+        List<StoreDTO> storeDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+            .getBody()
+            .toDataList(BANMAERP_FIELD_STORES)
+        )
+        .map(o -> (StoreDTO)o)
+        .collect(Collectors.toList());
         return storeDTOList;
     }
 

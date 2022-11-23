@@ -12,9 +12,14 @@ import com.hrghs.xycb.domains.BanmaerpURL;
 import com.hrghs.xycb.domains.enums.BanmaerpAuthEnums;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeUtils;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.redis.core.ReactiveRedisOperations;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -27,10 +32,13 @@ import reactor.core.publisher.Mono;
 
 import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 
 import static com.hrghs.xycb.config.BanmaerpProperties.*;
 import static com.hrghs.xycb.domains.BanmaerpURL.banmaerp_GetToken_GET;
 import static com.hrghs.xycb.domains.BanmaerpURL.banmaerp_RefreshToken_GET;
+import static jodd.util.StringPool.COLON;
+import static jodd.util.StringPool.SLASH;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 
 @Component
@@ -40,11 +48,11 @@ public class BanmaTokenUtils {
 
     private WebClient.Builder webClientBuilder = WebClient.builder();
     @Autowired
-    private ApplicationContext applicationContext;
-    @Autowired
     private EncryptionUtils encryptionUtils;
     @Autowired
     private  HttpClientsUtils httpClients;
+    @Autowired
+    private ReactiveRedisOperations<String,TokenResponseDTO> tokenRespReactiveRedisOperations;
 
     /**
      * todo 提供非阻塞式调用方式，返回结果序列化有问题，暂时不修复.
@@ -68,36 +76,43 @@ public class BanmaTokenUtils {
     }
 
     public TokenResponseDTO getBanmaErpMasterToken(BanmaerpProperties banmaerpProperties){
-        //todo retrieve from redis
+        String redisKey = "banmaerp".concat(COLON).concat("token").concat(COLON)
+                .concat(banmaerpProperties.getX_BANMA_MASTER_APP_ID());
+        TokenResponseDTO tokenResp=null;
         BanmaerpSigningVO banmaerpSigningVO = banmaerpSigningVO(banmaerpProperties);
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders = banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
         HttpEntity requestBody = new HttpEntity(null,httpHeaders);
-        TokenResponseDTO tokenResponseDTO= httpClients.restTemplate()
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(banmaerp_GetToken_GET),HttpMethod.GET,
-                        requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<TokenResponseDTO>>() {})
-                .getBody().getData();
-
-
-        ObjectMapper objectMapper = new ObjectMapper().registerModule(new JodaModule());
-        String getTokenResponse = null;
-        try {
-            getTokenResponse = objectMapper.writer().withDefaultPrettyPrinter().writeValueAsString(tokenResponseDTO);
-            System.out.println(getTokenResponse);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-        if (tokenResponseDTO.getAccessTokenExpiryTime().isBeforeNow()){
+        tokenResp =
+        tokenRespReactiveRedisOperations.opsForValue().get(redisKey)
+        .map(tokenResponseDTO -> validateToken(tokenResponseDTO,requestBody,redisKey))
+        .switchIfEmpty(Mono.defer(() -> {
+            TokenResponseDTO tokenResponseDTO = httpClients.restTemplate()
+                    .exchange(BanmaerpURL.banmaerp_gateway.concat(banmaerp_GetToken_GET),HttpMethod.GET,
+                            requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<TokenResponseDTO>>() {})
+                    .getBody().getData();
+            tokenResponseDTO = validateToken(tokenResponseDTO,requestBody,redisKey);
+            return Mono.just(tokenResponseDTO);
+        }))
+        .block();
+        return tokenResp;
+    }
+    private TokenResponseDTO validateToken(TokenResponseDTO _tokenResponseDTO,HttpEntity requestBody,String redisKey){
+        TokenResponseDTO tokenResponseDTO = _tokenResponseDTO;
+        if (tokenResponseDTO.getAccessTokenExpiryTime().toLocalDateTime().isBefore(LocalDateTime.now())){
             String refreshTokenUri =String.format(banmaerp_RefreshToken_GET,tokenResponseDTO.getRefreshToken());
-            tokenResponseDTO= httpClients.restTemplate()
+            tokenResponseDTO = httpClients.restTemplate()
                     .exchange(BanmaerpURL.banmaerp_gateway.concat(refreshTokenUri),HttpMethod.GET,
                             requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<TokenResponseDTO>>() {})
                     .getBody().getData();
         }
-        //todo save it to redis
+        long timeDiff = tokenResponseDTO.getAccessTokenExpiryTime().getMillis() - DateTime.now().getMillis() - 1000;
+        tokenRespReactiveRedisOperations.opsForValue()
+                .set(redisKey,tokenResponseDTO, Duration.ofMillis(timeDiff))
+                .subscribe();
         return tokenResponseDTO;
-
     }
+
     public BanmaerpSigningVO banmaerpSigningVO(BanmaerpProperties banmaerpProperties){
         Long timestamp = System.currentTimeMillis()/1000L;
         BanmaerpSigningVO banmaerpSigningVO = new BanmaerpSigningVO();

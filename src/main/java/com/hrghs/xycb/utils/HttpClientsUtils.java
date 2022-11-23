@@ -18,6 +18,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.PostConstruct;
 import java.util.Collections;
 
 import static com.hrghs.xycb.config.BanmaerpProperties.*;
@@ -28,9 +29,13 @@ import static com.hrghs.xycb.config.BanmaerpProperties.BANMA_HEADER_SIGNMETHOD;
 public class HttpClientsUtils {
     @Autowired
     private ApplicationContext applicationContext;
+
     private RestTemplate restTemplate;
-    @Autowired
-    private ObjectMapper objectMapper;
+    @PostConstruct
+    private void init(){
+        this.restTemplate = restTemplate==null? restTemplate():this.restTemplate;
+    }
+
     @Bean
     public WebClient.Builder webClientBuilder(){
         return WebClient.builder();
@@ -67,23 +72,14 @@ public class HttpClientsUtils {
     @Bean
     @ConditionalOnMissingBean
     public RestTemplate restTemplate(){
-        restTemplate = new RestTemplate(new BufferingClientHttpRequestFactory(new SimpleClientHttpRequestFactory()));
-        return restTemplate;
+        this.restTemplate = new RestTemplate(new BufferingClientHttpRequestFactory(new SimpleClientHttpRequestFactory()));
+        return this.restTemplate;
     }
     public RestTemplate restTemplateWithBanmaMasterToken(BanmaerpProperties banmaerpProperties){
         BanmaTokenUtils tokenUtils = applicationContext.getBean(BanmaTokenUtils.class);
         TokenResponseDTO tokenResponse = tokenUtils.getBanmaErpMasterToken(banmaerpProperties);
         String access_token = tokenResponse.getAccessToken();
-
-        String getTokenResponse = null;
-        try {
-            getTokenResponse = objectMapper.writer().withDefaultPrettyPrinter().writeValueAsString(tokenResponse);
-            System.out.println(getTokenResponse);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-
-        restTemplate.setInterceptors(Collections.singletonList((httpRequest, bytes, clientHttpRequestExecution) -> {
+        this.restTemplate.setInterceptors(Collections.singletonList((httpRequest, bytes, clientHttpRequestExecution) -> {
             HttpHeaders headers = httpRequest.getHeaders();
             headers.add(BANMA_HEADER_ACCESSTOKEN, access_token);
             return clientHttpRequestExecution.execute(httpRequest,bytes);

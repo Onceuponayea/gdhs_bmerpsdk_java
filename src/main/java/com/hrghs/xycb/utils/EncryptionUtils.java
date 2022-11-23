@@ -7,8 +7,9 @@ import org.springframework.util.StringUtils;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Locale;
-import java.util.UUID;
+import java.util.*;
+
+import static jodd.util.StringPool.*;
 
 @Component
 public class EncryptionUtils {
@@ -64,4 +65,47 @@ public class EncryptionUtils {
         return getUUID().replaceAll("-","");
     }
 
+    public String rmEmptyParas(String apiUrl){
+        if (apiUrl.contains(QUESTION_MARK)){
+            String[] splitedStr = apiUrl.split(BACK_SLASH+QUESTION_MARK);
+            String formattedUrl=splitedStr[0].concat(QUESTION_MARK);
+            StringBuffer stringBuffer = new StringBuffer(formattedUrl);
+            String paramStr =splitedStr[1];
+            Map<String,String> stringMap = stringToMap(paramStr,AMPERSAND,EQUALS,null);
+            stringMap.forEach((k,v) -> {
+                if (StringUtils.hasText(v) && !v.toLowerCase(Locale.ROOT).equalsIgnoreCase("null")){
+                    stringBuffer.append(k.concat(EQUALS).concat(v).concat(AMPERSAND));
+                }
+            });
+            apiUrl = stringBuffer.substring(0,stringBuffer.length()-1);
+        }
+        return apiUrl;
+    }
+    public Map<String, String> stringToMap(String value, String split, String key_valueSperator, List<String> excludeKey) {
+        Map<String, String> stringMap = new HashMap<>();
+        for (String reqpair : value.split(split)) {
+            String[] kv = reqpair.split(key_valueSperator);
+            if (excludeKey!=null){
+                for (String exKey : excludeKey) {
+                    if (kv.length == 2 && !kv[0].equalsIgnoreCase(exKey)) {
+                        stringMap.put(kv[0], kv[1]);
+                    }
+                }
+            }else{
+                if (kv.length == 2) {
+                    stringMap.put(kv[0], kv[1]);
+                }
+            }
+        }
+        return stringMap;
+    }
+
+    public String mapToString(Map<String,String> stringMap,String split,String key_valueSperator){
+        StringBuffer stringBuffer = new StringBuffer();
+        stringMap.forEach((k,v) -> {
+            String kv =k.concat(key_valueSperator).concat(v).concat(split);
+            stringBuffer.append(kv);
+        });
+        return stringBuffer.substring(0,stringBuffer.length()-1);
+    }
 }

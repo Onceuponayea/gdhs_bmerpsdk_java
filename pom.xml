@@ -14,6 +14,7 @@
     <maven.compiler.target>1.8</maven.compiler.target>
     <maven.compiler.source>1.8</maven.compiler.source>
     <common-codec.version>1.15</common-codec.version>
+    <shedlock.version>4.42.0</shedlock.version>
   </properties>
   <parent>
     <groupId>org.springframework.boot</groupId>
@@ -37,16 +38,16 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>redis.clients</groupId>
-          <artifactId>jedis</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>io.lettuce</groupId>
-          <artifactId>lettuce-core</artifactId>
-        </exclusion>
-      </exclusions>
+<!--      <exclusions>-->
+<!--        <exclusion>-->
+<!--          <groupId>redis.clients</groupId>-->
+<!--          <artifactId>jedis</artifactId>-->
+<!--        </exclusion>-->
+<!--        <exclusion>-->
+<!--          <groupId>io.lettuce</groupId>-->
+<!--          <artifactId>lettuce-core</artifactId>-->
+<!--        </exclusion>-->
+<!--      </exclusions>-->
     </dependency>
     <dependency>
       <groupId>org.redisson</groupId>
@@ -62,6 +63,11 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.alibaba</groupId>
@@ -86,8 +92,13 @@
     </dependency>
     <dependency>
       <groupId>net.javacrumbs.shedlock</groupId>
+      <artifactId>shedlock-spring</artifactId>
+      <version>${shedlock.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>net.javacrumbs.shedlock</groupId>
       <artifactId>shedlock-provider-redis-spring</artifactId>
-      <version>4.42.0</version>
+      <version>${shedlock.version}</version>
     </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>
@@ -113,11 +124,6 @@
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
       <version>${common-codec.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-test</artifactId>
-      <scope>test</scope>
     </dependency>
   </dependencies>
   <dependencyManagement></dependencyManagement>

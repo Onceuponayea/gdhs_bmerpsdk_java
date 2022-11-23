@@ -5,7 +5,7 @@ spring:
     host: rds.xmsuodi.com
     port: 46379
     password: lilishop
-    database: 0
+    database: 1
 #    cluster:
 #      nodes:
     lettuce:

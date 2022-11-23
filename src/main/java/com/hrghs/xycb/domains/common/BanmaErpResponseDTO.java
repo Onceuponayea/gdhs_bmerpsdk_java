@@ -2,28 +2,25 @@ package com.hrghs.xycb.domains.common;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import com.hrghs.xycb.domains.banmaerpDTO.StoreDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.*;
+import com.hrghs.xycb.utils.DateTimeConverter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
+import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
-
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+
+import static com.hrghs.xycb.domains.Constants.*;
 
 @Data
 @AllArgsConstructor
@@ -69,23 +66,52 @@ public class BanmaErpResponseDTO<T> {
     private String requestId;
 
     @JsonIgnore
-    private ObjectMapper objectMapper = new ObjectMapper().registerModule(new JodaModule());
+    private ObjectMapper objectMapper = new ObjectMapper().registerModule(new JodaModule()).setTimeZone(SimpleTimeZone.getDefault());
     @JsonIgnore
-    private Gson gson = new Gson();
+    private Gson gson = new GsonBuilder().disableHtmlEscaping()
+            .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)
+            .registerTypeAdapter(DateTime.class,new DateTimeConverter())
+            .setDateFormat("yyyy-MM-dd HH:mm:ss")
+            .create();
 
     @SneakyThrows
-    public Object[] toDataList(Class<?> vClass,String objClass){
+    public Object[] toDataList(String objClass){
         List<Object> datas = new ArrayList<>();
         if (data !=null && data instanceof JsonNode){
             JsonNode dataList = (JsonNode)data;
-            JsonNode jsonNodeStores = dataList.get(objClass);
-//            java.lang.reflect.Type type = vClass;
-//
-//            Class c =vClass.getClass();
-//            new TypeToken<List<String>>(){}.getType();
-//            StoreDTO[] storeDTOS = gson.fromJson(jsonNodeStores.toString(),new TypeToken<List<type>>());
-            StoreDTO[] storeDTOS = gson.fromJson(jsonNodeStores.toString(),StoreDTO[].class);
-            datas.addAll(Arrays.asList(storeDTOS));
+            JsonNode jsonNodeSrc = dataList.get(objClass);
+            Type type = null;
+            switch (objClass){
+                case BANMAERP_FIELD_STORES:
+                    type = new TypeToken<Collection<StoreDTO>>(){}.getType();
+                    //Collection<StoreDTO> storeDTOS = gson.fromJson(jsonNodeStores.toString(),store);
+                    break;
+                case BANMAERP_FIELD_CATEGORYS:
+                    type = new TypeToken<Collection<CategoryDTO>>(){}.getType();
+                    break;
+                case BANMAERP_FIELD_ORDERS:
+                    type = new TypeToken<Collection<OrderDTO>>(){}.getType();
+                    break;
+                case BANMAERP_FIELD_PRODUCTS:
+                    type = new TypeToken<Collection<ProductDTO>>(){}.getType();
+                    break;
+                case BANMAERP_FIELD_SKUS:
+                    type = new TypeToken<Collection<ProductSkusDTO>>(){}.getType();
+                    break;
+                case BANMAERP_FIELD_TAGS:
+                    type = new TypeToken<Collection<ProductTagsDTO>>(){}.getType();
+                    break;
+                case BANMAERP_FIELD_SUPPLIERS:
+                    type = new TypeToken<Collection<ProductSuppliersDTO>>(){}.getType();
+                    break;
+                case BANMAERP_FIELD_STORAGES:
+                    type = new TypeToken<Collection<StorageDTO>>(){}.getType();
+                    break;
+                case BANMAERP_FIELD_PAGE:
+                    type = new TypeToken<Collection<PageDTO>>(){}.getType();
+                    break;
+            }
+            datas = gson.fromJson(jsonNodeSrc.toString(),type);
         }
         return datas.toArray();
     }

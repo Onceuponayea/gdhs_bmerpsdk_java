@@ -1,6 +1,8 @@
 package com.hrghs.xycb.services;
 
+import net.javacrumbs.shedlock.core.SchedulerLock;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 
 public class ScheduleService {
@@ -23,10 +25,15 @@ public class ScheduleService {
     /** https://segmentfault.com/a/1190000040036458/en
      * https://dzone.com/articles/distributed-java-locks-with-redis
      * https://www.baeldung.com/shedlock-spring
+     * https://blog.csdn.net/qq_43050847/article/details/117479059
      * pull order from banmaerp every 5 mins.
      */
-    @Scheduled(cron = "0 0/5 0 * * ?")
-    public void pullOrders(){
+//    @Scheduled(cron = "0 0/5 0 * * ?")
+    @Scheduled(cron = "* * * * * ?")
+    @Async
+    @SchedulerLock(name = "shedlock/banmaerp_periodically_pull", lockAtLeastForString = "PT1M", lockAtMostFor = 60000 )
+    public void pullDataFromBanmaerp(){
         //todo
+        System.out.println("定期请求service...");
     }
 }

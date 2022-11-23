@@ -29,17 +29,14 @@ public class BanmaerpDefaultPropertiesAspect {
             Object objects = args[banmaerpProsArgsIndex];
             for (int m=0;m< newArgs.length;m++){
                 if (m==banmaerpProsArgsIndex){
-                    if (!(objects!=null && (objects instanceof BanmaerpProperties))){
-                        newArgs[m]= banmaerpProperties;
-                    }else{
-                        newArgs[m]= objects;
+                    if (objects==null && parameterTypes[m].getSimpleName().equalsIgnoreCase(BanmaerpProperties.class.getSimpleName())){
+                        newArgs[m] = banmaerpProperties;
                     }
                 }else{
                     newArgs[m]=args[m];
                 }
             }
         }
-
         joinPoint.proceed(newArgs);
     }
 

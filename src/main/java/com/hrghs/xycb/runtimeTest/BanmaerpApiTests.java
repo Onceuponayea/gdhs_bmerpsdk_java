@@ -36,9 +36,12 @@ public class BanmaerpApiTests  {
        storeList.subscribe(resp -> System.out.println(resp.getData().size()));
    }
    private void getStoreList(){
-       List<StoreDTO> storeList =
-       storeService.getStoretList(null,null, BanmaerpPlatformEnums.Platform.Lazada,1,
-               100,new DateTime("2020-12-01T00:00:00"),new DateTime("2021-01-01"),"CreateTime",
+//       List<StoreDTO> storeList =
+//       storeService.getStoretList(null,null, BanmaerpPlatformEnums.Platform.Lazada,1,
+//               100,new DateTime("2020-12-01T00:00:00"),new DateTime("2021-01-01"),"CreateTime",
+//               null,null,null);
+       List<StoreDTO> storeList = storeService.getStoretList(null,null, BanmaerpPlatformEnums.Platform.Lazada,1,
+               100,null,null,"CreateTime",
                null,null,null);
        System.out.println("storeList size: " + storeList.size());
        if (storeList.size()>0){
