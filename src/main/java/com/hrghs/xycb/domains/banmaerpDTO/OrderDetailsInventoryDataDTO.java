@@ -8,13 +8,13 @@ import org.springframework.stereotype.Component;
 @Data
 public class OrderDetailsInventoryDataDTO {
     @JsonProperty(value = "SKUID")
-    private long skuId;
+    private String SKUID;
     @JsonProperty(value = "SKUCode")
-    private String skuCode;
+    private String SKUCode;
     @JsonProperty(value = "ShortageQuantity")
     private int shortageQuantity;
     @JsonProperty(value = "LockQuantity")
     private int lockQuantity;
     @JsonProperty(value = "SPUID")
-    private long spuId;
+    private String SPUID;
 }

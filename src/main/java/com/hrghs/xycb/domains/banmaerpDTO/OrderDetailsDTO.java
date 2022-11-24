@@ -1,34 +1,37 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
 import org.springframework.stereotype.Component;
 
 @Component
 @Data
+
 public class OrderDetailsDTO {
     @JsonProperty(value = "ID")
-    private String id;
+    private String ID;
     @JsonProperty(value = "PackageID")
-    private String packageId;
+    private String packageID;
     @JsonProperty("OriginalOrderID")
-    private String originalOrderId;
+    private String originalOrderID;
     @JsonProperty(value = "OriginalDetailID")
-    private String originalDetailId;
+    private String originalDetailID;
     @JsonProperty(value = "OriginalSKU")
-    private String originalSku;
+    private String originalSKU;
     @JsonProperty(value = "SPUID")
-    private long spuId;
+    private String SPUID;
     @JsonProperty(value = "SKUID")
-    private long skuId;
+    private String SKUID;
     @JsonProperty(value = "SKUType")
-    private String skuType;
+    private String SKUType;
     @JsonProperty(value = "SKUCode")
-    private String skuCode;
+    private String SKUCode;
     @JsonProperty(value = "SKUSpecification")
-    private String skuSpecification;
+    private String SKUSpecification;
     @JsonProperty(value = "Price")
-    private String price;
+    private double price;
     @JsonProperty(value = "Title")
     private String title;
     @JsonProperty(value = "OriginalImage")
@@ -38,7 +41,7 @@ public class OrderDetailsDTO {
     @JsonProperty(value = "OriginalQuantity")
     private int originalQuantity;
     @JsonProperty(value = "Amount")
-    private String amount;
+    private double amount;
     @JsonProperty(value = "Status")
     private String status;
     @JsonProperty(value = "PriceCurrency")
@@ -46,11 +49,11 @@ public class OrderDetailsDTO {
     @JsonProperty(value = "Properties")
     private String[] properties;
     @JsonProperty(value = "OriginalProductID")
-    private String originalProductId;
+    private String originalProductID;
     @JsonProperty(value = "OriginalSKUID")
-    private String originalSkuId;
+    private String originalSKUID;
     @JsonProperty(value = "WarehouseID")
-    private String warehouseId;
+    private String warehouseID;
     @JsonProperty(value = "InventoryStatus")
     private String inventoryStatus;
     @JsonProperty(value = "InventoryLockQuantity")
@@ -60,7 +63,7 @@ public class OrderDetailsDTO {
     @JsonProperty(value = "OriginalSpecification")
     private String originalSpecification;
     @JsonProperty(value = "SKUImage")
-    private String skuImage;
+    private String SKUImage;
     @JsonProperty(value = "InventoryData")
     private OrderDetailsInventoryDataDTO[] inventoryData;
     @JsonProperty(value = "Sort")
@@ -72,7 +75,7 @@ public class OrderDetailsDTO {
     @JsonProperty(value = "QuantityStatus")
     private String quantityStatus;
     @JsonProperty(value = "RelationDetailID")
-    private String relationDetailId;
+    private String relationDetailID;
     @JsonProperty(value = "DeliveryInstructions")
     private String deliveryInstructions;
     @JsonProperty(value = "Priority")

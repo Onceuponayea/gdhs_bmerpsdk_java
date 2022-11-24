@@ -17,11 +17,11 @@ import org.springframework.stereotype.Component;
 @JsonTypeName("Product")
 public class ProductDTO {
     @JsonProperty(value = "SPU")
-    private ProductSpuDTO spu;
+    private ProductSpuDTO SPU;
     @JsonProperty(value = "Descriptions")
     private ProductDescriptionsDTO descriptions;
     @JsonProperty(value = "SKUs")
-    private ProductSkusDTO[] skus;
+    private ProductSkusDTO[] SKUs;
     @JsonProperty(value = "Options")
     private ProductOptionsDTO[] options;
     @JsonProperty(value = "Images")

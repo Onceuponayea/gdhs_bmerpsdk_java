@@ -27,7 +27,7 @@ public class AccountDTO {
 
     @Id
     @JsonProperty(value = "ID")
-    private int id;
+    private int ID;
 
     @Column(name = "real_name")
     @JsonProperty(value = "RealName")

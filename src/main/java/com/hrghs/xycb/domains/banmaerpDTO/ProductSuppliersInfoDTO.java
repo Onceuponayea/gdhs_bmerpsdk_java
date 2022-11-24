@@ -14,11 +14,11 @@ import org.springframework.stereotype.Component;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT,use = JsonTypeInfo.Id.NAME)
-@JsonTypeName("Suppliers")
+//@JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT,use = JsonTypeInfo.Id.NAME)
+//@JsonTypeName("Suppliers")
 public class ProductSuppliersInfoDTO {
     @JsonProperty(value = "ID")
-    private String id;
+    private String ID;
     @JsonProperty(value = "Name")
     private String name;
     @JsonProperty(value = "Contact")

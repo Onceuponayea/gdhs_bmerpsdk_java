@@ -1,16 +1,19 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
 import org.springframework.stereotype.Component;
 
 @Component
 @Data
+
 public class ProductDescriptionsDTO {
         @JsonProperty(value = "Html")
         private String html;
         @JsonProperty(value = "Text")
         private String text;
         @JsonProperty(value = "Short")
-        private String sHort;
+        private String Short;
 }

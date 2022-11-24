@@ -21,9 +21,9 @@ import javax.persistence.Entity;
 @JsonTypeName("Category")
 public class CategoryDTO {
     @JsonProperty(value = "ID")
-    private String id;
+    private String ID;
     @JsonProperty(value = "ParentID")
-    private String parentId;
+    private String parentID;
     @JsonProperty(value = "Name")
     private String name;
     @JsonProperty(value = "Description")

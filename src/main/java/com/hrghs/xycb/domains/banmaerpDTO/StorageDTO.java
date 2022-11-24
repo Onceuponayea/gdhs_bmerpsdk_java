@@ -20,13 +20,13 @@ import org.springframework.stereotype.Component;
 @JsonTypeName("Storage")
 public class StorageDTO {
     @JsonProperty(value = "ID")
-    private String id;
+    private String ID;
     @JsonProperty(value = "Name")
     private String name;
     @JsonProperty(value = "Url")
     private String url;
     @JsonProperty(value = "FileCategoryID")
-    private String fileCategoryId;
+    private String fileCategoryID;
     @JsonProperty(value = "FileType")
     private String fileType;
     @JsonProperty(value = "Size")

@@ -2,24 +2,27 @@ package com.hrghs.xycb.domains.banmaerpDTO;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
 import org.springframework.stereotype.Component;
 
 @Component
 @Data
+
 public class ProductSpuDTO {
     @JsonProperty(value = "SPUID")
-    private String spuId;
+    private String SPUID;
     @JsonProperty(value = "Code")
     private String code;
     @JsonProperty(value = "Title")
     private String title;
     @JsonProperty(value = "LeiMuID")
-    private String leiMuId;
+    private String leiMuID;
     @JsonProperty(value = "SourceUrl")
     private String sourceUrl;
     @JsonProperty(value = "TagIDs")
-    private String tagIds;
+    private String tagIDs;
     @JsonProperty(value = "Image")
     private String image;
     @JsonProperty(value = "Status")
@@ -27,7 +30,7 @@ public class ProductSpuDTO {
     @JsonProperty(value = "Source")
     private String source;
     @JsonProperty(value = "DefaultSupplierID")
-    private String defaultSupplierId;
+    private String defaultSupplierID;
     @JsonProperty(value = "Remark")
     private String remark;
     @JsonProperty(value = "IsExemptQuality")

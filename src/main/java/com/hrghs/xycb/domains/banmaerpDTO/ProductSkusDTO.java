@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 @JsonTypeName("SKU")
 public class ProductSkusDTO {
     @JsonProperty(value = "SKUID")
-    private String skuId;
+    private String SKUID;
     @JsonProperty(value = "Code")
     private String code;
     @JsonProperty(value = "Specification")
