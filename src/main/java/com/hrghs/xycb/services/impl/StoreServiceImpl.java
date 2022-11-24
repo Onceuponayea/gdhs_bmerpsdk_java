@@ -22,6 +22,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import java.nio.charset.Charset;
@@ -34,6 +35,7 @@ import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_STORES;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 
 @Service
+//@Transactional(transactionManager = "banmaerpXATransactionManager")
 public class StoreServiceImpl implements StoreService {
     @Autowired
     private HttpClientsUtils httpClients;
@@ -115,5 +117,11 @@ public class StoreServiceImpl implements StoreService {
     public BanmaErpResponseDTO getStoreById(String spuId,
                                             BanmaerpProperties banmaerpProperties) {
         return null;
+    }
+
+    @Override
+    public List<StoreDTO> saveStoreList(List<StoreDTO> storeDTOList) {
+        return storeRepository.saveAllAndFlush(storeDTOList);
+        //return storeRepository.saveAll(storeDTOList);
     }
 }

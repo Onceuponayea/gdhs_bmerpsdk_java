@@ -58,7 +58,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public BanmaErpResponseDTO insertProduct(ProductDTO productDto,
                                              BanmaerpProperties banmaerpProperties) {
-        productRepository.save(productDto);
+        //productRepository.save(productDto);
         return null;
     }
 

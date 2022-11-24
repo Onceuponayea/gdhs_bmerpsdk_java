@@ -51,4 +51,6 @@ public interface StoreService {
      * @return
      */
     BanmaErpResponseDTO getStoreById(String spuId,BanmaerpProperties banmaerpProperties);
+
+    List<StoreDTO> saveStoreList(List<StoreDTO> storeDTOList);
 }

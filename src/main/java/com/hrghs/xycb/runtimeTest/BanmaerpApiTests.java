@@ -101,7 +101,9 @@ public class BanmaerpApiTests  {
        Arrays.stream(objects).map(o -> (StoreDTO)o)
                .collect(Collectors.toList());
        System.out.println("saving result........");
-       storeRepository.saveAll(storeDTOList);
-
+       //storeRepository.saveAllAndFlush(storeDTOList);
+       //storeRepository.saveAll(storeDTOList);
+       storeService.saveStoreList(storeDTOList);
+       storeRepository.findAll().forEach(storeDTO -> System.out.println("findAll- ID:\t "+ storeDTO.getID()));
    }
 }
