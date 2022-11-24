@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
 import com.hrghs.xycb.config.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.StoreDTO;
-import com.hrghs.xycb.domains.banmaerpDTO.TokenResponseDTO;
+import com.hrghs.xycb.repositories.StoreRepository;
 import com.hrghs.xycb.utils.BanmaTokenUtils;
 import com.hrghs.xycb.utils.HttpClientsUtils;
 import com.hrghs.xycb.domains.BanmaerpSigningVO;
@@ -26,9 +26,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static com.hrghs.xycb.config.BanmaerpProperties.BANMA_HEADER_SIGN;
@@ -43,6 +41,9 @@ public class StoreServiceImpl implements StoreService {
     private BanmaTokenUtils banmaTokenUtils;
     @Autowired
     private EncryptionUtils encryptionUtils;
+    @Autowired
+    private StoreRepository storeRepository;
+
     /**
      * 查询店铺列表
      * @param ids   店铺ID，用逗号分隔
@@ -101,6 +102,7 @@ public class StoreServiceImpl implements StoreService {
         )
         .map(o -> (StoreDTO)o)
         .collect(Collectors.toList());
+        storeRepository.saveAll(storeDTOList);
         return storeDTOList;
     }
 

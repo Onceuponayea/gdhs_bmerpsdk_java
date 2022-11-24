@@ -9,14 +9,17 @@ import org.joda.time.format.DateTimeFormatter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 
 @SpringBootTest
-@ActiveProfiles(value = {"dev"})
-//@ComponentScan(basePackages = "com.hrghs.xycb")
+@ActiveProfiles(value = {"h2db"})
+@ComponentScan(basePackages = "com.hrghs.xycb")
+@ContextConfiguration(locations={"classpath:application-h2db.yml"})
 public class BanerpApiTests {
     @Autowired
     StoreService storeService;

@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: dev
+    active: h2db
   redis:
     host: rds.xmsuodi.com
     port: 46379
@@ -40,7 +40,6 @@ spring:
         keep-alive: true
         keep-alive-between-time-millis: 60000
         connectionProperties: druid.stat.mergeSql\=true;druid.stat.slowSqlMillis\=5000
-
       hikari:
         maximum-pool-size: 20
         max-lifetime: 21600000
@@ -49,6 +48,14 @@ spring:
         connection-timeout: 10000
         keepaliveTime: 60000
         jdbc-url: ${spring.datasource.banmaerp.url}
+  jpa:
+    hibernate:
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+      ddl-auto: update
+    generate-ddl: true
+
 
 
 jdbc:

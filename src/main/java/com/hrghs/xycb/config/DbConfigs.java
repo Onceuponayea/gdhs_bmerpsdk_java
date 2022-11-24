@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.jta.atomikos.AtomikosDataSourceBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,6 +34,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.jta.JtaTransactionManager;
 import javax.annotation.PreDestroy;
 import javax.persistence.EntityManagerFactory;
@@ -49,12 +51,15 @@ import java.util.concurrent.ScheduledExecutorService;
 import static com.hrghs.xycb.domains.Constants.*;
 
 @Configuration
+@EntityScan(basePackages = {"com.hrghs.xycb.domains"})
+@EnableTransactionManagement
 public class DbConfigs {
     public static Server h2DBServer;
     @Autowired
     private Environment env;
     @Autowired
     private ScheduledExecutorService scheduledExecutorService;
+//初始化
     @Bean
     @ConditionalOnMissingBean
     public ReactiveRedisConnectionFactory redisConnectionFactory(@Value("${spring.redis.host:localhost}") String host,
@@ -91,7 +96,6 @@ public class DbConfigs {
     public LockProvider lockProvider(ReactiveRedisConnectionFactory connectionFactory){
         return new ReactiveRedisLockProvider.Builder(connectionFactory).build();
     }
-
     @Primary
     @Bean(name = "dataSourceXABanmaerp")
     public DataSource dataSourceXABanmaerp(BanmaerpDruidXADataSource banmaerpDruidXADataSource) throws SQLException {
@@ -114,7 +118,6 @@ public class DbConfigs {
         }
         return  new HikariDataSource(hikariConfig);
     }
-
     /**
      * init size equals druid configurations
      * @return
@@ -142,6 +145,17 @@ public class DbConfigs {
          */
         dataSourceBean.setReapTimeout(maxLifeTime-maxIdleTime);
         dataSourceBean.setTestQuery(DB_JDBC_TEST_QUERY);
+        boolean useH2DB = Arrays.stream(env.getActiveProfiles())
+                .anyMatch(s -> s.toLowerCase(Locale.ROOT).equalsIgnoreCase(ENV_PROFILES_H2DB));
+        String driverClass="",jdbcurl="";
+        if (useH2DB){
+            driverClass = useH2DB ?DB_JDBC_DRIVER_H2DB:DB_JDBC_DRIVER_MYSQL;
+            jdbcurl = useH2DB ?DB_JDBC_URL_HIKARI_H2DB:env.getProperty(DB_HIKARI_JDBC_URL);
+            banmaerpDruidXADataSource.setUsername("");
+            banmaerpDruidXADataSource.setPassword("");
+        }
+        banmaerpDruidXADataSource.setUrl(jdbcurl);
+        banmaerpDruidXADataSource.setDriverClassName(driverClass);
         dataSourceBean.setXaDataSource(banmaerpDruidXADataSource);
         return dataSourceBean;
     }
@@ -181,7 +195,6 @@ public class DbConfigs {
     }
 
     /**
-     * @@see http://www.javacui.com/opensource/583.html
      * @param timeoutMs
      * @return
      * @throws SystemException

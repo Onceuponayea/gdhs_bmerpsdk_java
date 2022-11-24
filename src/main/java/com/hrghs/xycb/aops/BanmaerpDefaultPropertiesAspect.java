@@ -14,7 +14,7 @@ public class BanmaerpDefaultPropertiesAspect {
     @Autowired
     ApplicationContext applicationContext;
     @Around("execution(* com.hrghs.xycb..*.*(..)) && @annotation(com.hrghs.xycb.annotations.CheckBanmaerpProperties)")
-    public void checkBanmaerpProperties(ProceedingJoinPoint joinPoint) throws Throwable {
+    public Object checkBanmaerpProperties(ProceedingJoinPoint joinPoint) throws Throwable {
         MethodSignature methodSignature= (MethodSignature) joinPoint.getSignature();
         Object[] args = joinPoint.getArgs();
         Object[] newArgs = new Object[args.length];
@@ -37,7 +37,7 @@ public class BanmaerpDefaultPropertiesAspect {
                 }
             }
         }
-        joinPoint.proceed(newArgs);
+        return joinPoint.proceed(newArgs);
     }
 
 }

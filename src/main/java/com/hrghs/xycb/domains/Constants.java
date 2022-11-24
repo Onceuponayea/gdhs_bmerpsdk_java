@@ -16,7 +16,7 @@ public class Constants {
     public static final String DB_JDBC_PROPERTY_PREPARESTATEMENT_CACHESIZE = "jdbc.property.prepStmtCacheSize";
     public static final String DB_JDBC_PROPERTY_PREPARESTATEMENT_CACHESQLLIMIT = "jdbc.property.prepStmtCacheSqlLimit";
     public static final String DB_JDBC_DRIVER_H2DB = "org.h2.Driver";
-    public static final String DB_JDBC_URL_HIKARI_H2DB = "jdbc:h2:mem:testdb;MODE=MYSQL;DB_CLOSE_ON_EXIT=TRUE";
+    public static final String DB_JDBC_URL_HIKARI_H2DB = "jdbc:h2:mem:testdb;MODE=MYSQL;DB_CLOSE_ON_EXIT=TRUE;INIT=runscript from 'classpath:init-script.sql'";
     public static final String DB_JDBC_DRIVER_MYSQL = "com.mysql.cj.jdbc.Driver";
 
     public static final String DB_BANMAERP_USERNAME = "spring.datasource.banmaerp.username";
@@ -25,8 +25,9 @@ public class Constants {
 
     public static final String DB_JDBC_TEST_QUERY = "SELECT 1";
     public static final String ENV_PROFILES_H2DB = "h2db";
+    public static final String ENV_PROFILES_DEV = "dev";
     public static final String ENTITY_PACKGES_XYHZSTORE = "com.hrghs.xycb.domains.xyhzstore";
-    public static final String ENTITY_PACKGES_BANMAERP = "com.hrghs.xycb.domains.banmaerpDTO";
+    public static final String ENTITY_PACKGES_BANMAERP = "com.hrghs.xycb.domains";
     public static final String JPA_PROS_HIBERNATE_TRANSACTIONMANAGER_LOOKUP_CLASS = "hibernate.transaction.manager_lookup_class";// @deprecated since hibernate 3
     public static final String JPA_PROS_HIBERNATE_TRANSACTIONMANAGER_COORDINATE_CLASS = "hibernate.transaction.coordinator_class";
     public static final String JPA_PROS_HIBERNATE_DIALECT = "hibernate.dialect";
