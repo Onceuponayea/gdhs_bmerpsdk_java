@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: h2db
+    active: dev
   redis:
     host: rds.xmsuodi.com
     port: 46379
@@ -19,7 +19,7 @@ spring:
     banmaerp:
       username: root
       password: lilishop
-      url: jdbc:mysql://rds.xmsuodi.com:49906/lilishop?characterEncoding=utf8&autoReconnect=true&useUnicode=true&tcpKeepAlive=true&useSSL=false&allowPublicKeyRetrieval=true&useLegacyDateTimeCode=false&serverTimezone=Asia/Shanghai&
+      url: jdbc:mysql://rds.xmsuodi.com:49906/banmaerp_ljl?characterEncoding=utf8&autoReconnect=true&useUnicode=true&tcpKeepAlive=true&useSSL=false&allowPublicKeyRetrieval=true&useLegacyDateTimeCode=false&serverTimezone=Asia/Shanghai&
       druid:
         username: ${spring.datasource.banmaerp.username}
         password: ${spring.datasource.banmaerp.password}

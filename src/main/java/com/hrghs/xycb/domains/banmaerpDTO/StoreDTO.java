@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Type;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
@@ -39,14 +40,14 @@ public class StoreDTO {
     @Column(name = "Platform",columnDefinition = "varchar(100) COMMENT 'Store_platform' ")
     @JsonProperty(value = "Platform")
     private String platform;
-
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    @JsonProperty(value = "CreateTime")
-    @Column(name = "CreateTime",columnDefinition = "DATETIME COMMENT 'Store_CreateTime' ")
-    private DateTime createTime;
-
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    @JsonProperty(value = "UpdateTime")
-    @Column(name = "UpdateTime",columnDefinition = "DATETIME COMMENT 'Store_UpdateTime' ")
-    private DateTime updateTime;
+//
+//    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
+//    @JsonProperty(value = "CreateTime")
+//    @Column(name = "CreateTime",columnDefinition = "DATETIME COMMENT 'Store_CreateTime' ")
+//    private DateTime createTime;
+//
+//    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
+//    @JsonProperty(value = "UpdateTime")
+//    @Column(name = "UpdateTime",columnDefinition = "DATETIME COMMENT 'Store_UpdateTime' ")
+//    private DateTime updateTime;
 }
