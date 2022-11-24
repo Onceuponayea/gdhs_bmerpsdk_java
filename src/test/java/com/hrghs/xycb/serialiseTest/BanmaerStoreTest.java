@@ -13,7 +13,9 @@ import org.joda.time.format.ISODateTimeFormat;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_STORES;
 
@@ -35,23 +37,23 @@ public class BanmaerStoreTest {
                 "                \"Name\": \"test1\",\n" +
                 "                \"Platform\": \"Wish\",\n" +
                 "                \"CreateTime\": \"2019-01-10 16:57:58\",\n" +
-                "                \"UpdateTime\": \"2020-06-13T09:59:25\"\n" +
+                "                \"UpdateTime\": \"2020-06-13 09:59:25\"\n" +
                 "            },\n" +
                 "            {\n" +
                 "                \"ID\": \"400025423071000141\",\n" +
                 "                \"Name\": \"test2\",\n" +
                 "                \"Platform\": \"Wish\",\n" +
                 "                \"CreateTime\": \"2019-03-18 14:16:04\",\n" +
-                "                \"UpdateTime\": \"2020-08-19T16:58:07\"\n" +
+                "                \"UpdateTime\": \"2020-08-19 16:58:07\"\n" +
                 "            }\n" +
-                "        ]\n" +
-//                "        \"Page\": {\n" +
-//                "            \"PageNumber\": 1,\n" +
-//                "            \"PageCount\": 1,\n" +
-//                "            \"PageSize\": 20,\n" +
-//                "            \"TotalCount\": 6,\n" +
-//                "            \"HasMore\": false\n" +
-//                "        }\n" +
+                "        ],\n" +
+                "        \"Page\": {\n" +
+                "            \"PageNumber\": 1,\n" +
+                "            \"PageCount\": 1,\n" +
+                "            \"PageSize\": 20,\n" +
+                "            \"TotalCount\": 6,\n" +
+                "            \"HasMore\": false\n" +
+                "        }\n" +
                 "    },\n" +
                 "    \"Success\": true,\n" +
                 "    \"Message\": \"成功\"\n" +
@@ -76,7 +78,7 @@ public class BanmaerStoreTest {
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JodaModule());
 
         BanmaErpResponseDTO<StoreDTO> banmaErpResponseDTO = objectMapper.readValue(getStoreById, new TypeReference<BanmaErpResponseDTO<StoreDTO>>() {});
-       System.out.println(banmaErpResponseDTO.getData().getName());
+       System.out.println(banmaErpResponseDTO.getData().getName()+"\t" + banmaErpResponseDTO.getData().getID()+"\t"+banmaErpResponseDTO.getData().getPlatform());
 
         BanmaErpResponseDTO<JsonNode> storeListRaw =objectMapper.readValue(getStoretList, new TypeReference<BanmaErpResponseDTO<JsonNode>>() {});
         JsonNode storesNode = storeListRaw.getData();
@@ -90,5 +92,9 @@ public class BanmaerStoreTest {
         for (Object o :objects){
             System.out.println(((StoreDTO)o).getName());
         }
+        List<StoreDTO> storeDTOList=
+                Arrays.stream(objects).map(o -> (StoreDTO)o)
+                        .collect(Collectors.toList());
+        System.out.println(storeDTOList.size());
     }
 }

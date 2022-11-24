@@ -1,4 +1,9 @@
 package com.hrghs.xycb.repositories;
 
-public interface CategoryRepository {
+import com.hrghs.xycb.domains.banmaerpDTO.CategoryDTO;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface CategoryRepository extends JpaRepository<CategoryDTO,String> {
 }

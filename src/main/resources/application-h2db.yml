@@ -1,20 +1,17 @@
 spring:
-  profiles:
-    active: dev
   redis:
     host: rds.xmsuodi.com
     port: 46379
-    password:
-    database: 0
-#    cluster:
-#      nodes:
+    password: lilishop
+    database: 1
+    #    cluster:
+    #      nodes:
     lettuce:
       pool:
         max-wait: 1000
         max-idle: 20
         min-idle: 10
         max-active: 2000
-
   datasource:
     banmaerp:
       username: root
@@ -24,8 +21,8 @@ spring:
         username: ${spring.datasource.banmaerp.username}
         password: ${spring.datasource.banmaerp.password}
         url: ${spring.datasource.banmaerp.url}
-        initial-size: 100
-        min-idle: 100
+        initial-size: 10
+        min-idle: 10
         maxActive: 600
         maxWait: 60000
         timeBetweenEvictionRunsMillis: 30000
@@ -42,30 +39,26 @@ spring:
         connectionProperties: druid.stat.mergeSql\=true;druid.stat.slowSqlMillis\=5000
 
       hikari:
-        maximum-pool-size: 200
+        maximum-pool-size: 20
         max-lifetime: 21600000
-        minimum-idle: 50
+        minimum-idle: 5
         idle-timeout: 600000
         connection-timeout: 10000
         keepaliveTime: 60000
         jdbc-url: ${spring.datasource.banmaerp.url}
+  jpa:
+    hibernate:
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+      ddl-auto: create
+    generate-ddl: true
+    show-sql: true
 
-
-jdbc:
-  property:
-    cachePrepStmts: true
-    prepStmtCacheSize: 200
-    prepStmtCacheSqlLimit: 6535
-
-
-#1、先配置好mysql, atomikos 代理ali druid,先用H2DB测试,不需要开启,项目一启动就把实体类导入到h2db
-#2、配置好redisson + lettuce
-h2server:
-  enabled: true
-  port: 7777
-
-erp:
-  banmaerp:
-    enabled: true
-
-
+actable:
+  table:
+    auto: update
+  model:
+    pack: com.hrghs.xycb
+  database:
+    type: mysql
