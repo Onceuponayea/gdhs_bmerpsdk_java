@@ -139,7 +139,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public BanmaErpResponseDTO<ProductDTO> updateProductById(ProductDTO productDto,
                                                              BanmaerpProperties banmaerpProperties) {
-        String apiUrl = String.format(BanmaerpURL.banmaerp_product_PUT,Long.parseLong(productDto.getSPU().getSPUID()));
+        String apiUrl = String.format(BanmaerpURL.banmaerp_product_PUT,productDto.getSPU().getSPUID());
         return saveOrUpdate(apiUrl,productDto,banmaerpProperties);
     }
     private BanmaErpResponseDTO<ProductDTO> saveOrUpdate(String apiUrl,ProductDTO productDto,

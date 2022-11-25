@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -27,25 +28,33 @@ public class CategoryDTO {
 
     @Id
     @JsonProperty(value = "ID")
+    @Column(name = "id")
     private String ID;
     @JsonProperty(value = "ParentID")
+    @Column(name = "parent_id")
     private String parentID;
     @JsonProperty(value = "Name")
+    @Column
     private String name;
     @JsonProperty(value = "Description")
+    @Column
     private String description;
     @JsonProperty(value = "Code")
+    @Column
     private String code;
-    @JsonProperty(value = "Sort")
     /**
      * @@apiNote DESC 倒序; ASC 正序;
      */
+    @JsonProperty(value = "Sort")
+    @Column
     private int sort;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonProperty(value = "CreateTime")
+    @Column(name = "create_time")
     private String createTime;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonProperty(value = "UpdateTime")
+    @Column(name = "update_time")
     private String updateTime;
 
 }

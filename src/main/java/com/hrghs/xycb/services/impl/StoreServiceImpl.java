@@ -92,14 +92,18 @@ public class StoreServiceImpl implements StoreService {
 
     @Override
     @CheckBanmaerpProperties
-    public List<StoreDTO> getStoretList(String ids, String name, BanmaerpPlatformEnums.Platform platform, int pageNumber, int pageSize, DateTime searchTimeStart,
-                                        DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy,
+    public List<StoreDTO> getStoretList(String ids, String name, BanmaerpPlatformEnums.Platform platform, int pageNumber, int pageSize, String searchTimeStart,
+                                        String searchTimeEnd, String searchTimeField, String sortField, String sortBy,
                                         BanmaerpProperties banmaerpProperties) {
         String apiUrl = String.format(BanmaerpURL.banmaerp_storelist_GET,ids,name,platform==null?"":platform.toString(),pageNumber,pageSize,
                 searchTimeStart, searchTimeEnd,searchTimeField,sortField,sortBy);
+        System.out.println("StringFormat:"+apiUrl);
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+        System.out.println("rmEmptyParas:"+apiUrl);
         HttpHeaders httpHeaders = new HttpHeaders();
-        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,apiUrl);
+        System.out.println("getRequest_query:"+banmaerpSigningVO.getRequest_query());
+        System.out.println("X_BANMA_MASTER_SIGN_METHOD:"+banmaerpProperties.getX_BANMA_MASTER_SIGN_METHOD());
         //todo signing
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
         HttpEntity requestBody = new HttpEntity(null,httpHeaders);
@@ -126,7 +130,7 @@ public class StoreServiceImpl implements StoreService {
         String apiUrl = String.format(BanmaerpURL.banmaerp_store_GET,spuId);
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
         HttpHeaders httpHeaders = new HttpHeaders();
-        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,apiUrl);
         //todo signing
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
         HttpEntity requestBody = new HttpEntity(null,httpHeaders);
@@ -149,7 +153,12 @@ public class StoreServiceImpl implements StoreService {
 
     @Override
     public List<StoreDTO> saveStoreList(List<StoreDTO> storeDTOList) {
-        return storeRepository.saveAll(storeDTOList);
+        return storeRepository.saveAllAndFlush(storeDTOList);
+    }
+
+    @Override
+    public StoreDTO saveStore(StoreDTO storeDTO) {
+        return storeRepository.saveAndFlush(storeDTO);
     }
 
 }

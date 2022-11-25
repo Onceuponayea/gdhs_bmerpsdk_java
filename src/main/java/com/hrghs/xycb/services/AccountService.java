@@ -3,6 +3,7 @@ package com.hrghs.xycb.services;
 import com.hrghs.xycb.config.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.AccountDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.DataAccessDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.StoreDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import org.joda.time.DateTime;
 
@@ -87,4 +88,7 @@ public interface AccountService {
      */
     DataAccessDTO getDataAccess(int id, BanmaerpProperties banmaerpProperties);
 
+    List<AccountDTO> saveAccountList(List<AccountDTO> accountDTOList);
+
+    AccountDTO saveAccount(AccountDTO accountDTO);
 }

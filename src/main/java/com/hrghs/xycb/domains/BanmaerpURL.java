@@ -35,6 +35,8 @@ public class BanmaerpURL {
     public final static String banmaerp_accountPrivileges_GET = "/v1/Account/%ld/DataAccess/Store";
     public final static String banmaerp_storagelist_GET = "/v1/storage?PageNumber=%d&PageSize=%d&SearchTimeStart=%s&SearchTimeEnd=%s&SearchTimeField=%s";
     public final static String banmaerp_storage_GET = "/v1/storage/%s";
+    public final static String banmaerp_storage_stream_POST = "/v1/storage/stream?name=%s";
+    public final static String banmaerp_storage_base64_POST = "/v1/storage/base64?name=%s";
 //    private final static String banmaerp_gateway = "";
 //    private final static String banmaerp_gateway = "";
 

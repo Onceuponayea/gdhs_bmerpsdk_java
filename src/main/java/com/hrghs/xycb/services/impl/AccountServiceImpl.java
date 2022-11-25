@@ -47,8 +47,8 @@ public class AccountServiceImpl implements AccountService {
     private BanmaTokenUtils banmaTokenUtils;
     @Autowired
     private EncryptionUtils encryptionUtils;
-//    @Autowired
-//    private AccountRepository accountRepository;
+    @Autowired
+    private AccountRepository accountRepository;
 
     /**
      * 查询用户列表
@@ -100,6 +100,7 @@ public class AccountServiceImpl implements AccountService {
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
         HttpHeaders httpHeaders = new HttpHeaders();
         BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+
         //todo signing
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
         HttpEntity requestBody = new HttpEntity(null,httpHeaders);
@@ -134,19 +135,16 @@ public class AccountServiceImpl implements AccountService {
     @Override
     @CheckBanmaerpProperties
     public BanmaErpResponseDTO<Boolean> addAccount(String phone, String email, String realName, String department,boolean useVirtual ,BanmaerpProperties banmaerpProperties) {
-        AccountDTO accountDTO = new AccountDTO();
-        accountDTO.setPhone(phone);
-        accountDTO.setEmail(email);
-        accountDTO.setRealName(realName);
-        accountDTO.setDepartment(department);
-        String accountJson = JSONUtil.toJsonStr(accountDTO);
+        AccountDTO accountDTO = new AccountDTO(
+                0,realName,email,phone,department,null,null
+        );
         String apiUrl = String.format(BanmaerpURL.banmaerp_accountAdd_POST);
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
         HttpHeaders httpHeaders = new HttpHeaders();
         BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
         //todo signing
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
-        HttpEntity requestBody = new HttpEntity(accountJson,httpHeaders);
+        HttpEntity requestBody = new HttpEntity(accountDTO,httpHeaders);
         BanmaErpResponseDTO<JsonNode> body = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
                 .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.POST, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {
                 })
@@ -227,6 +225,16 @@ public class AccountServiceImpl implements AccountService {
         }
 
         return dataAccessDTO;
+    }
+
+    @Override
+    public List<AccountDTO> saveAccountList(List<AccountDTO> accountDTOList) {
+        return accountRepository.saveAllAndFlush(accountDTOList);
+    }
+
+    @Override
+    public AccountDTO saveAccount(AccountDTO accountDTO) {
+        return accountRepository.saveAndFlush(accountDTO);
     }
 
 

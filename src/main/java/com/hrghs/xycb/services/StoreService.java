@@ -40,8 +40,8 @@ public interface StoreService {
             BanmaerpProperties banmaerpProperties
     );
     List<StoreDTO> getStoretList(@Nullable String ids, @Nullable String name,
-                                                      @Nullable BanmaerpPlatformEnums.Platform platform, int pageNumber, @Nullable int pageSize, @Nullable DateTime searchTimeStart,
-                                                      @Nullable DateTime searchTimeEnd, @Nullable String searchTimeField, @Nullable String sortField, @Nullable String sortBy,
+                                                      @Nullable BanmaerpPlatformEnums.Platform platform, int pageNumber, @Nullable int pageSize, @Nullable String searchTimeStart,
+                                                      @Nullable String searchTimeEnd, @Nullable String searchTimeField, @Nullable String sortField, @Nullable String sortBy,
                                                       BanmaerpProperties banmaerpProperties);
 
     /**
@@ -53,4 +53,6 @@ public interface StoreService {
     StoreDTO getStoreById(String spuId,BanmaerpProperties banmaerpProperties);
 
     List<StoreDTO> saveStoreList(List<StoreDTO> storeDTOList);
+
+    StoreDTO saveStore(StoreDTO storeDTO);
 }

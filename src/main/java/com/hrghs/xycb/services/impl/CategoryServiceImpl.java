@@ -11,6 +11,7 @@ import com.hrghs.xycb.domains.BanmaerpSigningVO;
 import com.hrghs.xycb.domains.BanmaerpURL;
 import com.hrghs.xycb.domains.banmaerpDTO.AccountDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.CategoryDTO;
+import com.hrghs.xycb.repositories.CategoryRepository;
 import com.hrghs.xycb.utils.BanmaTokenUtils;
 import com.hrghs.xycb.utils.EncryptionUtils;
 import com.hrghs.xycb.utils.HttpClientsUtils;
@@ -39,6 +40,8 @@ public class CategoryServiceImpl implements CategoryService {
     private BanmaTokenUtils banmaTokenUtils;
     @Autowired
     private EncryptionUtils encryptionUtils;
+    @Autowired
+    CategoryRepository categoryRepository;
 
     /**
      * 查询类目列表
@@ -108,5 +111,15 @@ public class CategoryServiceImpl implements CategoryService {
         }
 
         return categoryDTO;
+    }
+
+    @Override
+    public List<CategoryDTO> saveCategoryList(List<CategoryDTO> categoryDTOList) {
+        return categoryRepository.saveAllAndFlush(categoryDTOList);
+    }
+
+    @Override
+    public CategoryDTO saveCategory(CategoryDTO categoryDTO) {
+        return categoryRepository.saveAndFlush(categoryDTO);
     }
 }

@@ -27,7 +27,7 @@ public class AccountDTO {
     @Id
     @Column(name = "id")
     @JsonProperty(value = "ID")
-    private Long ID ;
+    private Integer ID ;
 
     @Column(name = "real_name")
     @JsonProperty(value = "RealName")
@@ -42,12 +42,12 @@ public class AccountDTO {
     @JsonProperty(value = "Department")
     private String department;
 
-    @Column(name = "create_time")
+    @Column(name = "createTime")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonProperty(value = "CreateTime")
     private String createTime;
 
-    @Column(name = "update_time")
+    @Column(name = "updateTime")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonProperty(value = "UpdateTime")
     private String updateTime;

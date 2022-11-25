@@ -39,12 +39,12 @@ public class StoreDTO {
     @JsonProperty(value = "Platform")
     private String platform;
 
-    @Column(name = "create_time")
+    @Column(name = "createTime")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonProperty(value = "CreateTime")
     private String createTime;
 
-    @Column(name = "update_time")
+    @Column(name = "updateTime")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonProperty(value = "UpdateTime")
     private String updateTime;
