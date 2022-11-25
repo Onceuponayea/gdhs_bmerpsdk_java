@@ -8,10 +8,18 @@ import lombok.Data;
 import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
 @Component
 @Data
-
+@Entity
+@Table(name = "bmerp_order_master")
 public class OrderMasterDTO {
+
+    @Id
     @JsonProperty(value = "ID")
     private String ID;
     @JsonProperty(value = "StoreID")
@@ -24,7 +32,7 @@ public class OrderMasterDTO {
     private String displayOrderID;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonProperty(value = "PayTime")
-    private DateTime payTime;
+    private String payTime;
     @JsonProperty(value = "PayChannel")
     private String payChannel;
 //    @JsonProperty("PayType")
@@ -77,30 +85,30 @@ public class OrderMasterDTO {
     private String userIndentity;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonProperty(value = "OrderTime")
-    private DateTime orderTime;
+    private String orderTime;
     @JsonProperty(value = "Tags")
     private String[] tags;
     @JsonProperty(value = "OriginalOrderStatus")
     private String originalOrderStatus;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonProperty(value = "OriginalOrderTime")
-    private DateTime originalOrderTime;
+    private String originalOrderTime;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonProperty(value = "OriginalPayTime")
-    private DateTime originalPayTime;
+    private String originalPayTime;
     @JsonProperty(value = "HaveMessage")
     private boolean haveMessage;
     @JsonProperty(value = "HaveRemark")
     private boolean haveRemark;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonProperty(value = "LatestDeliveryTime")
-    private DateTime latestDeliveryTime;
+    private String latestDeliveryTime;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonProperty(value = "CreateTime")
-    private DateTime createTime;
+    private String createTime;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonProperty(value = "UpdateTime")
-    private DateTime updateTime;
+    private String updateTime;
     @JsonProperty(value = "IsCOD")
     private boolean isCOD;
     @JsonProperty(value = "Flags")
@@ -119,10 +127,10 @@ public class OrderMasterDTO {
     private String message;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonProperty(value = "ShippingTime")
-    private DateTime shippingTime;
+    private String shippingTime;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonProperty(value = "OriginalShippingTime")
-    private DateTime originalShippingTime;
+    private String originalShippingTime;
     @JsonProperty(value = "OriginalTags")
     private String[] originalTags;
     @JsonProperty(value = "BuyerPhone")
@@ -132,15 +140,20 @@ public class OrderMasterDTO {
      */
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonProperty(value = "RequestedDeliveryDate")
-    private DateTime requestedDeliveryDate;
+    private String requestedDeliveryDate;
     /**
      * 要求交货时间/预计交货时间/期望交货时间时间段，如 10:00-16:00,上午/午前=06:00-12:00,下午/午后=12:00-18:00,夜间=18:00-21:00
      */
     @JsonProperty(value = "RequestedDeliveryTime")
-    private DateTime requestedDeliveryTime;
+    private String requestedDeliveryTime;
+    @JsonProperty(value = "ProfitData")
+    private String profitData;
     @JsonProperty(value = "RiskLevel")
     private String riskLevel;
     @JsonProperty(value = "UsedPoint")
     private Integer usedPoint;
+
+
+
 
 }

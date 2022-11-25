@@ -11,6 +11,10 @@ import lombok.NoArgsConstructor;
 import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
 @Component
 @Data
 
@@ -18,7 +22,11 @@ import org.springframework.stereotype.Component;
 @NoArgsConstructor
 @JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT,use = JsonTypeInfo.Id.NAME)
 @JsonTypeName("Storage")
+@Entity
+@Table(name = "bmerp_storage")
 public class StorageDTO {
+
+    @Id
     @JsonProperty(value = "ID")
     private String ID;
     @JsonProperty(value = "Name")
@@ -33,8 +41,8 @@ public class StorageDTO {
     private int size;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonProperty(value = "CreateTime")
-    private DateTime createTime;
+    private String createTime;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonProperty(value = "UpdateTime")
-    private DateTime updateTime;
+    private String updateTime;
 }

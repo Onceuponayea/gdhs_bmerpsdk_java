@@ -5,11 +5,16 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
 import org.springframework.stereotype.Component;
+import java.util.List;
+import javax.persistence.*;
 
 @Component
 @Data
-
+@Entity
+@Table(name = "bmerp_order_details")
 public class OrderDetailsDTO {
+
+    @Id
     @JsonProperty(value = "ID")
     private String ID;
     @JsonProperty(value = "PackageID")
@@ -64,8 +69,9 @@ public class OrderDetailsDTO {
     private String originalSpecification;
     @JsonProperty(value = "SKUImage")
     private String SKUImage;
+    @OneToMany(mappedBy = "orderDetailsDTO",cascade= CascadeType.ALL,fetch=FetchType.LAZY)
     @JsonProperty(value = "InventoryData")
-    private OrderDetailsInventoryDataDTO[] inventoryData;
+    private List<OrderDetailsInventoryDataDTO> inventoryData;
     @JsonProperty(value = "Sort")
     private int sort;
     @JsonProperty(value = "Type")

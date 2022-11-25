@@ -2,8 +2,12 @@ package com.hrghs.xycb.services;
 
 import com.hrghs.xycb.config.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.ProductDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.ProductSkusDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.ProductSuppliersInfoDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.ProductTagsDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import org.joda.time.DateTime;
+import java.util.List;
 
 public interface ProductService {
 
@@ -27,9 +31,9 @@ public interface ProductService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO getProductList(
+    List<ProductDTO> getProductList(
             String spuIds,
-            long source,
+            String source,
             String spu,
             String categoryId,
             String title,
@@ -52,7 +56,7 @@ public interface ProductService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO getProductById(String spuId,
+    ProductDTO getProductById(String spuId,
                                        BanmaerpProperties banmaerpProperties);
 
     /**
@@ -62,7 +66,7 @@ public interface ProductService {
      * 必填： Spu(描述信息)，Skus（sku信息）,Options（选项）,Images（图片）
      * @return
      */
-    BanmaErpResponseDTO insertProduct(ProductDTO productDto,
+    ProductDTO addProduct(ProductDTO productDto,
                                       BanmaerpProperties banmaerpProperties);
 
     /**
@@ -72,7 +76,7 @@ public interface ProductService {
      * 必填： Spu(描述信息)，Skus（sku信息）,Options（选项）,Images（图片）
      * @return
      */
-    BanmaErpResponseDTO updateProductById(ProductDTO productDto,
+    ProductDTO updateProductById(ProductDTO productDto,
                                           BanmaerpProperties banmaerpProperties);
 
     /**
@@ -92,10 +96,10 @@ public interface ProductService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO getProductSkuList(
+    List<ProductSkusDTO> getProductSkuList(
             String skuIds,
             String code,
-            long spuId,
+            String spuId,
             String costPriceStart,
             String costPriceEnd,
             int pageNumber,
@@ -114,7 +118,7 @@ public interface ProductService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO getProductSkuById(String skuid,
+    ProductSkusDTO getProductSkuById(String skuid,
                                           BanmaerpProperties banmaerpProperties);
 
     /**
@@ -130,7 +134,7 @@ public interface ProductService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO getProductTagsList(
+    List<ProductTagsDTO> getProductTagsList(
             String name,
             int pageNumber,
             int pageSize,
@@ -155,7 +159,7 @@ public interface ProductService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO getProductSuppliersList(
+    List<ProductSuppliersInfoDTO> getProductSuppliersList(
             String name,
             int pageNumber,
             int pageSize,

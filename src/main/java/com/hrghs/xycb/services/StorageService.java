@@ -1,8 +1,10 @@
 package com.hrghs.xycb.services;
 
 import com.hrghs.xycb.config.BanmaerpProperties;
+import com.hrghs.xycb.domains.banmaerpDTO.StorageDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import org.joda.time.DateTime;
+import java.util.List;
 
 public interface StorageService {
 
@@ -22,7 +24,7 @@ public interface StorageService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO getStoragetList(
+    List<StorageDTO> getStoragetList(
             String ids,
             String name,
             String fileType,
@@ -43,7 +45,7 @@ public interface StorageService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO getStorageById(String id,
+    StorageDTO getStorageById(String id,
                                        BanmaerpProperties banmaerpProperties);
 
     /**

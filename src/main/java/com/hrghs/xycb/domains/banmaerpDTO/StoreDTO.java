@@ -10,6 +10,9 @@ import lombok.NoArgsConstructor;
 import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
 
+import javax.persistence.Column;
+import javax.persistence.Id;
+
 @Component
 @Data
 
@@ -19,15 +22,21 @@ import org.springframework.stereotype.Component;
 //@JsonTypeInfo(include = JsonTypeInfo.As.EXISTING_PROPERTY, use = JsonTypeInfo.Id.NAME, visible = true, property = "Stores")
 @JsonTypeName("Store")
 public class StoreDTO {
+    @Id
+    @Column(name = "id")
     @JsonProperty(value = "ID")
-    private String id;
+    private String ID;
+    @Column(name = "name")
     @JsonProperty(value = "Name")
     private String name;
+    @Column(name = "platform")
     @JsonProperty(value = "Platform")
     private String platform;
+    @Column(name = "create_time")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonProperty(value = "CreateTime")
     private DateTime createTime;
+    @Column(name = "update_time")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonProperty(value = "UpdateTime")
     private DateTime updateTime;

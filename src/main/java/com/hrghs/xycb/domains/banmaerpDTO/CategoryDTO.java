@@ -11,6 +11,8 @@ import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Component
 @Data
@@ -19,7 +21,11 @@ import javax.persistence.Entity;
 @NoArgsConstructor
 @JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT,use = JsonTypeInfo.Id.NAME)
 @JsonTypeName("Category")
+@Entity
+@Table(name = "bmerp_category")
 public class CategoryDTO {
+
+    @Id
     @JsonProperty(value = "ID")
     private String ID;
     @JsonProperty(value = "ParentID")
@@ -37,9 +43,9 @@ public class CategoryDTO {
     private int sort;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonProperty(value = "CreateTime")
-    private DateTime createTime;
+    private String createTime;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonProperty(value = "UpdateTime")
-    private DateTime updateTime;
+    private String updateTime;
 
 }

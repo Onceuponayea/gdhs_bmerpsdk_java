@@ -1,13 +1,44 @@
 package com.hrghs.xycb.services.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
 import com.hrghs.xycb.config.BanmaerpProperties;
+import com.hrghs.xycb.domains.BanmaerpSigningVO;
+import com.hrghs.xycb.domains.BanmaerpURL;
+import com.hrghs.xycb.domains.banmaerpDTO.StorageDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.StoreDTO;
+import com.hrghs.xycb.utils.BanmaTokenUtils;
+import com.hrghs.xycb.utils.EncryptionUtils;
 import com.hrghs.xycb.utils.HttpClientsUtils;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.services.StorageService;
 import org.joda.time.DateTime;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_STORAGES;
+import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_STORES;
+
+@Service
 public class StorageServiceImpl implements StorageService {
+    @Autowired
     private HttpClientsUtils httpClients;
+    @Autowired
+    private BanmaTokenUtils banmaTokenUtils;
+    @Autowired
+    private EncryptionUtils encryptionUtils;
     /**
      * 查询文件列表
      * @param ids   存储ID，用逗号分隔
@@ -24,10 +55,26 @@ public class StorageServiceImpl implements StorageService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO getStoragetList(String ids, String name, String fileType, String fileCategoryId, int pageNumber, int pageSize,
-                                               DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField,
-                                               String sortBy,BanmaerpProperties banmaerpProperties) {
-        return null;
+    @CheckBanmaerpProperties
+    public List<StorageDTO> getStoragetList(String ids, String name, String fileType, String fileCategoryId, int pageNumber, int pageSize,
+                                            DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField,
+                                            String sortBy, BanmaerpProperties banmaerpProperties) {
+        String apiUrl = String.format(BanmaerpURL.banmaerp_storagelist_GET,pageNumber,pageSize,
+                searchTimeStart, searchTimeEnd,searchTimeField);
+        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+        //todo signing
+        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
+        HttpEntity requestBody = new HttpEntity(null,httpHeaders);
+        List<StorageDTO> storageDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+                .getBody()
+                .toDataList(BANMAERP_FIELD_STORAGES)
+        )
+                .map(o -> (StorageDTO)o)
+                .collect(Collectors.toList());
+        return storageDTOList;
     }
 
     /**
@@ -36,9 +83,31 @@ public class StorageServiceImpl implements StorageService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO getStorageById(String id,
+    @CheckBanmaerpProperties
+    public StorageDTO getStorageById(String id,
                                               BanmaerpProperties banmaerpProperties) {
-        return null;
+        String apiUrl = String.format(BanmaerpURL.banmaerp_storage_GET,id);
+        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+        //todo signing
+        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
+        HttpEntity requestBody = new HttpEntity(null,httpHeaders);
+        BanmaErpResponseDTO<JsonNode> body = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {
+                })
+                .getBody();
+
+        ObjectMapper objectMapper = new ObjectMapper().registerModule(new JodaModule());
+        StorageDTO storageDTO = null;
+        try {
+            storageDTO = objectMapper.readValue(body.getData().toString(), new TypeReference<StorageDTO>() {
+            });
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        return storageDTO;
     }
 
     /**

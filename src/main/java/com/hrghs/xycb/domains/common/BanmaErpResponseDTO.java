@@ -102,13 +102,16 @@ public class BanmaErpResponseDTO<T> {
                     type = new TypeToken<Collection<ProductTagsDTO>>(){}.getType();
                     break;
                 case BANMAERP_FIELD_SUPPLIERS:
-                    type = new TypeToken<Collection<ProductSuppliersDTO>>(){}.getType();
+                    type = new TypeToken<Collection<ProductSuppliersInfoDTO>>(){}.getType();
                     break;
                 case BANMAERP_FIELD_STORAGES:
                     type = new TypeToken<Collection<StorageDTO>>(){}.getType();
                     break;
                 case BANMAERP_FIELD_PAGE:
                     type = new TypeToken<Collection<PageDTO>>(){}.getType();
+                    break;
+                case BANMAERP_FIELD_ACCOUNTS:
+                    type = new TypeToken<Collection<AccountDTO>>(){}.getType();
                     break;
             }
             datas = gson.fromJson(jsonNodeSrc.toString(),type);

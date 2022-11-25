@@ -7,10 +7,17 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
 import org.springframework.stereotype.Component;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
 @Component
 @Data
-
+@Entity
+@Table(name = "bmerp_product_spu")
 public class ProductSpuDTO {
+
+    @Id
     @JsonProperty(value = "SPUID")
     private String SPUID;
     @JsonProperty(value = "Code")

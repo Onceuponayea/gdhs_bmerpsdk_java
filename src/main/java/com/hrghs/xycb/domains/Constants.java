@@ -47,6 +47,7 @@ public class Constants {
     public static final String BANMAERP_FIELD_SUPPLIERS = "Suppliers";
     public static final String BANMAERP_FIELD_STORAGES = "Storages";
     public static final String BANMAERP_FIELD_PAGE = "Page";
+    public static final String BANMAERP_FIELD_ACCOUNTS = "Accounts";
 
     public static final String DATETIME_FORMAT_DASH_SHORT ="yyyy-MM-dd HH:mm:ss";
     public static final String DATETIME_FORMAT_SLASH_SHORT ="MM/dd/yyyy HH:mm:ss";

@@ -8,10 +8,19 @@ import lombok.Data;
 import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
 @Component
 @Data
-
+@Entity
+@Table(name = "bmerp_order_refunds")
 public class OrderRefundsDTO {
+
+    @Id
+    private int id;
+
     @JsonProperty(value = "DetailID")
     private String detailID;
     @JsonProperty(value = "OrignalRefundID")
@@ -24,5 +33,5 @@ public class OrderRefundsDTO {
     private String refundType;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonProperty(value = "RefundTime")
-    private DateTime refundTime;
+    private String refundTime;
 }

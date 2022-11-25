@@ -7,15 +7,21 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
+import java.util.List;
+import javax.persistence.*;
 
 @Component
 @Data
 
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT,use = JsonTypeInfo.Id.NAME)
-@JsonTypeName("SKU")
+//@JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT,use = JsonTypeInfo.Id.NAME)
+//@JsonTypeName("SKU")
+@Entity
+@Table(name = "bmerp_product_skus")
 public class ProductSkusDTO {
+
+    @Id
     @JsonProperty(value = "SKUID")
     private String SKUID;
     @JsonProperty(value = "Code")
@@ -44,10 +50,14 @@ public class ProductSkusDTO {
     private int sort;
     @JsonProperty(value = "Type")
     private String type;
+
+    @OneToMany(mappedBy = "productSkusDTO",cascade= CascadeType.ALL,fetch=FetchType.LAZY)
     @JsonProperty(value = "CombineData")
-    private ProductSkusCombineDataDTO[] combineData;
+    private List<ProductSkusCombineDataDTO> combineData;
+
+    @OneToMany(mappedBy = "productSkusDTO",cascade= CascadeType.ALL,fetch=FetchType.LAZY)
     @JsonProperty(value = "Options")
-    private ProductSkusOptionsDTO[] options;
+    private List<ProductSkusOptionsDTO> options;
 
 
 

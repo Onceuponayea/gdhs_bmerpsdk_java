@@ -1,7 +1,9 @@
 package com.hrghs.xycb.services;
 
 import com.hrghs.xycb.config.BanmaerpProperties;
+import com.hrghs.xycb.domains.banmaerpDTO.CategoryDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
+import java.util.List;
 import org.joda.time.DateTime;
 
 public interface CategoryService {
@@ -12,21 +14,23 @@ public interface CategoryService {
      * @param name 类目名称
      * @param parentId 	类目父级id
      * @param pageNumber 	页码（必填）
-     * @param SearchTimeStart 页大小
-     * @param SearchTimeEnd 	查询的开始时间
+     * @param searchTimeStart 页大小
+     * @param pageSize           页大小
+     * @param searchTimeEnd 	查询的开始时间
      * @param searchTimeField 	查询的结束时间
      * @param sortField 查询的时间字段名，具体值参见:SearchTimeField
      * @param sortBy 排序字段名，具体值参见:SortField
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return 排序方式，具体值参见:SortBy
      */
-    BanmaErpResponseDTO getCategoryList(
+    List<CategoryDTO> getCategoryList(
             String ids,
             String name,
             String parentId,
             int pageNumber,
-            DateTime SearchTimeStart,
-            DateTime SearchTimeEnd,
+            int pageSize,
+            DateTime searchTimeStart,
+            DateTime searchTimeEnd,
             String searchTimeField,
             String sortField,
             String sortBy,
@@ -39,6 +43,6 @@ public interface CategoryService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO getCategoryById(String id,
-                                        BanmaerpProperties banmaerpProperties);
+    CategoryDTO getCategoryById(String id,
+                                BanmaerpProperties banmaerpProperties);
 }

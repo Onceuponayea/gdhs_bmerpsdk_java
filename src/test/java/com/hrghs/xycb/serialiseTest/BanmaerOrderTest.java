@@ -281,6 +281,6 @@ public class BanmaerOrderTest {
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JodaModule());
         BanmaErpResponseDTO<List<OrderDTO>> banmaErpResponseDTO = objectMapper.readValue(getOrderById, new TypeReference<BanmaErpResponseDTO<List<OrderDTO>>>() {
         });
-        System.out.println(banmaErpResponseDTO.getData().get(0).getMaster().getStoreId());
+        System.out.println(banmaErpResponseDTO.getData().get(0).getMaster().getStoreID());
     }
 }

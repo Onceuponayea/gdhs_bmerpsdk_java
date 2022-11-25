@@ -6,10 +6,19 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
 import org.springframework.stereotype.Component;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
 @Component
 @Data
-
+@Entity
+@Table(name = "bmerp_product_sources")
 public class ProductSourcesDTO {
+
+    @Id
+    private int id;
+
     @JsonProperty(value = "Url")
     private String url;
     @JsonProperty(value = "Remark")

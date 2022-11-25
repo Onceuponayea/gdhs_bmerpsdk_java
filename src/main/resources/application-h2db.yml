@@ -14,9 +14,12 @@ spring:
         max-active: 2000
   datasource:
     banmaerp:
+#      username: root
+#      password: lilishop
+#      url: jdbc:mysql://rds.xmsuodi.com:49906/lilishop?characterEncoding=utf8&autoReconnect=true&useUnicode=true&tcpKeepAlive=true&useSSL=false&allowPublicKeyRetrieval=true&useLegacyDateTimeCode=false&serverTimezone=Asia/Shanghai&
       username: root
-      password: lilishop
-      url: jdbc:mysql://rds.xmsuodi.com:49906/lilishop?characterEncoding=utf8&autoReconnect=true&useUnicode=true&tcpKeepAlive=true&useSSL=false&allowPublicKeyRetrieval=true&useLegacyDateTimeCode=false&serverTimezone=Asia/Shanghai&
+      password: 12345678
+      url: jdbc:mysql://127.0.0.1:3306/banmaerp?characterEncoding=utf8&autoReconnect=true&useUnicode=true&tcpKeepAlive=true&useSSL=false&allowPublicKeyRetrieval=true&useLegacyDateTimeCode=false&serverTimezone=Asia/Shanghai&
       druid:
         username: ${spring.datasource.banmaerp.username}
         password: ${spring.datasource.banmaerp.password}

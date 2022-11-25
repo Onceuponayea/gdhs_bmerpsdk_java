@@ -1,8 +1,11 @@
 package com.hrghs.xycb.services;
 
 import com.hrghs.xycb.config.BanmaerpProperties;
+import com.hrghs.xycb.domains.banmaerpDTO.OrderDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import org.joda.time.DateTime;
+import org.springframework.stereotype.Service;
+import java.util.List;
 
 public interface OrderService {
 
@@ -27,9 +30,9 @@ public interface OrderService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO getOrderList(
+    List<OrderDTO> getOrderList(
             String ids,
-            long storeId,
+            String storeId,
             String platform,
             String status,
             String payStatus,
@@ -53,6 +56,6 @@ public interface OrderService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO getOrderById(String id,
-                                     BanmaerpProperties banmaerpProperties);
+    OrderDTO getOrderById(String id,
+                          BanmaerpProperties banmaerpProperties);
 }

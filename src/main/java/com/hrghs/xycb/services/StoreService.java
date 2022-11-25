@@ -50,5 +50,7 @@ public interface StoreService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO getStoreById(String spuId,BanmaerpProperties banmaerpProperties);
+    StoreDTO getStoreById(String spuId,BanmaerpProperties banmaerpProperties);
+
+    List<StoreDTO> saveStoreList(List<StoreDTO> storeDTOList);
 }

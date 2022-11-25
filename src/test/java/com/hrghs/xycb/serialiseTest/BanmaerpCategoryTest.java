@@ -85,7 +85,7 @@ public class BanmaerpCategoryTest {
 
         //objectMapper.configure(SerializationFeature.WRAP_ROOT_VALUE,true);
         BanmaErpResponseDTO<CategoryDTO> banmaErpResponseDTO = objectMapper.readValue(getCategoryById, new TypeReference<BanmaErpResponseDTO<CategoryDTO>>() {});
-        System.out.println(banmaErpResponseDTO.getData().getId());
+        System.out.println(banmaErpResponseDTO.getData().getID());
         BanmaErpResponseDTO<List<CategoryDTO>> banmaErpResponseDTOs =objectMapper.readValue(getCategoryList,new TypeReference<BanmaErpResponseDTO<List<CategoryDTO>>>() {});
         banmaErpResponseDTOs.getData();
     }

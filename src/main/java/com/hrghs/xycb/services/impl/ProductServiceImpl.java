@@ -1,16 +1,45 @@
 package com.hrghs.xycb.services.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
 import com.hrghs.xycb.config.BanmaerpProperties;
-import com.hrghs.xycb.domains.banmaerpDTO.ProductDTO;
+import com.hrghs.xycb.domains.BanmaerpSigningVO;
+import com.hrghs.xycb.domains.BanmaerpURL;
+import com.hrghs.xycb.domains.banmaerpDTO.*;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.repositories.ProductRepository;
 import com.hrghs.xycb.services.ProductService;
+import com.hrghs.xycb.utils.BanmaTokenUtils;
+import com.hrghs.xycb.utils.EncryptionUtils;
+import com.hrghs.xycb.utils.HttpClientsUtils;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static com.hrghs.xycb.domains.Constants.*;
+
+@Service
 public class ProductServiceImpl implements ProductService {
+
     @Autowired
-    private ProductRepository productRepository;
+    private HttpClientsUtils httpClients;
+    @Autowired
+    private BanmaTokenUtils banmaTokenUtils;
+    @Autowired
+    private EncryptionUtils encryptionUtils;
+
     /**
      * 查询产品列表
      * @param spuIds spuID，用逗号分隔
@@ -30,12 +59,26 @@ public class ProductServiceImpl implements ProductService {
      * @param sortBy    排序方式，具体值参见:SortBy
      * @return
      */
+
     @Override
-    public BanmaErpResponseDTO getProductList(String spuIds, long source, String spu, String categoryId, String title, String supplier,
-                                              String costPriceStart, String costPriceEnd, int pageNumber, int pageSize,
-                                              DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField,
-                                              String sortBy,BanmaerpProperties banmaerpProperties) {
-        return null;
+    @CheckBanmaerpProperties
+    public List<ProductDTO> getProductList(String spuIds, String source, String spu, String categoryId, String title, String supplier, String costPriceStart, String costPriceEnd, int pageNumber, int pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy, BanmaerpProperties banmaerpProperties) {
+        String apiUrl = String.format(BanmaerpURL.banmaerp_productlist_GET,pageNumber,pageSize,
+                searchTimeStart, searchTimeEnd,searchTimeField,sortField,sortBy);
+        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+        //todo signing
+        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
+        HttpEntity requestBody = new HttpEntity(null,httpHeaders);
+        List<ProductDTO> productDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+                .getBody()
+                .toDataList(BANMAERP_FIELD_PRODUCTS)
+        )
+                .map(o -> (ProductDTO)o)
+                .collect(Collectors.toList());
+        return productDTOList;
     }
 
     /**
@@ -44,10 +87,34 @@ public class ProductServiceImpl implements ProductService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO getProductById(String spuId,
-                                              BanmaerpProperties banmaerpProperties) {
-        return null;
+    @CheckBanmaerpProperties
+    public ProductDTO getProductById(String spuId,
+                                     BanmaerpProperties banmaerpProperties) {
+        String apiUrl = String.format(BanmaerpURL.banmaerp_product_GET,spuId);
+        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+        //todo signing
+        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
+        HttpEntity requestBody = new HttpEntity(null,httpHeaders);
+        BanmaErpResponseDTO<JsonNode> body = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {
+                })
+                .getBody();
+
+        ObjectMapper objectMapper = new ObjectMapper().registerModule(new JodaModule());
+        ProductDTO productDTO = null;
+        try {
+            productDTO = objectMapper.readValue(body.getData().toString(), new TypeReference<ProductDTO>() {
+            });
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        return productDTO;
     }
+
+
 
     /**
      * 添加产品
@@ -56,9 +123,8 @@ public class ProductServiceImpl implements ProductService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO insertProduct(ProductDTO productDto,
-                                             BanmaerpProperties banmaerpProperties) {
-        productRepository.save(productDto);
+
+    public ProductDTO addProduct(ProductDTO productDto, BanmaerpProperties banmaerpProperties) {
         return null;
     }
 
@@ -69,10 +135,12 @@ public class ProductServiceImpl implements ProductService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO updateProductById(ProductDTO productDto,
-                                                 BanmaerpProperties banmaerpProperties) {
+    public ProductDTO updateProductById(ProductDTO productDto,
+                                        BanmaerpProperties banmaerpProperties) {
         return null;
     }
+
+
 
     /**
      * 查询SKU列表
@@ -91,11 +159,23 @@ public class ProductServiceImpl implements ProductService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO getProductSkuList(String skuIds, String code, long spuId, String costPriceStart, String costPriceEnd,
-                                                 int pageNumber, int pageSize, DateTime searchTimeStart, DateTime searchTimeEnd,
-                                                 String searchTimeField, String sortField, String sortBy,
-                                                 BanmaerpProperties banmaerpProperties) {
-        return null;
+    @CheckBanmaerpProperties
+    public List<ProductSkusDTO> getProductSkuList(String skuIds, String code, String spuId, String costPriceStart, String costPriceEnd, int pageNumber, int pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy, BanmaerpProperties banmaerpProperties) {
+        String apiUrl = String.format(BanmaerpURL.Banmaerp_product_skulist_GET,skuIds,spuId);
+        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+        //todo signing
+        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
+        HttpEntity requestBody = new HttpEntity(null,httpHeaders);
+        List<ProductSkusDTO> productSkusDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+                .getBody()
+                .toDataList(BANMAERP_FIELD_SKUS)
+        )
+                .map(o -> (ProductSkusDTO)o)
+                .collect(Collectors.toList());
+        return productSkusDTOList;
     }
 
     /**
@@ -104,9 +184,31 @@ public class ProductServiceImpl implements ProductService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO getProductSkuById(String skuid,
-                                                 BanmaerpProperties banmaerpProperties) {
-        return null;
+    @CheckBanmaerpProperties
+    public ProductSkusDTO getProductSkuById(String skuid,
+                                            BanmaerpProperties banmaerpProperties) {
+        String apiUrl = String.format(BanmaerpURL.Banmaerp_product_sku_GET,skuid);
+        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+        //todo signing
+        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
+        HttpEntity requestBody = new HttpEntity(null,httpHeaders);
+        BanmaErpResponseDTO<JsonNode> body = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {
+                })
+                .getBody();
+
+        ObjectMapper objectMapper = new ObjectMapper().registerModule(new JodaModule());
+        ProductSkusDTO productSkusDTO = null;
+        try {
+            productSkusDTO = objectMapper.readValue(body.getData().get("SKU").toString(), new TypeReference<ProductSkusDTO>() {
+            });
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        return productSkusDTO;
     }
 
     /**
@@ -122,10 +224,25 @@ public class ProductServiceImpl implements ProductService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO getProductTagsList(String name, int pageNumber, int pageSize, DateTime searchTimeStart, DateTime searchTimeEnd,
-                                                  String searchTimeField, String sortField, String sortBy,
-                                                  BanmaerpProperties banmaerpProperties) {
-        return null;
+    @CheckBanmaerpProperties
+    public List<ProductTagsDTO> getProductTagsList(String name, int pageNumber, int pageSize, DateTime searchTimeStart, DateTime searchTimeEnd,
+                                                   String searchTimeField, String sortField, String sortBy,
+                                                   BanmaerpProperties banmaerpProperties) {
+        String apiUrl = String.format(BanmaerpURL.Banmaerp_taglist_GET,name);
+        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+        //todo signing
+        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
+        HttpEntity requestBody = new HttpEntity(null,httpHeaders);
+        List<ProductTagsDTO> productTagsDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+                .getBody()
+                .toDataList(BANMAERP_FIELD_TAGS)
+        )
+                .map(o -> (ProductTagsDTO)o)
+                .collect(Collectors.toList());
+        return productTagsDTOList;
     }
 
     /**
@@ -141,9 +258,24 @@ public class ProductServiceImpl implements ProductService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO getProductSuppliersList(String name, int pageNumber, int pageSize, DateTime searchTimeStart,
-                                                       DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy,
-                                                       BanmaerpProperties banmaerpProperties) {
-        return null;
+    @CheckBanmaerpProperties
+    public List<ProductSuppliersInfoDTO> getProductSuppliersList(String name, int pageNumber, int pageSize, DateTime searchTimeStart,
+                                                                 DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy,
+                                                                 BanmaerpProperties banmaerpProperties) {
+        String apiUrl = String.format(BanmaerpURL.Banmaerp_supplierlist_GET,name);
+        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+        //todo signing
+        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
+        HttpEntity requestBody = new HttpEntity(null,httpHeaders);
+        List<ProductSuppliersInfoDTO> productSuppliersInfoDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+                .getBody()
+                .toDataList(BANMAERP_FIELD_SUPPLIERS)
+        )
+                .map(o -> (ProductSuppliersInfoDTO)o)
+                .collect(Collectors.toList());
+        return productSuppliersInfoDTOList;
     }
 }

@@ -294,7 +294,7 @@ public class BanmaerProductTest {
                 "}\n";
         ProductDTO productDTO = objectMapper.readValue(insertProductReq, new TypeReference<ProductDTO>() {
         });
-        System.out.println(productDTO.getSpu().getCode());
+        System.out.println(productDTO.getSPU().getCode());
 
         // 添加商品响应
         String insertProductResp = "{\n" +
@@ -537,7 +537,7 @@ public class BanmaerProductTest {
                 "}\n";
         ProductDTO productDTO1 = objectMapper.readValue(updateProductReq, new TypeReference<ProductDTO>() {
         });
-        System.out.println(productDTO1.getSpu().getCode());
+        System.out.println(productDTO1.getSPU().getCode());
         // 更新产品响应
         String updateProductResp = "{\n" +
                 "    \"Code\": 200,\n" +
@@ -840,6 +840,6 @@ public class BanmaerProductTest {
 //        System.out.println(banmaErpResponseDTO.getData().getAccessToken());
         BanmaErpResponseDTO<List<ProductDTO>> banmaErpResponseDTO = objectMapper.readValue(getProductSuppliersList, new TypeReference<BanmaErpResponseDTO<List<ProductDTO>>>() {
         });
-        System.out.println(banmaErpResponseDTO.getData().get(0).getSuppliers()[0].getId());
+        System.out.println(banmaErpResponseDTO.getData().get(0).getSuppliers()[0].getID());
     }
 }

@@ -2,10 +2,7 @@ package com.hrghs.xycb.config;
 
 
 import com.hrghs.xycb.domains.BanmaErpAccount;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConstructorBinding;
 import org.springframework.context.annotation.Configuration;
