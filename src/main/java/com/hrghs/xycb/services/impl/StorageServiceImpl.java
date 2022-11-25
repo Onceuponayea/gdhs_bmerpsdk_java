@@ -2,6 +2,7 @@ package com.hrghs.xycb.services.impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
 import com.hrghs.xycb.config.BanmaerpProperties;
 import com.hrghs.xycb.domains.BanmaerpSigningVO;
 import com.hrghs.xycb.domains.BanmaerpURL;
@@ -12,6 +13,7 @@ import com.hrghs.xycb.utils.EncryptionUtils;
 import com.hrghs.xycb.utils.HttpClientsUtils;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.services.StorageService;
+import org.apache.commons.imaging.ImageFormats;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
@@ -23,6 +25,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_STORES;
@@ -83,27 +86,32 @@ public class StorageServiceImpl implements StorageService {
 
     /**
      * 使用base64文件流的方式上传文件
-     * @param contentType 内容类型（必填）
      * @param name  文件名称（必填）
      * @param file  文件内容（必填）
      * @return
      */
     @Override
-    public BanmaErpResponseDTO<StorageDTO> uploadTheFileToBase64(String contentType, String name, String file,
+    @CheckBanmaerpProperties
+    public BanmaErpResponseDTO<StorageDTO> uploadTheFileToBase64(String name, String file,
                                                      BanmaerpProperties banmaerpProperties) {
-        String apiUrl = String.format(BanmaerpURL.banmaerp_storage_base64_POST,name);
-        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentType(MediaType.TEXT_PLAIN);
-        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
-        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
-        HttpEntity requestBody = new HttpEntity(file,httpHeaders);
-        return
-                httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                        .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),
-                                HttpMethod.POST,requestBody,
-                                new ParameterizedTypeReference<BanmaErpResponseDTO<StorageDTO>>() {})
-                        .getBody();
+        if (isFileNameValid(name)){
+            String apiUrl = String.format(BanmaerpURL.banmaerp_storage_base64_POST,name);
+            apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.setContentType(MediaType.TEXT_PLAIN);
+            httpHeaders.setAccept(Arrays.asList(MediaType.TEXT_PLAIN));
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+            httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
+            HttpEntity requestBody = new HttpEntity(file,httpHeaders);
+            return
+                    httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),
+                                    HttpMethod.POST,requestBody,
+                                    new ParameterizedTypeReference<BanmaErpResponseDTO<StorageDTO>>() {})
+                            .getBody();
+        }else {
+            throw new IllegalArgumentException(name + "  is not a valid image file type!");
+        }
     }
 
     /**
@@ -116,5 +124,11 @@ public class StorageServiceImpl implements StorageService {
     public BanmaErpResponseDTO<StorageDTO> uploadTheFileToForm(String contentType, String file,
                                                    BanmaerpProperties banmaerpProperties) {
         return null;
+    }
+    private boolean isFileNameValid(String name){
+        return  Arrays.stream(ImageFormats.values())
+                .filter(format -> Arrays.stream(format.getExtensions())
+                        .anyMatch(extension -> name.toLowerCase(Locale.ROOT).contains(extension.toLowerCase(Locale.ROOT))))
+                .count()>0;
     }
 }

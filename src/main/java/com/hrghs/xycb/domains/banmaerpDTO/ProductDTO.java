@@ -8,11 +8,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import javax.persistence.Entity;
+
 @Component
 @Data
 
 @AllArgsConstructor
 @NoArgsConstructor
+
 @JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT,use = JsonTypeInfo.Id.NAME)
 @JsonTypeName("Product")
 public class ProductDTO {
