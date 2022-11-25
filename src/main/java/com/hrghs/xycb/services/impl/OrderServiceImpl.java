@@ -67,10 +67,10 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @CheckBanmaerpProperties
     public List<OrderDTO> getOrderList(String ids, String storeId, String platform, String status, String payStatus,
-                                            String holdStatus, String refundStatus, String inventoryStatus, String countryCode,
-                                            int pageNumber, int pageSize, DateTime searchTimeStart, DateTime searchTimeEnd,
-                                            String searchTimeField, String sortField, String sortBy,
-                                            BanmaerpProperties banmaerpProperties) {
+                                       String holdStatus, String refundStatus, String inventoryStatus, String countryCode,
+                                       int pageNumber, int pageSize, DateTime searchTimeStart, DateTime searchTimeEnd,
+                                       String searchTimeField, String sortField, String sortBy,
+                                       BanmaerpProperties banmaerpProperties) {
         String apiUrl = String.format(BanmaerpURL.banmaerp_order_GET, pageNumber, pageSize,searchTimeStart,searchTimeEnd,searchTimeField);
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
         HttpHeaders httpHeaders = new HttpHeaders();

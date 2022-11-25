@@ -2,7 +2,10 @@ package com.hrghs.xycb.config;
 
 
 import com.hrghs.xycb.domains.BanmaErpAccount;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConstructorBinding;
 import org.springframework.context.annotation.Configuration;
@@ -19,7 +22,7 @@ import java.util.List;
 @Data
 @ConfigurationProperties(prefix = "erp.banmaerp",ignoreInvalidFields=true)
 @EnableJpaRepositories(entityManagerFactoryRef="banmaerpEntityManagerFactory",transactionManagerRef="banmaerpXATransactionManager",
-        bootstrapMode= BootstrapMode.LAZY,basePackages = "com.hrghs.xycb.repositories")
+        bootstrapMode= BootstrapMode.DEFAULT,basePackages = "com.hrghs.xycb.repositories")
 public class BanmaerpProperties {
     /**
      * @@apiNote Immutable property for banmaERP api mandatory Headers
