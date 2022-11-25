@@ -4,16 +4,14 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.hrghs.xycb.utils.JpaJodaDateTimeConverter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 @Component
 @Data
@@ -27,7 +25,7 @@ public class AccountDTO {
 
     @Id
     @JsonProperty(value = "ID")
-    private int id;
+    private int ID;
 
     @Column(name = "real_name")
     @JsonProperty(value = "RealName")
@@ -41,12 +39,12 @@ public class AccountDTO {
 
     @JsonProperty(value = "Department")
     private String department;
-
+    @Convert(converter = JpaJodaDateTimeConverter.class)
     @Column(name = "create_time")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonProperty(value = "CreateTime")
     private DateTime createTime;
-
+    @Convert(converter = JpaJodaDateTimeConverter.class)
     @Column(name = "update_time")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonProperty(value = "UpdateTime")

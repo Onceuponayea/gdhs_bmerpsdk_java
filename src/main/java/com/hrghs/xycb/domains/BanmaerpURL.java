@@ -10,7 +10,7 @@ public class BanmaerpURL {
     public final static String banmaerp_productlist_GET = "/v1/product/?PageNumber=%d&PageSize=%d&SearchTimeStart=%s&SearchTimeEnd=%s";
     public final static String banmaerp_product_GET = "/v1/product/%ld";
     public final static String banmaerp_product_PUT = "/v1/product/%ld";
-    public final static String banmaerp_product_POST = "/v1/product/";
+    public final static String banmaerp_product_POST = "/v1/product";
     public final static String banmaerp_order_GET = "/v1/order?PageNumber=%d&PageSize=%d&SearchTimeStart=%s&SearchTimeEnd=%s";
     public final static String banmaerp_orderdetail_GET = "/v1/order/%ld";
     /**0=返回认证令牌(默认值)  1=浏览器直接跳转 **/
@@ -24,6 +24,8 @@ public class BanmaerpURL {
     public final static String banmaerp_account_GET = "/v1/Account/%ld";
     public final static String banmaerp_accountPrivileges_GET = "/v1/Account/%ld/DataAccess/Store";
 
+    public final static String banmaerp_storage_stream_POST = "/v1/storage/stream?name=%s";
+    public final static String banmaerp_storage_base64_POST = "/v1/storage/base64?name=%s";
 //    private final static String banmaerp_gateway = "";
 //    private final static String banmaerp_gateway = "";
 

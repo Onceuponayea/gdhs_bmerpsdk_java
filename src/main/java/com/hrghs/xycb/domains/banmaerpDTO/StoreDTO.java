@@ -4,19 +4,13 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.hrghs.xycb.utils.JpaJodaDateTimeConverter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 @Component
 @Data
@@ -40,14 +34,14 @@ public class StoreDTO {
     @Column(name = "Platform",columnDefinition = "varchar(100) COMMENT 'Store_platform' ")
     @JsonProperty(value = "Platform")
     private String platform;
-//
-//    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
-//    @JsonProperty(value = "CreateTime")
-//    @Column(name = "CreateTime",columnDefinition = "DATETIME COMMENT 'Store_CreateTime' ")
-//    private DateTime createTime;
-//
-//    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
-//    @JsonProperty(value = "UpdateTime")
-//    @Column(name = "UpdateTime",columnDefinition = "DATETIME COMMENT 'Store_UpdateTime' ")
-//    private DateTime updateTime;
+    @Convert(converter = JpaJodaDateTimeConverter.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
+    @JsonProperty(value = "CreateTime")
+    @Column(name = "CreateTime",columnDefinition = "TIMESTAMP COMMENT 'Store_CreateTime' ")
+    private DateTime createTime;
+    @Convert(converter = JpaJodaDateTimeConverter.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
+    @JsonProperty(value = "UpdateTime")
+    @Column(name = "UpdateTime",columnDefinition = "TIMESTAMP COMMENT 'Store_UpdateTime' ")
+    private DateTime updateTime;
 }

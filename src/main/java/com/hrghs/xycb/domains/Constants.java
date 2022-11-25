@@ -40,6 +40,7 @@ public class Constants {
 
     public static final String Data ="Data";
     public static final String BANMAERP_FIELD_STORES = "Stores";
+    public static final String BANMAERP_FIELD_ACCOUNTS = "Accounts";
     public static final String BANMAERP_FIELD_CATEGORYS = "Categorys";
     public static final String BANMAERP_FIELD_ORDERS = "Orders";
     public static final String BANMAERP_FIELD_PRODUCTS = "Products";

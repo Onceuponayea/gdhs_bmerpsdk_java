@@ -5,6 +5,8 @@ import com.hrghs.xycb.domains.banmaerpDTO.ProductDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import org.joda.time.DateTime;
 
+import java.util.List;
+
 public interface ProductService {
 
     /**
@@ -27,7 +29,7 @@ public interface ProductService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO getProductList(
+    List<ProductDTO> getProductList(
             String spuIds,
             long source,
             String spu,
@@ -52,7 +54,7 @@ public interface ProductService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO getProductById(String spuId,
+    BanmaErpResponseDTO<ProductDTO> getProductById(String spuId,
                                        BanmaerpProperties banmaerpProperties);
 
     /**
@@ -62,7 +64,7 @@ public interface ProductService {
      * 必填： Spu(描述信息)，Skus（sku信息）,Options（选项）,Images（图片）
      * @return
      */
-    BanmaErpResponseDTO insertProduct(ProductDTO productDto,
+    BanmaErpResponseDTO<ProductDTO> insertProduct(ProductDTO productDto,
                                       BanmaerpProperties banmaerpProperties);
 
     /**
@@ -72,7 +74,7 @@ public interface ProductService {
      * 必填： Spu(描述信息)，Skus（sku信息）,Options（选项）,Images（图片）
      * @return
      */
-    BanmaErpResponseDTO updateProductById(ProductDTO productDto,
+    BanmaErpResponseDTO<ProductDTO> updateProductById(ProductDTO productDto,
                                           BanmaerpProperties banmaerpProperties);
 
     /**
