@@ -123,9 +123,11 @@ public class ProductServiceImpl implements ProductService {
      * @return
      */
     @Override
-
-    public ProductDTO addProduct(ProductDTO productDto, BanmaerpProperties banmaerpProperties) {
-        return null;
+    public BanmaErpResponseDTO<ProductDTO> insertProduct(ProductDTO productDto,
+                                                         BanmaerpProperties banmaerpProperties) {
+        //productRepository.save(productDto);
+        String apiUrl = BanmaerpURL.banmaerp_product_POST;
+        return saveOrUpdate(apiUrl,productDto,banmaerpProperties);
     }
 
     /**
@@ -135,9 +137,24 @@ public class ProductServiceImpl implements ProductService {
      * @return
      */
     @Override
-    public ProductDTO updateProductById(ProductDTO productDto,
-                                        BanmaerpProperties banmaerpProperties) {
-        return null;
+    public BanmaErpResponseDTO<ProductDTO> updateProductById(ProductDTO productDto,
+                                                             BanmaerpProperties banmaerpProperties) {
+        String apiUrl = String.format(BanmaerpURL.banmaerp_product_PUT,Long.parseLong(productDto.getSPU().getSPUID()));
+        return saveOrUpdate(apiUrl,productDto,banmaerpProperties);
+    }
+    private BanmaErpResponseDTO<ProductDTO> saveOrUpdate(String apiUrl,ProductDTO productDto,
+                                                         BanmaerpProperties banmaerpProperties){
+        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
+        HttpEntity requestBody = new HttpEntity(productDto,httpHeaders);
+        return
+                httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                        .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),
+                                HttpMethod.POST,requestBody,
+                                new ParameterizedTypeReference<BanmaErpResponseDTO<ProductDTO>>() {})
+                        .getBody();
     }
 
 

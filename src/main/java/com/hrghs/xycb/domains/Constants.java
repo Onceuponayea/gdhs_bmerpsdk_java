@@ -30,6 +30,7 @@ public class Constants {
     public static final String ENTITY_PACKGES_BANMAERP = "com.hrghs.xycb.domains";
     public static final String JPA_PROS_HIBERNATE_TRANSACTIONMANAGER_LOOKUP_CLASS = "hibernate.transaction.manager_lookup_class";// @deprecated since hibernate 3
     public static final String JPA_PROS_HIBERNATE_TRANSACTIONMANAGER_COORDINATE_CLASS = "hibernate.transaction.coordinator_class";
+    public static final String JPA_PROS_HIBERNATE_ALLOW_UPDATE_OUTSIDE_TRANSACATION = "hibernate.allow_update_outside_transaction";
     public static final String JPA_PROS_HIBERNATE_DIALECT = "hibernate.dialect";
     public static final String JPA_PROS_HIBERNATE_SESSION_CONTEXT_CLASS = "hibernate.current_session_context_class";
     public static final String JPA_PROS_HIBERNATE_SHOW_SQL = "hibernate.show_sql";
@@ -39,6 +40,7 @@ public class Constants {
 
     public static final String Data ="Data";
     public static final String BANMAERP_FIELD_STORES = "Stores";
+    public static final String BANMAERP_FIELD_ACCOUNTS = "Accounts";
     public static final String BANMAERP_FIELD_CATEGORYS = "Categorys";
     public static final String BANMAERP_FIELD_ORDERS = "Orders";
     public static final String BANMAERP_FIELD_PRODUCTS = "Products";
@@ -47,7 +49,6 @@ public class Constants {
     public static final String BANMAERP_FIELD_SUPPLIERS = "Suppliers";
     public static final String BANMAERP_FIELD_STORAGES = "Storages";
     public static final String BANMAERP_FIELD_PAGE = "Page";
-    public static final String BANMAERP_FIELD_ACCOUNTS = "Accounts";
 
     public static final String DATETIME_FORMAT_DASH_SHORT ="yyyy-MM-dd HH:mm:ss";
     public static final String DATETIME_FORMAT_SLASH_SHORT ="MM/dd/yyyy HH:mm:ss";

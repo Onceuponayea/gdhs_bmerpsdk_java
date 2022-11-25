@@ -59,7 +59,7 @@ public class DbConfigs {
     private Environment env;
     @Autowired
     private ScheduledExecutorService scheduledExecutorService;
-//初始化
+    //初始化
     @Bean
     @ConditionalOnMissingBean
     public ReactiveRedisConnectionFactory redisConnectionFactory(@Value("${spring.redis.host:localhost}") String host,
@@ -148,14 +148,16 @@ public class DbConfigs {
         boolean useH2DB = Arrays.stream(env.getActiveProfiles())
                 .anyMatch(s -> s.toLowerCase(Locale.ROOT).equalsIgnoreCase(ENV_PROFILES_H2DB));
         String driverClass="",jdbcurl="";
+        driverClass = useH2DB ?DB_JDBC_DRIVER_H2DB:DB_JDBC_DRIVER_MYSQL;
+        jdbcurl = useH2DB ?DB_JDBC_URL_HIKARI_H2DB:env.getProperty(DB_HIKARI_JDBC_URL);
         if (useH2DB){
-            driverClass = useH2DB ?DB_JDBC_DRIVER_H2DB:DB_JDBC_DRIVER_MYSQL;
-            jdbcurl = useH2DB ?DB_JDBC_URL_HIKARI_H2DB:env.getProperty(DB_HIKARI_JDBC_URL);
             banmaerpDruidXADataSource.setUsername("");
             banmaerpDruidXADataSource.setPassword("");
         }
         banmaerpDruidXADataSource.setUrl(jdbcurl);
         banmaerpDruidXADataSource.setDriverClassName(driverClass);
+        banmaerpDruidXADataSource.setBreakAfterAcquireFailure(true);
+        banmaerpDruidXADataSource.setInitialSize(200);
         dataSourceBean.setXaDataSource(banmaerpDruidXADataSource);
         return dataSourceBean;
     }
@@ -187,8 +189,9 @@ public class DbConfigs {
         jpaPros.put(JPA_PROS_TRANSACTION_TYPE,"jta");
         jpaPros.put(JPA_PROS_HIBERNATE_SESSION_CONTEXT_CLASS,"jta");
         jpaPros.put(JPA_PROS_HIBERNATE_DIALECT, MySQL8Dialect.class.getName());
+        jpaPros.put(JPA_PROS_HIBERNATE_ALLOW_UPDATE_OUTSIDE_TRANSACATION,true);
         jpaPros.put(JPA_PROS_HIBERNATE_TRANSACTIONMANAGER_COORDINATE_CLASS,"jdbc");//full name: org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl
-        //jpaPros.put(JPA_PROS_HIBERNATE_TRANSACTIONMANAGER_LOOKUP_CLASS,"com.atomikos.icatch.jta.hibernate3.TransactionManagerLookup");
+        jpaPros.put(JPA_PROS_HIBERNATE_TRANSACTIONMANAGER_LOOKUP_CLASS,"com.atomikos.icatch.jta.hibernate3.TransactionManagerLookup");
         factoryBean.setJpaProperties(jpaPros);
         factoryBean.afterPropertiesSet();
         return factoryBean.getObject();
@@ -201,9 +204,9 @@ public class DbConfigs {
      */
     @Bean(name = "banmaerpXATransactionManager")
     @ConditionalOnMissingBean
-    public PlatformTransactionManager jtaTransactionManager(@Value("${spring.jta.atomikos.transaction.timeout:30000}")int timeoutMs) throws SystemException {
+    public JtaTransactionManager jtaTransactionManager(@Value("${spring.jta.atomikos.transaction.timeout:30000}")int timeoutMs) throws SystemException {
         UserTransactionManager userTransactionManager = new UserTransactionManager();
-        userTransactionManager.setForceShutdown(false);
+        userTransactionManager.setForceShutdown(true);
         UserTransaction userTransaction = new UserTransactionImp();
         userTransaction.setTransactionTimeout(timeoutMs);
         JtaTransactionManager jtaTransactionManager = new JtaTransactionManager();

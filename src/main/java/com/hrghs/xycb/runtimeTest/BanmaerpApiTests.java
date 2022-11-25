@@ -65,7 +65,7 @@ public class BanmaerpApiTests {
 //               .subscribe(s -> System.out.println(s));
         //getStoreListMono();
 //       getStoreList();
-        saveStoreList();
+//        saveStoreList();
 //       getAccountList();
 //       getCategoryList();
 //       getOrderList();
@@ -74,7 +74,7 @@ public class BanmaerpApiTests {
 //       getProductTagsList();
 //       getProductSuppliersList();
 //       getStoragetList();
-//        getStoreById();
+        getStoreById();
 //        getAccountById();
 //        getCategoryById();
 //        getOrderById();
@@ -113,6 +113,7 @@ public class BanmaerpApiTests {
         StoreDTO storeDTO = storeService.getStoreById("1492814222537527296", null);
         if (storeDTO != null) {
             System.out.println("storeDTO: " + storeDTO.getID());
+            storeRepository.save(storeDTO);
         }
     }
 
@@ -245,11 +246,7 @@ public class BanmaerpApiTests {
     // 添加产品
     private void addProduct() {
 
-        ProductDTO productDTO1 = new ProductDTO();
-        ProductDTO productDTO = productService.addProduct(productDTO1, null);
-        if (productDTO != null) {
-            System.out.println("productDTO: " + productDTO.getSPU().getSPUID());
-        }
+
     }
 
 

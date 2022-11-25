@@ -66,7 +66,7 @@ public interface ProductService {
      * 必填： Spu(描述信息)，Skus（sku信息）,Options（选项）,Images（图片）
      * @return
      */
-    ProductDTO addProduct(ProductDTO productDto,
+    BanmaErpResponseDTO<ProductDTO> insertProduct(ProductDTO productDto,
                                       BanmaerpProperties banmaerpProperties);
 
     /**
@@ -76,7 +76,7 @@ public interface ProductService {
      * 必填： Spu(描述信息)，Skus（sku信息）,Options（选项）,Images（图片）
      * @return
      */
-    ProductDTO updateProductById(ProductDTO productDto,
+    BanmaErpResponseDTO<ProductDTO> updateProductById(ProductDTO productDto,
                                           BanmaerpProperties banmaerpProperties);
 
     /**
