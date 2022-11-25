@@ -1,8 +1,12 @@
 package com.hrghs.xycb.utils;
 
+import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.springframework.stereotype.Component;
+
+import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,4 +56,15 @@ public class DateTimeUtils {
         String dateTimeFormatPattern = determineDateFormat(dateTimeSrc);
         return DateTimeFormat.forPattern(dateTimeFormatPattern);
     }
+
+    public Date joda2SQLDate(DateTime dateTime){
+        return new Date(dateTime.getMillis());
+    }
+    public Timestamp joda2SQLTimeStamp(DateTime dateTime){
+        return new Timestamp(dateTime.getMillis());
+    }
+    public DateTime sqlTimeStamp2JodaDateTime(Timestamp timestamp){
+        return DateTime.parse(timestamp.toLocalDateTime().toString());
+    }
+
 }

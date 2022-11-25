@@ -1,6 +1,7 @@
 package com.hrghs.xycb.services;
 
 import com.hrghs.xycb.config.BanmaerpProperties;
+import com.hrghs.xycb.domains.banmaerpDTO.StorageDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import org.joda.time.DateTime;
 
@@ -22,7 +23,7 @@ public interface StorageService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO getStoragetList(
+    BanmaErpResponseDTO<StorageDTO> getStoragetList(
             String ids,
             String name,
             String fileType,
@@ -43,7 +44,7 @@ public interface StorageService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO getStorageById(String id,
+    BanmaErpResponseDTO<StorageDTO> getStorageById(String id,
                                        BanmaerpProperties banmaerpProperties);
 
     /**
@@ -54,7 +55,7 @@ public interface StorageService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO uploadTheFileToStream(
+    BanmaErpResponseDTO<StorageDTO> uploadTheFileToStream(
             String contentType,
             String name,
             String file,
@@ -69,7 +70,7 @@ public interface StorageService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO uploadTheFileToBase64(
+    BanmaErpResponseDTO<StorageDTO> uploadTheFileToBase64(
             String contentType,
             String name,
             String file,
@@ -83,7 +84,7 @@ public interface StorageService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO uploadTheFileToForm(
+    BanmaErpResponseDTO<StorageDTO> uploadTheFileToForm(
             String contentType,
             String file,
             BanmaerpProperties banmaerpProperties

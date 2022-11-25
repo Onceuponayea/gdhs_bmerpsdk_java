@@ -1,12 +1,39 @@
 package com.hrghs.xycb.services.impl;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.hrghs.xycb.config.BanmaerpProperties;
+import com.hrghs.xycb.domains.BanmaerpSigningVO;
+import com.hrghs.xycb.domains.BanmaerpURL;
+import com.hrghs.xycb.domains.banmaerpDTO.StorageDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.StoreDTO;
+import com.hrghs.xycb.utils.BanmaTokenUtils;
+import com.hrghs.xycb.utils.EncryptionUtils;
 import com.hrghs.xycb.utils.HttpClientsUtils;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.services.StorageService;
 import org.joda.time.DateTime;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_STORES;
+
+@Service
 public class StorageServiceImpl implements StorageService {
+    @Autowired
+    private BanmaTokenUtils banmaTokenUtils;
+    @Autowired
+    private EncryptionUtils encryptionUtils;
+    @Autowired
     private HttpClientsUtils httpClients;
     /**
      * 查询文件列表
@@ -24,7 +51,7 @@ public class StorageServiceImpl implements StorageService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO getStoragetList(String ids, String name, String fileType, String fileCategoryId, int pageNumber, int pageSize,
+    public BanmaErpResponseDTO<StorageDTO> getStoragetList(String ids, String name, String fileType, String fileCategoryId, int pageNumber, int pageSize,
                                                DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField,
                                                String sortBy,BanmaerpProperties banmaerpProperties) {
         return null;
@@ -36,7 +63,7 @@ public class StorageServiceImpl implements StorageService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO getStorageById(String id,
+    public BanmaErpResponseDTO<StorageDTO> getStorageById(String id,
                                               BanmaerpProperties banmaerpProperties) {
         return null;
     }
@@ -49,7 +76,7 @@ public class StorageServiceImpl implements StorageService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO uploadTheFileToStream(String contentType, String name, String file,
+    public BanmaErpResponseDTO<StorageDTO> uploadTheFileToStream(String contentType, String name, String file,
                                                      BanmaerpProperties banmaerpProperties) {
         return null;
     }
@@ -62,9 +89,21 @@ public class StorageServiceImpl implements StorageService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO uploadTheFileToBase64(String contentType, String name, String file,
+    public BanmaErpResponseDTO<StorageDTO> uploadTheFileToBase64(String contentType, String name, String file,
                                                      BanmaerpProperties banmaerpProperties) {
-        return null;
+        String apiUrl = String.format(BanmaerpURL.banmaerp_storage_base64_POST,name);
+        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.TEXT_PLAIN);
+        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
+        HttpEntity requestBody = new HttpEntity(file,httpHeaders);
+        return
+                httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                        .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),
+                                HttpMethod.POST,requestBody,
+                                new ParameterizedTypeReference<BanmaErpResponseDTO<StorageDTO>>() {})
+                        .getBody();
     }
 
     /**
@@ -74,7 +113,7 @@ public class StorageServiceImpl implements StorageService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO uploadTheFileToForm(String contentType, String file,
+    public BanmaErpResponseDTO<StorageDTO> uploadTheFileToForm(String contentType, String file,
                                                    BanmaerpProperties banmaerpProperties) {
         return null;
     }

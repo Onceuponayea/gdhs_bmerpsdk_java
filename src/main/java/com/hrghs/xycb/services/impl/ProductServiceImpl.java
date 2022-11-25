@@ -1,14 +1,35 @@
 package com.hrghs.xycb.services.impl;
 
 import com.hrghs.xycb.config.BanmaerpProperties;
+import com.hrghs.xycb.domains.BanmaerpSigningVO;
+import com.hrghs.xycb.domains.BanmaerpURL;
 import com.hrghs.xycb.domains.banmaerpDTO.ProductDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.StorageDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.repositories.ProductRepository;
 import com.hrghs.xycb.services.ProductService;
+import com.hrghs.xycb.utils.BanmaTokenUtils;
+import com.hrghs.xycb.utils.EncryptionUtils;
+import com.hrghs.xycb.utils.HttpClientsUtils;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
 
+import java.util.List;
+@Service
 public class ProductServiceImpl implements ProductService {
+    @Autowired
+    private HttpClientsUtils httpClients;
+    @Autowired
+    private BanmaTokenUtils banmaTokenUtils;
+    @Autowired
+    private EncryptionUtils encryptionUtils;
+
     @Autowired
     private ProductRepository productRepository;
     /**
@@ -31,10 +52,10 @@ public class ProductServiceImpl implements ProductService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO getProductList(String spuIds, long source, String spu, String categoryId, String title, String supplier,
-                                              String costPriceStart, String costPriceEnd, int pageNumber, int pageSize,
-                                              DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField,
-                                              String sortBy,BanmaerpProperties banmaerpProperties) {
+    public List<ProductDTO> getProductList(String spuIds, long source, String spu, String categoryId, String title, String supplier,
+                                           String costPriceStart, String costPriceEnd, int pageNumber, int pageSize,
+                                           DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField,
+                                           String sortBy, BanmaerpProperties banmaerpProperties) {
         return null;
     }
 
@@ -44,7 +65,7 @@ public class ProductServiceImpl implements ProductService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO getProductById(String spuId,
+    public BanmaErpResponseDTO<ProductDTO> getProductById(String spuId,
                                               BanmaerpProperties banmaerpProperties) {
         return null;
     }
@@ -56,10 +77,11 @@ public class ProductServiceImpl implements ProductService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO insertProduct(ProductDTO productDto,
+    public BanmaErpResponseDTO<ProductDTO> insertProduct(ProductDTO productDto,
                                              BanmaerpProperties banmaerpProperties) {
         //productRepository.save(productDto);
-        return null;
+        String apiUrl = BanmaerpURL.banmaerp_product_POST;
+        return saveOrUpdate(apiUrl,productDto,banmaerpProperties);
     }
 
     /**
@@ -69,11 +91,25 @@ public class ProductServiceImpl implements ProductService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO updateProductById(ProductDTO productDto,
+    public BanmaErpResponseDTO<ProductDTO> updateProductById(ProductDTO productDto,
                                                  BanmaerpProperties banmaerpProperties) {
-        return null;
+        String apiUrl = String.format(BanmaerpURL.banmaerp_product_PUT,Long.parseLong(productDto.getSpu().getSpuId()));
+        return saveOrUpdate(apiUrl,productDto,banmaerpProperties);
     }
-
+    private BanmaErpResponseDTO<ProductDTO> saveOrUpdate(String apiUrl,ProductDTO productDto,
+                                                         BanmaerpProperties banmaerpProperties){
+        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
+        HttpEntity requestBody = new HttpEntity(productDto,httpHeaders);
+        return
+                httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                        .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),
+                                HttpMethod.POST,requestBody,
+                                new ParameterizedTypeReference<BanmaErpResponseDTO<ProductDTO>>() {})
+                        .getBody();
+    }
     /**
      * 查询SKU列表
      * @param skuIds SKUID，用逗号分隔

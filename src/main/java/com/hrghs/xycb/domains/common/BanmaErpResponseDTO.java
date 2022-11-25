@@ -79,39 +79,44 @@ public class BanmaErpResponseDTO<T> {
         List<Object> datas = new ArrayList<>();
         if (data !=null && data instanceof JsonNode){
             JsonNode dataList = (JsonNode)data;
-            JsonNode jsonNodeSrc = dataList.get(objClass);
-            Type type = null;
-            switch (objClass){
-                case BANMAERP_FIELD_STORES:
-                    type = new TypeToken<Collection<StoreDTO>>(){}.getType();
-                    //Collection<StoreDTO> storeDTOS = gson.fromJson(jsonNodeStores.toString(),store);
-                    break;
-                case BANMAERP_FIELD_CATEGORYS:
-                    type = new TypeToken<Collection<CategoryDTO>>(){}.getType();
-                    break;
-                case BANMAERP_FIELD_ORDERS:
-                    type = new TypeToken<Collection<OrderDTO>>(){}.getType();
-                    break;
-                case BANMAERP_FIELD_PRODUCTS:
-                    type = new TypeToken<Collection<ProductDTO>>(){}.getType();
-                    break;
-                case BANMAERP_FIELD_SKUS:
-                    type = new TypeToken<Collection<ProductSkusDTO>>(){}.getType();
-                    break;
-                case BANMAERP_FIELD_TAGS:
-                    type = new TypeToken<Collection<ProductTagsDTO>>(){}.getType();
-                    break;
-                case BANMAERP_FIELD_SUPPLIERS:
-                    type = new TypeToken<Collection<ProductSuppliersDTO>>(){}.getType();
-                    break;
-                case BANMAERP_FIELD_STORAGES:
-                    type = new TypeToken<Collection<StorageDTO>>(){}.getType();
-                    break;
-                case BANMAERP_FIELD_PAGE:
-                    type = new TypeToken<Collection<PageDTO>>(){}.getType();
-                    break;
+            if(dataList.has(objClass)){
+                JsonNode jsonNodeSrc = dataList.get(objClass);
+                Type type = null;
+                switch (objClass){
+                    case BANMAERP_FIELD_STORES:
+                        type = new TypeToken<Collection<StoreDTO>>(){}.getType();
+                        //Collection<StoreDTO> storeDTOS = gson.fromJson(jsonNodeStores.toString(),store);
+                        break;
+                    case BANMAERP_FIELD_CATEGORYS:
+                        type = new TypeToken<Collection<CategoryDTO>>(){}.getType();
+                        break;
+                    case BANMAERP_FIELD_ORDERS:
+                        type = new TypeToken<Collection<OrderDTO>>(){}.getType();
+                        break;
+                    case BANMAERP_FIELD_PRODUCTS:
+                        type = new TypeToken<Collection<ProductDTO>>(){}.getType();
+                        break;
+                    case BANMAERP_FIELD_SKUS:
+                        type = new TypeToken<Collection<ProductSkusDTO>>(){}.getType();
+                        break;
+                    case BANMAERP_FIELD_TAGS:
+                        type = new TypeToken<Collection<ProductTagsDTO>>(){}.getType();
+                        break;
+                    case BANMAERP_FIELD_SUPPLIERS:
+                        type = new TypeToken<Collection<ProductSuppliersDTO>>(){}.getType();
+                        break;
+                    case BANMAERP_FIELD_STORAGES:
+                        type = new TypeToken<Collection<StorageDTO>>(){}.getType();
+                        break;
+                    case BANMAERP_FIELD_PAGE:
+                        type = new TypeToken<Collection<PageDTO>>(){}.getType();
+                        break;
+                    case BANMAERP_FIELD_ACCOUNTS:
+                        type = new TypeToken<Collection<AccountDTO>>(){}.getType();
+                        break;
+                }
+                datas = gson.fromJson(jsonNodeSrc.toString(),type);
             }
-            datas = gson.fromJson(jsonNodeSrc.toString(),type);
         }
         return datas.toArray();
     }
