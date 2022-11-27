@@ -1,6 +1,10 @@
 package com.hrghs.xycb.services.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
 import com.hrghs.xycb.config.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.StoreDTO;
@@ -15,6 +19,8 @@ import com.hrghs.xycb.services.StoreService;
 import com.hrghs.xycb.utils.EncryptionUtils;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -35,6 +41,7 @@ import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_STORES;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 
 @Service
+@Lazy
 //@Transactional(transactionManager = "banmaerpXATransactionManager")
 public class StoreServiceImpl implements StoreService {
     @Autowired
@@ -45,6 +52,9 @@ public class StoreServiceImpl implements StoreService {
     private EncryptionUtils encryptionUtils;
     @Autowired
     private StoreRepository storeRepository;
+    @Autowired
+    @Lazy
+    private ObjectMapper objectMapper;
 
     /**
      * 查询店铺列表
@@ -94,6 +104,7 @@ public class StoreServiceImpl implements StoreService {
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
         HttpHeaders httpHeaders = new HttpHeaders();
         BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+        //todo signing
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
         HttpEntity requestBody = new HttpEntity(null,httpHeaders);
         List<StoreDTO> storeDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
@@ -113,14 +124,38 @@ public class StoreServiceImpl implements StoreService {
      * @return
      */
     @Override
-    public BanmaErpResponseDTO getStoreById(String spuId,
-                                            BanmaerpProperties banmaerpProperties) {
-        return null;
+    @CheckBanmaerpProperties
+    public StoreDTO getStoreById(String spuId,
+                                 BanmaerpProperties banmaerpProperties) {
+        String apiUrl = String.format(BanmaerpURL.banmaerp_store_GET,spuId);
+        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,apiUrl);
+        //todo signing
+        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
+        HttpEntity requestBody = new HttpEntity(null,httpHeaders);
+        BanmaErpResponseDTO<JsonNode> body = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {
+                })
+                .getBody();
+        StoreDTO storeDTO = null;
+        try {
+            storeDTO = objectMapper.readValue(body.getData().toString(), new TypeReference<StoreDTO>() {
+            });
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        return storeDTO;
     }
 
     @Override
     public List<StoreDTO> saveStoreList(List<StoreDTO> storeDTOList) {
         return storeRepository.saveAllAndFlush(storeDTOList);
-        //return storeRepository.saveAll(storeDTOList);
+    }
+
+    @Override
+    public StoreDTO saveStore(StoreDTO storeDTO) {
+        return null;
     }
 }

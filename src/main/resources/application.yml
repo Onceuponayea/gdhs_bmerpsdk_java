@@ -24,7 +24,7 @@ spring:
         username: ${spring.datasource.banmaerp.username}
         password: ${spring.datasource.banmaerp.password}
         url: ${spring.datasource.banmaerp.url}
-        initial-size: 10
+        initial-size: 3
         min-idle: 10
         maxActive: 600
         maxWait: 60000

@@ -1,143 +1,275 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
+import com.hrghs.xycb.domains.enums.BanmaerpPlatformEnums;
+import com.hrghs.xycb.utils.converters.JodaDateTimeConverter;
+import com.hrghs.xycb.utils.converters.JpaListStringConverter;
 import lombok.Data;
 import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
 
+import javax.persistence.*;
+import java.util.List;
+
 @Component
 @Data
+@Entity
+@Table(name = "bmerp_order_master")
 public class OrderMasterDTO {
+
+    @Id
     @JsonProperty(value = "ID")
-    private String id;
+    private String ID;
+
+    @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @JoinColumn(name = "order_uuid", referencedColumnName = "order_UUID")
+    @JsonBackReference
+    private OrderDTO orderDTO;
+
+    public String getOrder_uuid() {
+        return orderDTO.getOrderUUID().toString();
+    }
+    @Column(name = "store_id")
     @JsonProperty(value = "StoreID")
-    private String storeId;
+    private String storeID;
+
     @JsonProperty(value = "Platform")
-    private String platform;
+    private BanmaerpPlatformEnums.Platform platform;
+
+    @Column(name = "original_order_id")
     @JsonProperty(value = "OriginalOrderID")
-    private String originalOrderId;
+    private String originalOrderID;
+
+    @Column(name = "display_order_id")
     @JsonProperty(value = "DisplayOrderID")
-    private String displayOrderId;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    private String displayOrderID;
+
+    @Column(name = "pay_time")
+    @Convert(converter = JodaDateTimeConverter.class)
     @JsonProperty(value = "PayTime")
     private DateTime payTime;
+
+    @Column(name = "pay_channel")
     @JsonProperty(value = "PayChannel")
     private String payChannel;
+
+    @Column(name = "pay_type")
     @JsonProperty("PayType")
     private int payType;
+
+    @Column(name = "pay_amount")
     @JsonProperty(value = "PayAmount")
-    private String payAmount;
+    private double payAmount;
+
+    @Column(name = "pay_currency")
     @JsonProperty(value = "PayCurrency")
     private String payCurrency;
+
+    @Column(name = "pay_amount_usd")
     @JsonProperty(value = "PayAmountUSD")
-    private String payAmountUsd;
+    private double payAmountUSD;
+
+    @Column(name = "pay_amount_cny")
     @JsonProperty(value = "PayAmountCNY")
-    private String payAmountCny;
+    private double payAmountCNY;
+
+    @Column(name = "pay_freight")
     @JsonProperty(value = "PayFreight")
-    private String payFreight;
+    private double payFreight;
+
+    @Column(name = "pay_freight_currency")
     @JsonProperty(value = "PayFreightCurrency")
     private String payFreightCurrency;
+
+    @Column(name = "pay_freight_usd")
     @JsonProperty(value = "PayFreightUSD")
-    private String payFreightUsd;
+    private double payFreightUSD;
+
+    @Column(name = "pay_freight_cny")
     @JsonProperty(value = "PayFreightCNY")
-    private String payFreightCny;
+    private double payFreightCNY;
+
+    @Column(name = "refund_amount")
     @JsonProperty(value = "RefundAmount")
-    private String refundAmount;
+    private double refundAmount;
+
+    @Column(name = "refund_currency")
     @JsonProperty(value = "RefundCurrency")
     private String refundCurrency;
+
+    @Column(name = "refund_amount_usd")
     @JsonProperty(value = "RefundAmountUSD")
-    private String refundAmountUsd;
+    private double refundAmountUSD;
+
+    @Column(name = "refund_amount_cny")
     @JsonProperty(value = "RefundAmountCNY")
-    private String refundAmountCny;
+    private double refundAmountCNY;
+
+    @Column(name = "discount_amount")
     @JsonProperty(value = "DiscountAmount")
-    private String discountAmount;
+    private double discountAmount;
+
+    @Column(name = "discount_currency")
     @JsonProperty(value = "DiscountCurrency")
     private String discountCurrency;
+
     @JsonProperty(value = "Status")
     private String status;
+
+    @Column(name = "pay_status")
     @JsonProperty(value = "PayStatus")
     private String payStatus;
+
+    @Column(name = "shipping_type")
     @JsonProperty(value = "ShippingType")
     private String shippingType;
+
+    @Column(name = "country_code")
     @JsonProperty(value = "CountryCode")
     private String countryCode;
+
+    @Column(name = "hold_status")
     @JsonProperty(value = "HoldStatus")
     private String holdStatus;
+
+    @Column(name = "refund_status")
     @JsonProperty(value = "RefundStatus")
     private String refundStatus;
+
     @JsonProperty(value = "Quantity")
     private int Quantity;
+
+    @Column(name = "purchase_freight")
     @JsonProperty(value = "PurchaseFreight")
-    private String purchaseFreight;
+    private double purchaseFreight;
+
+    /**
+     * @@attention:  斑马erp单词拼错，可能后续会有变动！
+     */
+    @Column(name = "user_indentity")
     @JsonProperty(value = "UserIndentity")
     private String userIndentity;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+
+    @Column(name = "order_time")
+    @Convert(converter = JodaDateTimeConverter.class)
     @JsonProperty(value = "OrderTime")
     private DateTime orderTime;
+
+    @Convert(converter = JpaListStringConverter.class)
     @JsonProperty(value = "Tags")
-    private String[] tags;
+    private List<String> tags;
+
+    @Column(name = "original_order_status")
     @JsonProperty(value = "OriginalOrderStatus")
     private String originalOrderStatus;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+
+    @Column(name = "original_order_time")
+    @Convert(converter = JodaDateTimeConverter.class)
     @JsonProperty(value = "OriginalOrderTime")
     private DateTime originalOrderTime;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+
+    @Column(name = "original_pay_time")
+    @Convert(converter = JodaDateTimeConverter.class)
     @JsonProperty(value = "OriginalPayTime")
     private DateTime originalPayTime;
+
+    @Column(name = "have_message")
     @JsonProperty(value = "HaveMessage")
     private boolean haveMessage;
+
+    @Column(name = "have_remark")
     @JsonProperty(value = "HaveRemark")
     private boolean haveRemark;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+
+    @Column(name = "latest_delivery_time")
+    @Convert(converter = JodaDateTimeConverter.class)
     @JsonProperty(value = "LatestDeliveryTime")
     private DateTime latestDeliveryTime;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+
+    @Column(name = "create_time")
+    @Convert(converter = JodaDateTimeConverter.class)
     @JsonProperty(value = "CreateTime")
     private DateTime createTime;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+
+    @Column(name = "update_time")
+    @Convert(converter = JodaDateTimeConverter.class)
     @JsonProperty(value = "UpdateTime")
     private DateTime updateTime;
+
+    @Column(name = "is_cod")
     @JsonProperty(value = "IsCOD")
-    private boolean isCod;
+    private boolean isCOD;
+
+    @Convert(converter = JpaListStringConverter.class)
     @JsonProperty(value = "Flags")
-    private String[] flags;
+    private List<String> flags;
+
     @JsonProperty(value = "Email")
     private String email;
+
+    @Column(name = "inventory_status")
     @JsonProperty(value = "InventoryStatus")
     private String inventoryStatus;
+
+    @Column(name = "inventory_mode")
     @JsonProperty(value = "InventoryMode")
     private String inventoryMode;
+
+    @Column(name = "tx_no")
     @JsonProperty(value = "TxNo")
     private String txNo;
+
+    @Column(name = "buyer_name")
     @JsonProperty(value = "BuyerName")
     private String buyerName;
+
     @JsonProperty(value = "Message")
     private String message;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+
+    @Column(name = "shipping_time")
+    @Convert(converter = JodaDateTimeConverter.class)
     @JsonProperty(value = "ShippingTime")
     private DateTime shippingTime;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+
+    @Column(name = "original_shipping_time")
+    @Convert(converter = JodaDateTimeConverter.class)
     @JsonProperty(value = "OriginalShippingTime")
     private DateTime originalShippingTime;
+
+    @Column(name = "original_tags")
+    @Convert(converter = JpaListStringConverter.class)
     @JsonProperty(value = "OriginalTags")
-    private String[] originalTags;
+    private List<String> originalTags;
+
+    @Column(name = "buyer_phone")
     @JsonProperty(value = "BuyerPhone")
     private String buyerPhone;
+
     /**
      * 要求交货日期/预计交货日期/期望交货日期
      */
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    @Column(name = "requested_delivery_date")
+    @Convert(converter = JodaDateTimeConverter.class)
     @JsonProperty(value = "RequestedDeliveryDate")
     private DateTime requestedDeliveryDate;
+
     /**
      * 要求交货时间/预计交货时间/期望交货时间时间段，如 10:00-16:00,上午/午前=06:00-12:00,下午/午后=12:00-18:00,夜间=18:00-21:00
      */
-//    @JsonProperty(value = "RequestedDeliveryDate")
-//    private DateTime requestedDeliveryDates;
+    @Column(name = "requested_delivery_time")
+    @Convert(converter = JodaDateTimeConverter.class)
+    @JsonProperty(value = "RequestedDeliveryTime")
+    private DateTime requestedDeliveryTime;
+
+    @Column(name = "risk_level")
     @JsonProperty(value = "RiskLevel")
     private String riskLevel;
+
+    @Column(name = "used_point")
     @JsonProperty(value = "UsedPoint")
-    private String usedPoint;
+    private Integer usedPoint;
+
+
+
 
 }

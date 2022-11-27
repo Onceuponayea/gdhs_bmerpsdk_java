@@ -1,29 +1,57 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.hrghs.xycb.utils.converters.ProductDeserialiser;
+import com.hrghs.xycb.utils.converters.ProductSerialiser;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Type;
 import org.springframework.stereotype.Component;
+
+import javax.persistence.*;
+import java.util.List;
+import java.util.UUID;
 
 @Component
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Entity
+@Table(name = "bmerp_order")
 @JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT,use = JsonTypeInfo.Id.NAME)
 @JsonTypeName("Order")
 public class OrderDTO {
+
+    @JsonIgnore
+    @Column(name = "order_UUID")
+    @GeneratedValue
+    @Type(type = "uuid-char")
+    @Id
+    private UUID orderUUID;
+
+    @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY,mappedBy = "orderDTO")
+//    @JoinColumn(name = "order_uuid",referencedColumnName = "order_UUID")
     @JsonProperty(value = "Master")
+    @JsonManagedReference
     private OrderMasterDTO master;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "orderDTO")
     @JsonProperty(value = "Details")
-    private OrderDetailsDTO[] details;
+    private List<OrderDetailsDTO> details;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "orderDTO")
     @JsonProperty(value = "Addresses")
-    private OrderAddressesDTO[] addresses;
+    private List<OrderAddressesDTO> addresses;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "orderDTO")
     @JsonProperty(value = "Remarks")
-    private OrderRemarksDTO[] remarks;
+    private List<OrderRemarksDTO> remarks;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "orderDTO")
     @JsonProperty(value = "Refunds")
-    private OrderRefundsDTO[] refunds;
+    private List<OrderRefundsDTO> refunds;
 
 }

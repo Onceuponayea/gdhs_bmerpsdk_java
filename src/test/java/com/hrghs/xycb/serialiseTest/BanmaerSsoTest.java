@@ -34,6 +34,6 @@ public class BanmaerSsoTest {
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JodaModule());
         BanmaErpResponseDTO<GetSsoPassportResponse> banmaErpResponseDTO = objectMapper.readValue(ssoPassport, new TypeReference<BanmaErpResponseDTO<GetSsoPassportResponse>>() {
         });
-        System.out.println(banmaErpResponseDTO.getData().getUserId());
+        System.out.println(banmaErpResponseDTO.getData().getUserID());
     }
 }

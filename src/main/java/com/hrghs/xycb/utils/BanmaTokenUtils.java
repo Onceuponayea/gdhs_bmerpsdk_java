@@ -18,6 +18,7 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.redis.core.ReactiveRedisOperations;
 import org.springframework.http.HttpEntity;
@@ -52,6 +53,7 @@ public class BanmaTokenUtils {
     @Autowired
     private  HttpClientsUtils httpClients;
     @Autowired
+    @Lazy
     private ReactiveRedisOperations<String,TokenResponseDTO> tokenRespReactiveRedisOperations;
 
     /**
@@ -129,8 +131,31 @@ public class BanmaTokenUtils {
         httpHeaders.set(BANMA_HEADER_TIMESTAMP,String.valueOf(banmaerpSigningVO.getTimestamp()));
         if (banmaerpProperties.getX_BANMA_MASTER_SIGN_METHOD() != BanmaerpAuthEnums.AuthMethod.IP_WHITELIST.getAuthType()){
             httpHeaders.set(BANMA_HEADER_SIGNMETHOD,banmaerpProperties.getX_BANMA_MASTER_SIGN_ALGORITHM());
+            System.out.println("X-BANMA-SIGN-METHOD:"+banmaerpProperties.getX_BANMA_MASTER_SIGN_ALGORITHM());
             httpHeaders.set(BANMA_HEADER_SIGN,encryptionUtils.banmaerpSigning(banmaerpSigningVO));
         }
         return httpHeaders;
+    }
+
+
+    public BanmaerpSigningVO banmaerpSigningVO(BanmaerpProperties banmaerpProperties, String url) {
+        Long timestamp = System.currentTimeMillis() / 1000L;
+        BanmaerpSigningVO banmaerpSigningVO = new BanmaerpSigningVO();
+        banmaerpSigningVO.setApp_id(banmaerpProperties.getX_BANMA_MASTER_APP_ID());
+        banmaerpSigningVO.setApp_secret(banmaerpProperties.getX_BANMA_MASTER_APP_SECRET());
+        banmaerpSigningVO.setSign_algorithm(banmaerpProperties.getX_BANMA_MASTER_SIGN_ALGORITHM());
+        banmaerpSigningVO.setRequest_method(HttpMethod.GET);
+        banmaerpSigningVO.setTimestamp(timestamp);
+        if (url != null && url != ""){
+            if (url.contains("?")){
+                String s[] = url.split("\\?");
+                banmaerpSigningVO.setRequest_path(s[0]);
+                banmaerpSigningVO.setRequest_query(s[1]);
+            }
+            else {
+                banmaerpSigningVO.setRequest_path(url);
+            }
+        }
+        return banmaerpSigningVO;
     }
 }

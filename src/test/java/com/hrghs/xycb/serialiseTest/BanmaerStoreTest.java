@@ -8,6 +8,9 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.hrghs.xycb.domains.banmaerpDTO.StoreDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
+import com.hrghs.xycb.utils.converters.JodaDateTimeDeserialiser;
+import com.hrghs.xycb.utils.converters.JodaDateTimeSerialiser;
+import org.joda.time.DateTime;
 import org.joda.time.format.ISODateTimeFormat;
 
 import java.io.IOException;
@@ -37,7 +40,7 @@ public class BanmaerStoreTest {
                 "                \"Name\": \"test1\",\n" +
                 "                \"Platform\": \"Wish\",\n" +
                 "                \"CreateTime\": \"2019-01-10 16:57:58\",\n" +
-                "                \"UpdateTime\": \"2020-06-13 09:59:25\"\n" +
+                "                \"UpdateTime\": \"2020-06-13'T'09:59:25\"\n" +
                 "            },\n" +
                 "            {\n" +
                 "                \"ID\": \"400025423071000141\",\n" +
@@ -75,7 +78,10 @@ public class BanmaerStoreTest {
                 "    \"Success\": true,\n" +
                 "    \"Message\": \"成功\"\n" +
                 "}\n";
-        ObjectMapper objectMapper = new ObjectMapper().registerModule(new JodaModule());
+        JodaModule jodaModule = new JodaModule();
+        jodaModule.addSerializer(DateTime.class,new JodaDateTimeSerialiser());
+        jodaModule.addDeserializer(DateTime.class, new JodaDateTimeDeserialiser());
+        ObjectMapper objectMapper = new ObjectMapper().registerModule(jodaModule);
 
         BanmaErpResponseDTO<StoreDTO> banmaErpResponseDTO = objectMapper.readValue(getStoreById, new TypeReference<BanmaErpResponseDTO<StoreDTO>>() {});
        System.out.println(banmaErpResponseDTO.getData().getName()+"\t" + banmaErpResponseDTO.getData().getID()+"\t"+banmaErpResponseDTO.getData().getPlatform());

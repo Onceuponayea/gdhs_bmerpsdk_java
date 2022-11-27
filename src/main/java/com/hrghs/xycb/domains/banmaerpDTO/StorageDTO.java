@@ -5,11 +5,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.hrghs.xycb.domains.enums.BanmaerpStorageEnums;
+import com.hrghs.xycb.utils.converters.JodaDateTimeConverter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
+
+import javax.persistence.*;
 
 @Component
 @Data
@@ -18,25 +21,31 @@ import org.springframework.stereotype.Component;
 @NoArgsConstructor
 @JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT,use = JsonTypeInfo.Id.NAME)
 @JsonTypeName("Storage")
+@Entity
+@Table(name = "bmerp_storage")
 public class StorageDTO {
+
+    @Id
     @JsonProperty(value = "ID")
-    private String id;
+    private String ID;
     @JsonProperty(value = "Name")
     private String name;
     @JsonProperty(value = "Url")
     private String url;
+    @Column(name = "file_category_id")
     @JsonProperty(value = "FileCategoryID")
-    private String fileCategoryId;
+    private String fileCategoryID;
+    @Column(name = "file_type")
     @JsonProperty(value = "FileType")
     private String fileType;
     @JsonProperty(value = "Size")
     private int size;
-//    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'hh:mm:ss")
+    @Column(name = "create_time")
+    @Convert(converter = JodaDateTimeConverter.class)
     @JsonProperty(value = "CreateTime")
     private DateTime createTime;
-    //@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @Column(name = "update_time")
+    @Convert(converter = JodaDateTimeConverter.class)
     @JsonProperty(value = "UpdateTime")
     private DateTime updateTime;
 }

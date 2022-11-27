@@ -138,6 +138,6 @@ public class BanmaerStorageTest {
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JodaModule());
         BanmaErpResponseDTO<List<StorageDTO>> banmaErpResponseDTO = objectMapper.readValue(uploadTheFileToForm, new TypeReference<BanmaErpResponseDTO<List<StorageDTO>>>() {
         });
-        System.out.println(banmaErpResponseDTO.getData().get(0).getId());
+        System.out.println(banmaErpResponseDTO.getData().get(0).getID());
     }
 }

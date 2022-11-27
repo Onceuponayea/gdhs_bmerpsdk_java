@@ -5,6 +5,8 @@ import com.hrghs.xycb.domains.banmaerpDTO.StorageDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import org.joda.time.DateTime;
 
+import java.util.List;
+
 public interface StorageService {
 
     /**
@@ -23,7 +25,7 @@ public interface StorageService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO<StorageDTO> getStoragetList(
+    List<StorageDTO> getStoragetList(
             String ids,
             String name,
             String fileType,
@@ -44,8 +46,7 @@ public interface StorageService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO<StorageDTO> getStorageById(String id,
-                                       BanmaerpProperties banmaerpProperties);
+    StorageDTO getStorageById(String id, BanmaerpProperties banmaerpProperties);
 
     /**
      * 使用stream文件流的方式上传文件
@@ -76,7 +77,7 @@ public interface StorageService {
     );
 
     /**
-     * 使用base64文件流的方式上传文件
+     * 使用form-data文件流的方式上传文件
      * @param contentType 内容类型（必填）
      * @param file  文件内容（必填）
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）

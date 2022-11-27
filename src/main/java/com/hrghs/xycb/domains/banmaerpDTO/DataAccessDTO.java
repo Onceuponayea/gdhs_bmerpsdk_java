@@ -4,10 +4,14 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.hrghs.xycb.utils.converters.JodaDateTimeConverter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
+
+import javax.persistence.Convert;
 
 @Data
 @NoArgsConstructor
@@ -21,10 +25,10 @@ public class DataAccessDTO {
     private String dataAccessMode;
     @JsonProperty("Data")
     private String[] data;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    @Convert(converter = JodaDateTimeConverter.class)
     @JsonProperty(value = "CreateTime")
-    private String createTime;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    private DateTime createTime;
+    @Convert(converter = JodaDateTimeConverter.class)
     @JsonProperty(value = "UpdateTime")
-    private String updateTime;
+    private DateTime updateTime;
 }

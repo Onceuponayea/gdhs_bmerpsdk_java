@@ -3,6 +3,8 @@ package com.hrghs.xycb.services;
 import com.hrghs.xycb.config.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.AccountDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.DataAccessDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.StoreDTO;
+import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import org.joda.time.DateTime;
 
 import java.util.List;
@@ -57,14 +59,16 @@ public interface AccountService {
      * @param email      用户邮箱
      * @param realName   用户名称
      * @param department 部门
+     * @param useVirtual 是否用虚拟账号，true则会生成虚拟手机号
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    AccountDTO addAccount(
+    BanmaErpResponseDTO<Boolean> addAccount(
             String phone,
             String email,
             String realName,
             String department,
+            boolean useVirtual,
             BanmaerpProperties banmaerpProperties
     );
 
@@ -75,12 +79,16 @@ public interface AccountService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    Boolean logoutAccount(int id, BanmaerpProperties banmaerpProperties);
+    BanmaErpResponseDTO<Boolean> logoutAccount(int id, BanmaerpProperties banmaerpProperties);
 
     /**
      * 查询用户店铺权限
      * @param id 用户id
      * @return
      */
-    DataAccessDTO getDataAccess(int id);
+    DataAccessDTO getDataAccess(int id, BanmaerpProperties banmaerpProperties);
+
+    List<AccountDTO> saveAccountList(List<AccountDTO> accountDTOList);
+
+    AccountDTO saveAccount(AccountDTO accountDTO);
 }

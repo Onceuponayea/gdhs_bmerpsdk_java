@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 public class AppsInfoDTO {
     @JsonProperty(value = "ID")
-    private String id;
+    private String ID;
     @JsonProperty(value = "Name")
     private String name;
     @JsonProperty(value = "Status")

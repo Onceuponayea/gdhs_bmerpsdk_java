@@ -4,44 +4,51 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.hrghs.xycb.utils.JpaJodaDateTimeConverter;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.hrghs.xycb.domains.enums.BanmaerpPlatformEnums;
+import com.hrghs.xycb.utils.converters.JodaDateTimeConverter;
+import com.hrghs.xycb.utils.converters.JodaDateTimeDeserialiser;
+import com.hrghs.xycb.utils.converters.JodaDateTimeSerialiser;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Type;
 import org.joda.time.DateTime;
+import org.joda.time.contrib.hibernate.PersistentDateTime;
 import org.springframework.stereotype.Component;
+
 import javax.persistence.*;
 
 @Component
 @Data
-@Entity
-@Table(name = "bmerp_store")
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT,use = JsonTypeInfo.Id.NAME)
-//@JsonTypeInfo(include = JsonTypeInfo.As.EXISTING_PROPERTY, use = JsonTypeInfo.Id.NAME, visible = true, property = "Stores")
+@JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT, use = JsonTypeInfo.Id.NAME)
 @JsonTypeName("Store")
+@Entity
+@Table(name = "bmerp_store")
 public class StoreDTO {
     @Id
+    @Column(name = "id")
     @JsonProperty(value = "ID")
-    @Column(name = "ID",columnDefinition = "varchar(100) COMMENT 'StoreID' ")
     private String ID;
 
-    @Column(name = "Name",columnDefinition = "varchar(100) COMMENT 'StoreName' ")
+    @Column(name = "name")
     @JsonProperty(value = "Name")
     private String name;
 
-    @Column(name = "Platform",columnDefinition = "varchar(100) COMMENT 'Store_platform' ")
+    @Column(name = "platform")
     @JsonProperty(value = "Platform")
-    private String platform;
-    @Convert(converter = JpaJodaDateTimeConverter.class)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
+    private BanmaerpPlatformEnums.Platform platform;
+
+    @Column(name = "create_time")
+    @Convert(converter = JodaDateTimeConverter.class)
     @JsonProperty(value = "CreateTime")
-    @Column(name = "CreateTime",columnDefinition = "TIMESTAMP COMMENT 'Store_CreateTime' ")
     private DateTime createTime;
-    @Convert(converter = JpaJodaDateTimeConverter.class)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
+
+    @Column(name = "update_time")
+    @Convert(converter = JodaDateTimeConverter.class)
     @JsonProperty(value = "UpdateTime")
-    @Column(name = "UpdateTime",columnDefinition = "TIMESTAMP COMMENT 'Store_UpdateTime' ")
     private DateTime updateTime;
 }

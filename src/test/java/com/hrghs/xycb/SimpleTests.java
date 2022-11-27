@@ -10,57 +10,36 @@ import org.hibernate.dialect.MySQL8Dialect;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDateTime;
 import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
+
+import static jodd.util.StringPool.COMMA;
 //import com.atomikos.icatch.jta.hibernate3.TransactionManagerLookup;
 
 public class SimpleTests {
     public static void main(String[] args) {
-//        System.out.println(MySQL8Dialect.class.getName());
-//        System.out.println(org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl.class.getName());
-//"/v1/store?PageNumber=%d&PageSize=%d&SearchTimeStart=%tF&SearchTimeEnd=%tF";
-//        DateTimeFormatter dateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
-//        String formatedUrl = String.format(BanmaerpURL.banmaerp_storelist_GET,1,20,"2021-01-01 09:00:00","2023-01-10 09:00:00","","","");
-//        System.out.println(formatedUrl);
-//
-//        System.out.println(new DateTime().toString());
-//System.out.println(        BanmaerpPlatformEnums.Platform.Lazada.toString());
-//        BanmaerpPlatformEnums.Platform platform = null;
-//        System.out.println(platform.toString());
-        //DateTime d1 = new DateTime("2021-01-01 09:00:00");
-//        DateTime d2 = new DateTime("2021-01-01");
-//        DateTime d3 = new DateTime("2021-01-01T09:00:00");
-//        System.out.println(dateTimeFormatter.parseDateTime("2021-01-01 09:00:00"));
-//        System.out.println(dateTimeFormatter.parseDateTime("2021-01-01"));
-//        System.out.println(dateTimeFormatter.parseDateTime("2021-01-01T09:00:00"));
-
-//        BanmaerpProperties banmaerpProperties =null;
-//        Class[] classes= new Class[2];
-//        classes[0] =BanmaerpProperties.class;
-//        BanmaerpProperties banmaerpProperties2 =new BanmaerpProperties();
-//        System.out.println(banmaerpProperties instanceof BanmaerpProperties);
-//        System.out.println(banmaerpProperties2 instanceof BanmaerpProperties);
-//
-//        System.out.println(classes[0] == BanmaerpProperties.class );
-//
-//        Object[] objects = new Object[2];
-//        Object o = objects[1];
-//        System.out.println(o);
-//        System.out.println(o==null);
-
-       long count =
-               Arrays.stream(ImageFormats.values())
-                       .filter(format -> Arrays.stream(format.getExtensions())
-                               .anyMatch(extension -> "keycloak.jpg".toLowerCase(Locale.ROOT).contains(extension.toLowerCase(Locale.ROOT))))
-                               .count();
-       System.out.println(count);
-//        System.out.println(imageFormats.getName());
+        List<String>  strings = Arrays.asList("1","a","afa","fsfs");
+        StringBuilder stringBuilder = new StringBuilder();
+        for (String s : strings){
+            stringBuilder.append(s).append(COMMA);
+        }
+        String dbData = stringBuilder.substring(0,stringBuilder.length()-1);
+        System.out.println(dbData);
+        List<String> result =
+        Arrays.stream(dbData.split(COMMA))
+                .collect(Collectors.toList());
+        System.out.println(result.get(0)+"\t"+result.size());
     }
     private void banmaSign(){
         boolean isIP = ("IP白名单" == BanmaerpAuthEnums.AuthMethod.IP_WHITELIST.getAuthType());

@@ -5,20 +5,23 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.hrghs.xycb.domains.banmaerpDTO.AccountDTO;
-import com.hrghs.xycb.domains.banmaerpDTO.OrderDTO;
-import com.hrghs.xycb.domains.banmaerpDTO.StorageDTO;
-import com.hrghs.xycb.domains.banmaerpDTO.StoreDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.*;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.domains.enums.BanmaerpPlatformEnums;
 import com.hrghs.xycb.repositories.AccountRepository;
 import com.hrghs.xycb.repositories.OrderRepository;
 import com.hrghs.xycb.repositories.StoreRepository;
+import com.hrghs.xycb.services.OrderService;
+import com.hrghs.xycb.services.ProductService;
 import com.hrghs.xycb.services.StorageService;
 import com.hrghs.xycb.services.StoreService;
+import com.hrghs.xycb.utils.converters.JodaDateTimeDeserialiser;
+import com.hrghs.xycb.utils.converters.JodaDateTimeSerialiser;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -37,10 +40,19 @@ public class BanmaerpApiTests  {
     StoreRepository storeRepository;
 //    @Autowired
 //    AccountRepository accountRepository;
-//    @Autowired
-//    OrderRepository orderRepository;
+    @Autowired
+    OrderService orderService;
     @Autowired
     StorageService storageService;
+    @Autowired
+    ProductService productService;
+    @Autowired
+    @Lazy
+    private ObjectMapper objectMapper;
+//    @Autowired
+//    @Lazy
+//
+//    private ObjectMapper jackson;
 
    @EventListener(ApplicationReadyEvent.class)
    public void systemReady() throws JsonProcessingException {
@@ -50,10 +62,12 @@ public class BanmaerpApiTests  {
 //               .flatMap(webClient -> webClient.method(HttpMethod.GET).retrieve().bodyToMono(String.class))
 //               .subscribe(s -> System.out.println(s));
        //getStoreListMono();
-       //getStoreList();
-      // saveStoreList();
-      // saveAccountList();
-       uploadByBase64();
+       //List<StoreDTO> storeDTOList = getStoreList();     //working
+       //saveStoreList(storeDTOList);    //working
+       //saveAccountList();
+       //uploadByBase64();   //working
+       //saveProductList(); //working
+       saveOrderList();
 
    }
    private void getStoreListMono(){
@@ -63,11 +77,8 @@ public class BanmaerpApiTests  {
        System.out.println("getStoreList");
        storeList.subscribe(resp -> System.out.println(resp.getData().size()));
    }
-   private void getStoreList(){
-//       List<StoreDTO> storeList =
-//       storeService.getStoretList(null,null, BanmaerpPlatformEnums.Platform.Lazada,1,
-//               100,new DateTime("2020-12-01T00:00:00"),new DateTime("2021-01-01"),"CreateTime",
-//               null,null,null);
+
+   private List<StoreDTO> getStoreList(){
        List<StoreDTO> storeList = storeService.getStoretList(null,null, BanmaerpPlatformEnums.Platform.Lazada,1,
                100,null,null,"CreateTime",
                null,null,null);
@@ -75,49 +86,11 @@ public class BanmaerpApiTests  {
        if (storeList.size()>0){
            storeList.forEach(storeDTO -> System.out.println(storeDTO.getName()));
        }
+       return storeList;
    }
 
-   private void saveStoreList() throws JsonProcessingException {
-       String getStoretList = "{\n" +
-               "    \"Code\": 200,\n" +
-               "    \"Time\": \"2021-12-12 15:23:34\",    \n" +
-               "    \"Data\": {\n" +
-               "        \"Stores\": [\n" +
-               "            {\n" +
-               "                \"ID\": \"400000333053000132\",\n" +
-               "                \"Name\": \"test1\",\n" +
-               "                \"Platform\": \"Wish\",\n" +
-               "                \"CreateTime\": \"2019-01-10 16:57:58\",\n" +
-               "                \"UpdateTime\": \"2020-06-13 09:59:25\"\n" +
-               "            },\n" +
-               "            {\n" +
-               "                \"ID\": \"400025423071000141\",\n" +
-               "                \"Name\": \"test2\",\n" +
-               "                \"Platform\": \"Wish\",\n" +
-               "                \"CreateTime\": \"2019-03-18 14:16:04\",\n" +
-               "                \"UpdateTime\": \"2020-08-19 16:58:07\"\n" +
-               "            }\n" +
-               "        ],\n" +
-               "        \"Page\": {\n" +
-               "            \"PageNumber\": 1,\n" +
-               "            \"PageCount\": 1,\n" +
-               "            \"PageSize\": 20,\n" +
-               "            \"TotalCount\": 6,\n" +
-               "            \"HasMore\": false\n" +
-               "        }\n" +
-               "    },\n" +
-               "    \"Success\": true,\n" +
-               "    \"Message\": \"成功\"\n" +
-               "}\n";
-       ObjectMapper objectMapper = new ObjectMapper().registerModule(new JodaModule());
-       BanmaErpResponseDTO<JsonNode> storeListRaw =objectMapper.readValue(getStoretList, new TypeReference<BanmaErpResponseDTO<JsonNode>>() {});
-       Object[] objects = storeListRaw.toDataList(BANMAERP_FIELD_STORES);
-       List<StoreDTO> storeDTOList=
-       Arrays.stream(objects).map(o -> (StoreDTO)o)
-               .collect(Collectors.toList());
-       System.out.println("saving result........");
-       //storeRepository.saveAllAndFlush(storeDTOList);
-       //storeRepository.saveAll(storeDTOList);
+   private void saveStoreList(List<StoreDTO> storeDTOList) throws JsonProcessingException {
+       System.out.println("saving storeDTOList........");
        storeService.saveStoreList(storeDTOList);
        storeRepository.findAll().forEach(storeDTO -> System.out.println("findAll- ID:\t "+ storeDTO.getID()));
    }
@@ -167,6 +140,10 @@ public class BanmaerpApiTests  {
                        .collect(Collectors.toList());
 
        //accountRepository.saveAll(accountDTOS);
+   }
+
+   private void getOrderList(){
+
    }
    private void saveOrderList() throws JsonProcessingException {
         String orders = "{\n" +
@@ -295,7 +272,8 @@ public class BanmaerpApiTests  {
                Arrays.stream(objects).map(o -> (OrderDTO)o)
                        .collect(Collectors.toList());
        System.out.println(orderDTOS.size());
-       //orderRepository.saveAll(orderDTOS);
+       orderService.saveAll(orderDTOS);
+       System.out.println("orders has been saved...");
    }
 
    private void uploadByBase64() throws JsonProcessingException {
@@ -304,5 +282,309 @@ public class BanmaerpApiTests  {
        ObjectMapper objectMapper = new ObjectMapper().registerModule(new JodaModule());
        String result = objectMapper.writer().writeValueAsString(banmaErpResponseDTO);
        System.out.println(result);
+   }
+
+   private void saveProductList() throws JsonProcessingException {
+       System.out.println("saving productlist to db.");
+       String productLists="{\n" +
+               "    \"Code\": 200,\n" +
+               "    \"Time\": \"2021-12-12 15:23:34\",    \n" +
+               "    \"Data\": {\n" +
+               "        \"Products\": [\n" +
+               "            {\n" +
+               "            \"SPU\": {\n" +
+               "                \"SPUID\": \"1351482672542\",\n" +
+               "                \"Code\": \"100500203\",\n" +
+               "                \"Title\": \"男士条纹衬衫翻领短袖夏季透气2021纽扣休闲卡米萨斯街装沙滩夏威夷衬衫\",\n" +
+               "                \"LeiMuID\": \"c6ef5d23-8232-e811-8ffd-340804e01078\",\n" +
+               "                \"Image\": \"https://www.xxxx.com/images/78f44c98-411b-a5bbd-800x800.jpg\",\n" +
+               "                \"Status\": \"正常\",\n" +
+               "                \"Source\": \"平台同步\",\n" +
+               "                \"DefaultSupplierID\": \"00000000-0000-0000-0000-000000000000\",\n" +
+               "                \"Remark\": \"\",\n" +
+               "                \"IsExemptQuality\": false,\n" +
+               "                \"CreateTime\": \"2020-06-19 15:48:02\",\n" +
+               "                \"UpdateTime\": \"2021-10-16 14:32:46\"\n" +
+               "            },\n" +
+               "            \"SKUs\": [\n" +
+               "                {\n" +
+               "                    \"SKUID\": \"1351482672974663680\",\n" +
+               "                    \"Code\": \"14:10#Red;5:200000990\",\n" +
+               "                    \"Specification\": \"款式1;4XL\",\n" +
+               "                    \"CostPrice\": 77.28,\n" +
+               "                    \"Image\": \"https://www.xxxx.com/images/78f44c98-411b-a5bbd-800x800.jpg\",\n" +
+               "                    \"Weight\": 0,\n" +
+               "                    \"Length\": 0,\n" +
+               "                    \"Width\": 0,\n" +
+               "                    \"Height\": 0,\n" +
+               "                    \"IsValid\": true,\n" +
+               "                    \"Status\": \"正常\",\n" +
+               "                    \"Remark\": \"\",\n" +
+               "                    \"Sort\": 0,\n" +
+               "                    \"Type\": \"普通\",\n" +
+               "                    \"CombineData\": [],\n" +
+               "                    \"Options\": [\n" +
+               "                        {\n" +
+               "                            \"Name\": \"款式1\",\n" +
+               "                            \"Value\": \"款式1\"\n" +
+               "                        },\n" +
+               "                        {\n" +
+               "                            \"Name\": \"4XL\",\n" +
+               "                            \"Value\": \"4XL\"\n" +
+               "                        }\n" +
+               "                    ]\n" +
+               "                }\n" +
+               "            ]\n" +
+               "        }\n" +
+               "        ],\n" +
+               "        \"Page\": {\n" +
+               "            \"PageNumber\": 1,\n" +
+               "            \"PageCount\": 1,\n" +
+               "            \"PageSize\": 20,\n" +
+               "            \"TotalCount\": 1,\n" +
+               "            \"HasMore\": false\n" +
+               "        }\n" +
+               "    },\n" +
+               "    \"Success\": true,\n" +
+               "    \"Message\": \"成功\"\n" +
+               "}";
+
+//       BanmaErpResponseDTO<JsonNode> projectListRaw =objectMapper.readValue(productLists, new TypeReference<BanmaErpResponseDTO<JsonNode>>() {});
+//       Object[] objects = projectListRaw.toDataList(BANMAERP_FIELD_PRODUCTS);
+//       List<ProductDTO> productDTOS=
+//               Arrays.stream(objects).map(o -> (ProductDTO)o)
+//                       .collect(Collectors.toList());
+//       List<ProductDTO> result = productService.saveALL(productDTOS);
+//       System.out.println("result: \t" +result.size());
+
+
+       String product ="{\n" +
+               "    \"Code\": 200,\n" +
+               "    \"Time\": \"2021-12-12 15:23:34\",    \n" +
+               "    \"Data\": {\n" +
+               "        \"Product\": {\n" +
+               "            \"SPU\": {\n" +
+               "                \"SPUID\": \"1351482672542\",\n" +
+               "                \"Code\": \"100500203\",\n" +
+               "                \"Title\": \"男士条纹衬衫翻领短袖夏季透气2021纽扣休闲卡米萨斯街装沙滩夏威夷衬衫\",\n" +
+               "                \"LeiMuID\": \"c6ef5d23-8232-e811-8ffd-340804e01078\",\n" +
+               "                \"Image\": \"https://www.xxxx.com/images/78f44c98-411b-a5bbd-800x800.jpg\",\n" +
+               "                \"Status\": \"正常\",\n" +
+               "                \"Source\": \"平台同步\",\n" +
+               "                \"DefaultSupplierID\": \"00000000-0000-0000-0000-000000000000\",\n" +
+               "                \"Remark\": \"\",\n" +
+               "                \"IsExemptQuality\": false,\n" +
+               "                \"CreateTime\": \"2020-06-19 15:48:02\",\n" +
+               "                \"UpdateTime\": \"2021-10-16 14:32:46\"\n" +
+               "            },\n" +
+               "            \"Descriptions\": {\n" +
+               "                \"Html\": \"testlhtml\",\n" +
+               "                \"Text\": \"testText\",\n" +
+               "                \"Short\": \"testShort\"\n" +
+               "            },\n" +
+               "            \"SKUs\": [\n" +
+               "                {\n" +
+               "                    \"SKUID\": \"1351482672974663680\",\n" +
+               "                    \"Code\": \"14:10#Red;5:200000990\",\n" +
+               "                    \"Specification\": \"款式1;4XL\",\n" +
+               "                    \"CostPrice\": 77.28,\n" +
+               "                    \"Image\": \"https://www.xxxx.com/images/78f44c98-411b-a5bbd-800x800.jpg\",\n" +
+               "                    \"Weight\": 0,\n" +
+               "                    \"Length\": 0,\n" +
+               "                    \"Width\": 0,\n" +
+               "                    \"Height\": 0,\n" +
+               "                    \"IsValid\": true,\n" +
+               "                    \"Status\": \"正常\",\n" +
+               "                    \"Remark\": \"\",\n" +
+               "                    \"Sort\": 0,\n" +
+               "                    \"Type\": \"普通\",\n" +
+               "                    \"CombineData\": [],\n" +
+               "                    \"Options\": [\n" +
+               "                        {\n" +
+               "                            \"Name\": \"款式1\",\n" +
+               "                            \"Value\": \"款式1\"\n" +
+               "                        },\n" +
+               "                        {\n" +
+               "                            \"Name\": \"4XL\",\n" +
+               "                            \"Value\": \"4XL\"\n" +
+               "                        }\n" +
+               "                    ]\n" +
+               "                }\n" +
+               "            ],\n" +
+               "            \"Suppliers\": [],\n" +
+               "            \"Options\": [\n" +
+               "                {\n" +
+               "                    \"Name\": \"款式1\",\n" +
+               "                    \"Sort\": 0,\n" +
+               "                    \"Values\": [\n" +
+               "                        \"款式1\"\n" +
+               "                    ]\n" +
+               "                },\n" +
+               "                {\n" +
+               "                    \"Name\": \"4XL\",\n" +
+               "                    \"Sort\": 0,\n" +
+               "                    \"Values\": [\n" +
+               "                        \"4XL\",\n" +
+               "                        \"5XL\",\n" +
+               "                        \"L\",\n" +
+               "                        \"M\",\n" +
+               "                        \"S\",\n" +
+               "                        \"XL\",\n" +
+               "                        \"XXL\",\n" +
+               "                        \"3XL\"\n" +
+               "                    ]\n" +
+               "                }\n" +
+               "            ],\n" +
+               "            \"Requirements\": [],\n" +
+               "            \"Sources\": [],\n" +
+               "            \"Images\": [\n" +
+               "                {\n" +
+               "                    \"Src\": \"https://www.xxxx.com/images/78f44c98-411b-a5bbd-800x800.jpg\",\n" +
+               "                    \"Sort\": 0\n" +
+               "                }\n" +
+               "            ],\n" +
+               "            \"Tags\": [],\n" +
+               "            \"PackMaterials\": []\n" +
+               "        }\n" +
+               "    },\n" +
+               "    \"Success\": true,\n" +
+               "    \"Message\": \"成功\"\n" +
+               "}\n";
+       BanmaErpResponseDTO<ProductDTO> productDTOBanmaErpResponseDTO = objectMapper.readValue(product, new TypeReference<BanmaErpResponseDTO<ProductDTO>>() {});
+       System.out.println(productDTOBanmaErpResponseDTO.getData().getSPU().getTitle());
+       System.out.println("product saveing.............");
+
+       //productService.save(productDTOBanmaErpResponseDTO.getData());
+       System.out.println("product saved.............");
+       String products ="{\n" +
+               "    \"Code\": 200,\n" +
+               "    \"Time\": \"2021-12-12 15:23:34\",\n" +
+               "    \"Data\": {\n" +
+               "        \"Products\": [\n" +
+               "            {\n" +
+               "                \"SPU\": {\n" +
+               "                    \"SPUID\": \"1351482672542\",\n" +
+               "                    \"Code\": \"100500203\",\n" +
+               "                    \"Title\": \"男士条纹衬衫翻领短袖夏季透气2021纽扣休闲卡米萨斯街装沙滩夏威夷衬衫\",\n" +
+               "                    \"LeiMuID\": \"c6ef5d23-8232-e811-8ffd-340804e01078\",\n" +
+               "                    \"Image\": \"https://www.xxxx.com/images/78f44c98-411b-a5bbd-800x800.jpg\",\n" +
+               "                    \"Status\": \"正常\",\n" +
+               "                    \"Source\": \"平台同步\",\n" +
+               "                    \"DefaultSupplierID\": \"00000000-0000-0000-0000-000000000000\",\n" +
+               "                    \"Remark\": \"\",\n" +
+               "                    \"IsExemptQuality\": false,\n" +
+               "                    \"CreateTime\": \"2020-06-19 15:48:02\",\n" +
+               "                    \"UpdateTime\": \"2021-10-16 14:32:46\"\n" +
+               "                },\n" +
+               "                \"Descriptions\": {\n" +
+               "                    \"Html\": \"testlhtml\",\n" +
+               "                    \"Text\": \"testText\",\n" +
+               "                    \"Short\": \"testShort\"\n" +
+               "                },\n" +
+               "                \"SKUs\": [\n" +
+               "                    {\n" +
+               "                        \"SKUID\": \"1351482672974663680\",\n" +
+               "                        \"Code\": \"14:10#Red;5:200000990\",\n" +
+               "                        \"Specification\": \"款式1;4XL\",\n" +
+               "                        \"CostPrice\": 77.28,\n" +
+               "                        \"Image\": \"https://www.xxxx.com/images/78f44c98-411b-a5bbd-800x800.jpg\",\n" +
+               "                        \"Weight\": 0,\n" +
+               "                        \"Length\": 0,\n" +
+               "                        \"Width\": 0,\n" +
+               "                        \"Height\": 0,\n" +
+               "                        \"IsValid\": true,\n" +
+               "                        \"Status\": \"正常\",\n" +
+               "                        \"Remark\": \"\",\n" +
+               "                        \"Sort\": 0,\n" +
+               "                        \"Type\": \"普通\",\n" +
+               "                        \"CombineData\": [],\n" +
+               "                        \"Options\": [\n" +
+               "                            {\n" +
+               "                                \"Name\": \"款式1\",\n" +
+               "                                \"Value\": \"款式1\"\n" +
+               "                            },\n" +
+               "                            {\n" +
+               "                                \"Name\": \"4XL\",\n" +
+               "                                \"Value\": \"4XL\"\n" +
+               "                            }\n" +
+               "                        ]\n" +
+               "                    }\n" +
+               "                ],\n" +
+               "                \"Options\": [\n" +
+               "                    {\n" +
+               "                        \"Name\": \"款式1\",\n" +
+               "                        \"Sort\": 0,\n" +
+               "                        \"Values\": [\n" +
+               "                            \"款式1\"\n" +
+               "                        ]\n" +
+               "                    },\n" +
+               "                    {\n" +
+               "                        \"Name\": \"4XL\",\n" +
+               "                        \"Sort\": 0,\n" +
+               "                        \"Values\": [\n" +
+               "                            \"4XL\",\n" +
+               "                            \"5XL\",\n" +
+               "                            \"L\",\n" +
+               "                            \"M\",\n" +
+               "                            \"S\",\n" +
+               "                            \"XL\",\n" +
+               "                            \"XXL\",\n" +
+               "                            \"3XL\"\n" +
+               "                        ]\n" +
+               "                    }\n" +
+               "                ],\n" +
+               "                \"Images\": [\n" +
+               "                    {\n" +
+               "                        \"Src\": \"https://www.xxxx.com/images/78f44c98-411b-a5bbd-800x800.jpg\",\n" +
+               "                        \"Sort\": 0\n" +
+               "                    }\n" +
+               "                ],\n" +
+               "                \"Suppliers\": [\n" +
+               "                    {\n" +
+               "                        \"ID\": \"48F8184E-6A2B-443F-8FB4-EB777F7618D9\",\n" +
+               "                        \"Remark\": \"test\",\n" +
+               "                        \"Sort\": 1\n" +
+               "                    },\n" +
+               "                    {\n" +
+               "                        \"ID\": \"B1A86AA7-665C-4196-8509-CFEDF366AA82\",\n" +
+               "                        \"Remark\": \"test1\",\n" +
+               "                        \"Sort\": 2\n" +
+               "                    }\n" +
+               "                ],\n" +
+               "                \"Tags\": [\n" +
+               "                    {\n" +
+               "                        \"Name\": \"热卖\"\n" +
+               "                    },\n" +
+               "                    {\n" +
+               "                        \"Name\": \"热销\"\n" +
+               "                    }\n" +
+               "                ],\n" +
+               "                \"Requirements\": [],\n" +
+               "                \"Sources\": [],\n" +
+               "                \"PackMaterials\": []\n" +
+               "            }\n" +
+               "        ],\n" +
+               "        \"Page\": {\n" +
+               "            \"PageNumber\": 1,\n" +
+               "            \"PageCount\": 1,\n" +
+               "            \"PageSize\": 20,\n" +
+               "            \"TotalCount\": 1,\n" +
+               "            \"HasMore\": false\n" +
+               "        }\n" +
+               "    },\n" +
+               "    \"Success\": true,\n" +
+               "    \"Message\": \"成功\"\n" +
+               "}";
+
+       BanmaErpResponseDTO<JsonNode> projectListRaw =objectMapper.readValue(products, new TypeReference<BanmaErpResponseDTO<JsonNode>>() {});
+       Object[] objects = projectListRaw.toDataList(BANMAERP_FIELD_PRODUCTS);
+       List<ProductDTO> productDTOS=
+               Arrays.stream(objects).map(o -> (ProductDTO)o)
+                       .collect(Collectors.toList());
+       List<ProductDTO> result = productService.saveALL(productDTOS);
+       System.out.println("saving product result...." + result.size());
+
+
+
    }
 }

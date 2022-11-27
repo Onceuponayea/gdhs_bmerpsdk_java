@@ -17,9 +17,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.jta.atomikos.AtomikosDataSourceBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.*;
 import org.springframework.core.env.Environment;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
@@ -59,7 +57,7 @@ public class DbConfigs {
     private Environment env;
     @Autowired
     private ScheduledExecutorService scheduledExecutorService;
-//初始化
+    //初始化
     @Bean
     @ConditionalOnMissingBean
     public ReactiveRedisConnectionFactory redisConnectionFactory(@Value("${spring.redis.host:localhost}") String host,
@@ -85,6 +83,8 @@ public class DbConfigs {
         return new ReactiveStringRedisTemplate(redisConnectionFactory);
     }
     @Bean(name = "tokenRespReactiveRedisOperations")
+    @Lazy
+    @DependsOn(value = {"objectMapper"})
     public ReactiveRedisOperations<String, TokenResponseDTO> tokenRespReactiveRedisOperations(ReactiveRedisConnectionFactory redisConnectionFactory, ObjectMapper objectMapper){
         RedisSerializationContext.RedisSerializationContextBuilder<String,TokenResponseDTO> builder=
                 RedisSerializationContext.newSerializationContext(new StringRedisSerializer());

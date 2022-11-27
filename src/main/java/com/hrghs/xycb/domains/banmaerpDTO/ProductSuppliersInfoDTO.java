@@ -10,15 +10,21 @@ import lombok.NoArgsConstructor;
 import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
 @Component
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT,use = JsonTypeInfo.Id.NAME)
-@JsonTypeName("Suppliers")
+@Entity
+@Table(name = "bmerp_product_suppliers_info")
 public class ProductSuppliersInfoDTO {
+
+    @Id
     @JsonProperty(value = "ID")
-    private String id;
+    private String ID;
     @JsonProperty(value = "Name")
     private String name;
     @JsonProperty(value = "Contact")
