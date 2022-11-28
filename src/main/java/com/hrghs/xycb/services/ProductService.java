@@ -2,6 +2,9 @@ package com.hrghs.xycb.services;
 
 import com.hrghs.xycb.config.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.ProductDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.ProductSkusDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.ProductSuppliersInfoDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.ProductTagsDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import org.joda.time.DateTime;
 
@@ -54,7 +57,7 @@ public interface ProductService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO<ProductDTO> getProductById(String spuId,
+   ProductDTO getProductById(String spuId,
                                        BanmaerpProperties banmaerpProperties);
 
     /**
@@ -94,7 +97,7 @@ public interface ProductService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO getProductSkuList(
+    List<ProductSkusDTO> getProductSkuList(
             String skuIds,
             String code,
             long spuId,
@@ -116,8 +119,8 @@ public interface ProductService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO getProductSkuById(String skuid,
-                                          BanmaerpProperties banmaerpProperties);
+    ProductSkusDTO getProductSkuById(String skuid,
+                                     BanmaerpProperties banmaerpProperties);
 
     /**
      * 查询Tag列表
@@ -132,7 +135,7 @@ public interface ProductService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO getProductTagsList(
+    List<ProductTagsDTO> getProductTagsList(
             String name,
             int pageNumber,
             int pageSize,
@@ -157,7 +160,7 @@ public interface ProductService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO getProductSuppliersList(
+    List<ProductSuppliersInfoDTO>  getProductSuppliersList(
             String name,
             int pageNumber,
             int pageSize,
@@ -168,5 +171,10 @@ public interface ProductService {
             String sortBy,
             BanmaerpProperties banmaerpProperties
     );
+
+    List<ProductDTO> saveALL(List<ProductDTO> products);
+
+    ProductDTO save(ProductDTO productDTO);
+
 
 }

@@ -1,14 +1,14 @@
-package com.hrghs.xycb.utils;
+package com.hrghs.xycb.utils.converters;
 
+import com.hrghs.xycb.utils.DateTimeUtils;
 import org.joda.time.DateTime;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 import java.sql.Timestamp;
 
 @Converter
-public class JpaJodaDateTimeConverter implements AttributeConverter<DateTime, Timestamp> {
+public class JodaDateTimeConverter implements AttributeConverter<DateTime, Timestamp> {
     private DateTimeUtils dateTimeUtils = new DateTimeUtils();
     @Override
     public Timestamp convertToDatabaseColumn(DateTime attribute) {
