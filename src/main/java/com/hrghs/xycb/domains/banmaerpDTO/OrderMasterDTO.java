@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import javax.persistence.*;
 import java.util.List;
+import java.util.UUID;
 
 @Component
 @Data
@@ -26,9 +27,6 @@ public class OrderMasterDTO {
     @JsonBackReference
     private OrderDTO orderDTO;
 
-    public String getOrder_uuid() {
-        return orderDTO.getOrderUUID().toString();
-    }
     @Column(name = "store_id")
     @JsonProperty(value = "StoreID")
     private String storeID;
@@ -269,7 +267,11 @@ public class OrderMasterDTO {
     @JsonProperty(value = "UsedPoint")
     private Integer usedPoint;
 
-
-
+    public String getOrder_uuid() {
+        return orderDTO.getOrderUUID().toString();
+    }
+    public void setOrder_uuid(String order_uuid){
+        orderDTO.setOrderUUID(UUID.fromString(order_uuid));
+    }
 
 }
