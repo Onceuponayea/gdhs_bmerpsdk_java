@@ -4,6 +4,7 @@ package com.hrghs.xycb.config;
 import com.atomikos.icatch.jta.UserTransactionImp;
 import com.atomikos.icatch.jta.UserTransactionManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.hrghs.xycb.domains.banmaerpDTO.TokenResponseDTO;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -12,6 +13,7 @@ import net.javacrumbs.shedlock.provider.redis.spring.ReactiveRedisLockProvider;
 import org.h2.tools.Server;
 import org.hibernate.dialect.MySQL8Dialect;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -84,11 +86,13 @@ public class DbConfigs {
     }
     @Bean(name = "tokenRespReactiveRedisOperations")
     @Lazy
-    @DependsOn(value = {"objectMapper"})
-    public ReactiveRedisOperations<String, TokenResponseDTO> tokenRespReactiveRedisOperations(ReactiveRedisConnectionFactory redisConnectionFactory, ObjectMapper objectMapper){
+    @DependsOn(value = {"jacksonObjectMapper","jodaModule"})
+    public ReactiveRedisOperations<String, TokenResponseDTO> tokenRespReactiveRedisOperations(ReactiveRedisConnectionFactory redisConnectionFactory
+            , @Qualifier(value = "jacksonObjectMapper") ObjectMapper objectMapper, @Qualifier(value = "jodaModule")JodaModule jodaModule){
         RedisSerializationContext.RedisSerializationContextBuilder<String,TokenResponseDTO> builder=
                 RedisSerializationContext.newSerializationContext(new StringRedisSerializer());
         Jackson2JsonRedisSerializer<TokenResponseDTO> jsonRedisSerializer = new Jackson2JsonRedisSerializer(TokenResponseDTO.class);
+        objectMapper.registerModule(jodaModule);
         jsonRedisSerializer.setObjectMapper(objectMapper);
         return new ReactiveRedisTemplate<>(redisConnectionFactory,builder.value(jsonRedisSerializer).build());
     }
