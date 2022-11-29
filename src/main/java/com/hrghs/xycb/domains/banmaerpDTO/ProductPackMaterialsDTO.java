@@ -26,7 +26,7 @@ public class ProductPackMaterialsDTO {
     private int quantity;
 
     @JsonIgnore
-    @JoinColumn(name = "ID",nullable = false,insertable = false,updatable = false)
-    @ManyToOne
+    @JoinColumn(name = "product_id")
+    @ManyToOne(fetch = FetchType.LAZY)
     private ProductDTO productDTO;
 }

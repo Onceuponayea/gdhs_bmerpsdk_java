@@ -19,12 +19,14 @@ import java.util.List;
 public class OrderDetailsDTO {
 
     @Id
+    @Column(name = "id")
     @JsonProperty(value = "ID")
     private String ID;
 
     @JsonIgnore
-    @JoinColumn(name = "ID",nullable = false,insertable = false,updatable = false)
-    @ManyToOne
+//    @JoinColumn(name = "ID",nullable = false,insertable = false,updatable = false)
+    @ManyToOne(cascade = CascadeType.REFRESH,fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id")
     private OrderDTO orderDTO;
 
     @Column(name = "package_id")
@@ -126,7 +128,8 @@ public class OrderDetailsDTO {
     @JsonProperty(value = "SKUImage")
     private String SKUImage;
 
-    @OneToMany(mappedBy = "orderDetailsDTO",cascade= CascadeType.ALL,fetch=FetchType.LAZY)
+    @OneToMany(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @JoinColumn(name = "detail_id")
     @JsonProperty(value = "InventoryData")
     private List<OrderDetailsInventoryDataDTO> inventoryData;
 

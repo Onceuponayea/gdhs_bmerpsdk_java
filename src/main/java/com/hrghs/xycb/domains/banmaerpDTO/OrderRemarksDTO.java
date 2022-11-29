@@ -18,8 +18,9 @@ public class OrderRemarksDTO {
     private int id;
 
     @JsonIgnore
-    @JoinColumn(name = "id",nullable = false,insertable = false,updatable = false)
-    @ManyToOne
+//    @JoinColumn(name = "id",nullable = false,insertable = false,updatable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id")
     private OrderDTO orderDTO;
 
     @JsonProperty(value = "Category")

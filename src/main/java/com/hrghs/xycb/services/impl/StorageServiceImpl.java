@@ -36,9 +36,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
+
 import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_STORES;
 import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_STORAGES;
 import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_STORES;
+
 @Service
 @Lazy
 public class StorageServiceImpl implements StorageService {
@@ -53,24 +55,26 @@ public class StorageServiceImpl implements StorageService {
     @Autowired
     @Lazy
     private ObjectMapper objectMapper;
+
     /**
      * 查询文件列表
-     * @param ids   存储ID，用逗号分隔
-     * @param name  存储名称
-     * @param fileType  文件类型,具体值参见:FileType
-     * @param fileCategoryId    存储分类id
-     * @param pageNumber    页码（必填）
-     * @param pageSize  页大小
-     * @param searchTimeStart   查询的开始时间
-     * @param searchTimeEnd     查询的结束时间
-     * @param searchTimeField   查询的时间字段名，具体值参见:SearchTimeField
-     * @param sortField     排序字段名，具体值参见:SortField
-     * @param sortBy    排序方式，具体值参见:SortBy
+     *
+     * @param ids             存储ID，用逗号分隔
+     * @param name            存储名称
+     * @param fileType        文件类型,具体值参见:FileType
+     * @param fileCategoryId  存储分类id
+     * @param pageNumber      页码（必填）
+     * @param pageSize        页大小
+     * @param searchTimeStart 查询的开始时间
+     * @param searchTimeEnd   查询的结束时间
+     * @param searchTimeField 查询的时间字段名，具体值参见:SearchTimeField
+     * @param sortField       排序字段名，具体值参见:SortField
+     * @param sortBy          排序方式，具体值参见:SortBy
      * @return
      */
     @Override
     @CheckBanmaerpProperties
-    public List<StorageDTO> getStoragetList(String ids, String name, String fileType, String fileCategoryId, int pageNumber, int pageSize,
+    public List<StorageDTO> getStoragetList(String ids, String name, String fileType, String fileCategoryId, Integer pageNumber, Integer pageSize,
                                             DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField,
                                             String sortBy, BanmaerpProperties banmaerpProperties) {
         String apiUrl = String.format(BanmaerpURL.banmaerp_storagelist_GET, pageNumber, pageSize,
@@ -92,9 +96,16 @@ public class StorageServiceImpl implements StorageService {
         return storageDTOList;
     }
 
+    @Override
+    public List<StorageDTO> getStoragetList(Integer pageNumber, BanmaerpProperties banmaerpProperties) {
+        return getStoragetList(null, null, null, null, pageNumber
+                , null, null, null, null, null, null, banmaerpProperties);
+    }
+
     /**
      * 查询单个文件
-     * @param id  存储ID（必填）
+     *
+     * @param id 存储ID（必填）
      * @return
      */
     @Override
@@ -125,9 +136,10 @@ public class StorageServiceImpl implements StorageService {
 
     /**
      * 使用stream文件流的方式上传文件
+     *
      * @param contentType 内容类型（必填）
-     * @param name  文件名称（必填）
-     * @param file  文件内容（必填）
+     * @param name        文件名称（必填）
+     * @param file        文件内容（必填）
      * @return
      */
     @Override
@@ -138,51 +150,65 @@ public class StorageServiceImpl implements StorageService {
 
     /**
      * 使用base64文件流的方式上传文件
-     * @param name  文件名称（必填）
-     * @param file  文件内容（必填）
+     *
+     * @param name 文件名称（必填）
+     * @param file 文件内容（必填）
      * @return
      */
     @Override
     @CheckBanmaerpProperties
     public BanmaErpResponseDTO<StorageDTO> uploadTheFileToBase64(String name, String file,
-                                                     BanmaerpProperties banmaerpProperties) {
-        if (isFileNameValid(name)){
-            String apiUrl = String.format(BanmaerpURL.banmaerp_storage_base64_POST,name);
+                                                                 BanmaerpProperties banmaerpProperties) {
+        if (isFileNameValid(name)) {
+            String apiUrl = String.format(BanmaerpURL.banmaerp_storage_base64_POST, name);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders.setContentType(MediaType.TEXT_PLAIN);
             httpHeaders.setAccept(Arrays.asList(MediaType.TEXT_PLAIN));
             BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
-            httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
-            HttpEntity requestBody = new HttpEntity(file,httpHeaders);
-            BanmaErpResponseDTO<StorageDTO> responseDTO=
+            httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
+            HttpEntity requestBody = new HttpEntity(file, httpHeaders);
+            BanmaErpResponseDTO<StorageDTO> responseDTO =
                     httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
                             .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),
-                                    HttpMethod.POST,requestBody,
-                                    new ParameterizedTypeReference<BanmaErpResponseDTO<StorageDTO>>() {})
+                                    HttpMethod.POST, requestBody,
+                                    new ParameterizedTypeReference<BanmaErpResponseDTO<StorageDTO>>() {
+                                    })
                             .getBody();
             storageRepository.saveAndFlush(responseDTO.getData());
             return responseDTO;
-        }else {
+        } else {
             throw new IllegalArgumentException(name + "  is not a valid image file type!");
         }
     }
 
     /**
      * 使用base64文件流的方式上传文件
+     *
      * @param contentType 内容类型（必填）
-     * @param file  文件内容（必填）
+     * @param file        文件内容（必填）
      * @return
      */
     @Override
     public BanmaErpResponseDTO<StorageDTO> uploadTheFileToForm(String contentType, String file,
-                                                   BanmaerpProperties banmaerpProperties) {
+                                                               BanmaerpProperties banmaerpProperties) {
         return null;
     }
-    private boolean isFileNameValid(String name){
-        return  Arrays.stream(ImageFormats.values())
+
+    @Override
+    public List<StorageDTO> saveAll(List<StorageDTO> storageDTOList) {
+        return storageRepository.saveAllAndFlush(storageDTOList);
+    }
+
+    @Override
+    public StorageDTO save(StorageDTO storageDTO) {
+        return storageRepository.saveAndFlush(storageDTO);
+    }
+
+    private boolean isFileNameValid(String name) {
+        return Arrays.stream(ImageFormats.values())
                 .filter(format -> Arrays.stream(format.getExtensions())
                         .anyMatch(extension -> name.toLowerCase(Locale.ROOT).contains(extension.toLowerCase(Locale.ROOT))))
-                .count()>0;
+                .count() > 0;
     }
 }

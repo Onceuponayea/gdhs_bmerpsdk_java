@@ -1,18 +1,13 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 @Component
 @Data
@@ -39,10 +34,18 @@ public class ProductSuppliersInfoDTO {
     private String url;
     @JsonProperty(value = "QQ")
     private String qq;
+    @Column(name = "we_chat")
     @JsonProperty(value = "WeChat")
     private String weChat;
+    @Column(name = "wang_wang")
     @JsonProperty(value = "WangWang")
     private String wangWang;
+    @Column(name = "settlement_type")
     @JsonProperty(value = "SettlementType")
     private String settlementType;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "supplier_id", referencedColumnName = "id")
+    @JsonBackReference
+    private ProductSuppliersDTO productSuppliersDTO;
 }

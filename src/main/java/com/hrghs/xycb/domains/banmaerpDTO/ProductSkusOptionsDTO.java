@@ -30,7 +30,7 @@ public class ProductSkusOptionsDTO {
     private String value;
 
     @JsonIgnore
-    @ManyToOne(cascade={CascadeType.MERGE, CascadeType.REFRESH},optional=false)
-    @JoinColumn(name="sku_optionId",nullable = false,insertable = false,updatable = false)
+    @JoinColumn(name = "psku_id")
+    @ManyToOne(fetch = FetchType.LAZY)
     private ProductSkusDTO productSkusDTO;
 }

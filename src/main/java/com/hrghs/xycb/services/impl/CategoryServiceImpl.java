@@ -65,7 +65,7 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     @CheckBanmaerpProperties
-    public List<CategoryDTO> getCategoryList(String ids, String name, String parentId, int pageNumber, int pageSize, DateTime searchTimeStart,
+    public List<CategoryDTO> getCategoryList(String ids, String name, String parentId, Integer pageNumber, Integer pageSize, DateTime searchTimeStart,
                                                DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy,
                                                BanmaerpProperties banmaerpProperties) {
         String apiUrl = String.format(BanmaerpURL.banmaerp_categorylist_GET, pageNumber, pageSize,searchTimeStart,searchTimeEnd,searchTimeField);
@@ -84,6 +84,12 @@ public class CategoryServiceImpl implements CategoryService {
                 .map(o -> (CategoryDTO) o)
                 .collect(Collectors.toList());
         return categoryDTOList;
+    }
+
+    @Override
+    public List<CategoryDTO> getCategoryList(Integer pageNumber, BanmaerpProperties banmaerpProperties) {
+        return getCategoryList(null, null, null, pageNumber
+                , null, null, null, null, null, null, banmaerpProperties);
     }
 
     /**

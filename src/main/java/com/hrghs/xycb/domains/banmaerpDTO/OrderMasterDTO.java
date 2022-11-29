@@ -19,10 +19,11 @@ import java.util.UUID;
 public class OrderMasterDTO {
 
     @Id
+    @Column(name = "id")
     @JsonProperty(value = "ID")
     private String ID;
 
-    @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @OneToOne()
     @JoinColumn(name = "order_uuid", referencedColumnName = "order_UUID")
     @JsonBackReference
     private OrderDTO orderDTO;
@@ -255,9 +256,9 @@ public class OrderMasterDTO {
      * 要求交货时间/预计交货时间/期望交货时间时间段，如 10:00-16:00,上午/午前=06:00-12:00,下午/午后=12:00-18:00,夜间=18:00-21:00
      */
     @Column(name = "requested_delivery_time")
-    @Convert(converter = JodaDateTimeConverter.class)
+//    @Convert(converter = JodaDateTimeConverter.class)
     @JsonProperty(value = "RequestedDeliveryTime")
-    private DateTime requestedDeliveryTime;
+    private String requestedDeliveryTime;
 
     @Column(name = "risk_level")
     @JsonProperty(value = "RiskLevel")

@@ -34,15 +34,15 @@ public interface ProductService {
      */
     List<ProductDTO> getProductList(
             String spuIds,
-            long source,
+            String source,
             String spu,
             String categoryId,
             String title,
             String supplier,
             String costPriceStart,
             String costPriceEnd,
-            int pageNumber,
-            int pageSize,
+            Integer pageNumber,
+            Integer pageSize,
             DateTime searchTimeStart,
             DateTime searchTimeEnd,
             String searchTimeField,
@@ -100,11 +100,11 @@ public interface ProductService {
     List<ProductSkusDTO> getProductSkuList(
             String skuIds,
             String code,
-            long spuId,
+            String spuId,
             String costPriceStart,
             String costPriceEnd,
-            int pageNumber,
-            int pageSize,
+            Integer pageNumber,
+            Integer pageSize,
             DateTime searchTimeStart,
             DateTime searchTimeEnd,
             String searchTimeField,
@@ -137,8 +137,8 @@ public interface ProductService {
      */
     List<ProductTagsDTO> getProductTagsList(
             String name,
-            int pageNumber,
-            int pageSize,
+            Integer pageNumber,
+            Integer pageSize,
             DateTime searchTimeStart,
             DateTime searchTimeEnd,
             String searchTimeField,
@@ -162,8 +162,8 @@ public interface ProductService {
      */
     List<ProductSuppliersInfoDTO>  getProductSuppliersList(
             String name,
-            int pageNumber,
-            int pageSize,
+            Integer pageNumber,
+            Integer pageSize,
             DateTime searchTimeStart,
             DateTime searchTimeEnd,
             String searchTimeField,

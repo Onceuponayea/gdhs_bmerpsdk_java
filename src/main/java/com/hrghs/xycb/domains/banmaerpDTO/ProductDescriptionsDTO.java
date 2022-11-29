@@ -1,9 +1,6 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.*;
 import lombok.Data;
 import org.hibernate.annotations.Type;
 import org.springframework.stereotype.Component;
@@ -32,5 +29,10 @@ public class ProductDescriptionsDTO {
 
     @JsonProperty(value = "Short")
     private String Short;
+
+    @OneToOne()
+    @JoinColumn(name = "product_id", referencedColumnName = "product_uuid")
+    @JsonBackReference
+    private ProductDTO productDTO;
 
 }

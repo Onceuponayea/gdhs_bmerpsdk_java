@@ -24,8 +24,9 @@ public class OrderRefundsDTO {
     private UUID order_refund_id;
 
     @JsonIgnore
-    @JoinColumn(name = "order_refund_id",nullable = false,insertable = false,updatable = false)
-    @ManyToOne
+//    @JoinColumn(name = "order_refund_id",nullable = false,insertable = false,updatable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id")
     private OrderDTO orderDTO;
 
     @Column(name = "detail_id")

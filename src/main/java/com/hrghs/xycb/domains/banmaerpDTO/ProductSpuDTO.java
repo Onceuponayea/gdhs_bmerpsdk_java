@@ -23,6 +23,11 @@ public class ProductSpuDTO {
     @JsonProperty(value = "SPUID")
     private Long SPUID;
 
+    @OneToOne()
+    @JoinColumn(name = "product_id", referencedColumnName = "product_uuid")
+    @JsonBackReference
+    private ProductDTO productDTO;
+
     @JsonProperty(value = "Code")
     private String code;
 

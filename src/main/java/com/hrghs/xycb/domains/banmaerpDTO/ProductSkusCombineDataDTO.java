@@ -19,13 +19,14 @@ public class ProductSkusCombineDataDTO {
     @GeneratedValue
     @Id
     private UID sku_cmbdId;
+    @Column(name = "sku_code")
     @JsonProperty(value = "SKUCode")
     private String SKUCode;
     @JsonProperty(value = "Quantity")
     private int quantity;
 
     @JsonIgnore
-    @ManyToOne(cascade={CascadeType.MERGE, CascadeType.REFRESH},optional=false)
-    @JoinColumn(name="sku_cmbdId",nullable = false,insertable = false,updatable = false)
+    @JoinColumn(name = "psku_id")
+    @ManyToOne(fetch = FetchType.LAZY)
     private ProductSkusDTO productSkusDTO;
 }

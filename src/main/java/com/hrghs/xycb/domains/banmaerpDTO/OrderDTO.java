@@ -32,25 +32,30 @@ public class OrderDTO {
     @Id
     private UUID orderUUID;
 
-    @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY,mappedBy = "orderDTO")
-//    @JoinColumn(name = "order_uuid",referencedColumnName = "order_UUID")
-    @JsonProperty(value = "Master")
+    @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY,orphanRemoval = true,optional = true)
+    @JoinColumn(name = "order_masterId",referencedColumnName = "id")
     @JsonManagedReference
+    @JsonProperty(value = "Master")
     private OrderMasterDTO master;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "orderDTO")
+
+    @OneToMany(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id")
     @JsonProperty(value = "Details")
     private List<OrderDetailsDTO> details;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "orderDTO")
+    @OneToMany(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id")
     @JsonProperty(value = "Addresses")
     private List<OrderAddressesDTO> addresses;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "orderDTO")
+    @OneToMany(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id")
     @JsonProperty(value = "Remarks")
     private List<OrderRemarksDTO> remarks;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "orderDTO")
+    @OneToMany(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id")
     @JsonProperty(value = "Refunds")
     private List<OrderRefundsDTO> refunds;
 

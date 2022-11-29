@@ -21,6 +21,7 @@ public class BanmaerpURL {
      * 0=返回认证令牌(默认值)  1=浏览器直接跳转
      **/
     public final static String banmaerp_sso_GET = "/v1/sso/Passport?Account=%s&ClientIP=%s&Mode=%d";
+    public final static String banmaerp_ssoRegister_POST = "/v1/sso/Register";
     public final static String banmaerp_categorylist_GET = "/v1/category?PageNumber=%d&PageSize=%d&SearchTimeStart=%s&SearchTimeEnd=%s&SearchTimeField=%s";
     public final static String banmaerp_category_GET = "/v1/category/%s";
     public final static String banmaerp_storelist_GET = "/v1/store?ids=%s&name=%s&platform=%s&PageNumber=%d&PageSize=%d&SearchTimeStart=%s" +

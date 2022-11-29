@@ -73,7 +73,7 @@ public class StoreServiceImpl implements StoreService {
     @Deprecated
     @Override
     @CheckBanmaerpProperties
-    public Mono<BanmaErpResponseDTO<List<StoreDTO>>> getStoretListMono(@Nullable String ids, @Nullable String name, @Nullable BanmaerpPlatformEnums.Platform platform, int pageNumber, @Nullable int pageSize,
+    public Mono<BanmaErpResponseDTO<List<StoreDTO>>> getStoretListMono(@Nullable String ids, @Nullable String name, @Nullable BanmaerpPlatformEnums.Platform platform, Integer pageNumber, @Nullable Integer pageSize,
                                                                  @Nullable DateTime searchTimeStart, @Nullable DateTime searchTimeEnd, @Nullable String searchTimeField,
                                                                  @Nullable String sortField, @Nullable String sortBy, BanmaerpProperties banmaerpProperties) {
         String apiUrl = String.format(BanmaerpURL.banmaerp_storelist_GET,ids,name,platform==null?"":platform.toString(),pageNumber,pageSize,
@@ -96,7 +96,7 @@ public class StoreServiceImpl implements StoreService {
 
     @Override
     @CheckBanmaerpProperties
-    public List<StoreDTO> getStoretList(String ids, String name, BanmaerpPlatformEnums.Platform platform, int pageNumber, int pageSize, DateTime searchTimeStart,
+    public List<StoreDTO> getStoretList(String ids, String name, BanmaerpPlatformEnums.Platform platform, Integer pageNumber, Integer pageSize, DateTime searchTimeStart,
                                         DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy,
                                         BanmaerpProperties banmaerpProperties) {
         String apiUrl = String.format(BanmaerpURL.banmaerp_storelist_GET,ids,name,platform==null?"":platform.toString(),pageNumber,pageSize,
@@ -116,6 +116,12 @@ public class StoreServiceImpl implements StoreService {
         .collect(Collectors.toList());
         storeRepository.saveAll(storeDTOList);
         return storeDTOList;
+    }
+
+    @Override
+    public List<StoreDTO> getStoretList(Integer pageNumber, BanmaerpProperties banmaerpProperties) {
+        return getStoretList(null, null, null, pageNumber
+                , null, null, null, null, null, null, banmaerpProperties);
     }
 
     /**
@@ -156,6 +162,6 @@ public class StoreServiceImpl implements StoreService {
 
     @Override
     public StoreDTO saveStore(StoreDTO storeDTO) {
-        return null;
+        return storeRepository.saveAndFlush(storeDTO);
     }
 }

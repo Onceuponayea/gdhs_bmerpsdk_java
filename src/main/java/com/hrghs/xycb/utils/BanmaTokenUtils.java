@@ -131,7 +131,6 @@ public class BanmaTokenUtils {
         httpHeaders.set(BANMA_HEADER_TIMESTAMP,String.valueOf(banmaerpSigningVO.getTimestamp()));
         if (banmaerpProperties.getX_BANMA_MASTER_SIGN_METHOD() != BanmaerpAuthEnums.AuthMethod.IP_WHITELIST.getAuthType()){
             httpHeaders.set(BANMA_HEADER_SIGNMETHOD,banmaerpProperties.getX_BANMA_MASTER_SIGN_ALGORITHM());
-            System.out.println("X-BANMA-SIGN-METHOD:"+banmaerpProperties.getX_BANMA_MASTER_SIGN_ALGORITHM());
             httpHeaders.set(BANMA_HEADER_SIGN,encryptionUtils.banmaerpSigning(banmaerpSigningVO));
         }
         return httpHeaders;

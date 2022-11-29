@@ -23,8 +23,9 @@ public class OrderDetailsInventoryDataDTO {
     private UUID order_inventoryData_id;
 
     @JsonIgnore
-    @JoinColumn(name = "order_inventoryData_id",nullable = false,insertable = false,updatable = false)
-    @ManyToOne
+//    @JoinColumn(name = "order_inventoryData_id",nullable = false,insertable = false,updatable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "detail_id")
     private OrderDetailsDTO orderDetailsDTO;
 
     @Column(name = "sku_id")

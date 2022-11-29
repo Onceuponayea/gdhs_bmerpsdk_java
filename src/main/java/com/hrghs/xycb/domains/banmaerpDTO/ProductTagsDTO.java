@@ -27,7 +27,7 @@ public class ProductTagsDTO {
     private String name;
 
     @JsonIgnore
-    @JoinColumn(name = "product_TagId",nullable = false,insertable = false,updatable = false)
-    @ManyToOne
+    @JoinColumn(name = "product_id")
+    @ManyToOne(fetch = FetchType.LAZY)
     private ProductDTO productDTO;
 }

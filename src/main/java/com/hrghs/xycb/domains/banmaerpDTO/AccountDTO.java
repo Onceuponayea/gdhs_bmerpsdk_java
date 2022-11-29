@@ -17,8 +17,8 @@ import javax.persistence.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT,use = JsonTypeInfo.Id.NAME)
-@JsonTypeName("Account")
+//@JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT,use = JsonTypeInfo.Id.NAME)
+//@JsonTypeName("Account")
 @Entity
 @Table(name = "bmerp_account")
 public class AccountDTO {
@@ -26,7 +26,7 @@ public class AccountDTO {
     @Id
     @Column(name = "id")
     @JsonProperty(value = "ID")
-    private Integer ID ;
+    private Integer ID;
 
     @Column(name = "real_name")
     @JsonProperty(value = "RealName")
@@ -41,14 +41,20 @@ public class AccountDTO {
     @JsonProperty(value = "Department")
     private String department;
 
-    @Column(name = "create_time")
+    @Column(name = "createTime")
     @Convert(converter = JodaDateTimeConverter.class)
     @JsonProperty(value = "CreateTime")
     private DateTime createTime;
 
-    @Column(name = "update_time")
+    @Column(name = "updateTime")
     @Convert(converter = JodaDateTimeConverter.class)
     @JsonProperty(value = "UpdateTime")
     private DateTime updateTime;
+
+    @JsonProperty(value = "state")
+    private int state;
+
+    @JsonProperty(value = "userType")
+    private int userType;
 
 }

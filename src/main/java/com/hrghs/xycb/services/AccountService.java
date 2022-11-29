@@ -33,8 +33,8 @@ public interface AccountService {
             String email,
             String realName,
             String phone,
-            int pageNumber,
-            int pageSize,
+            Integer pageNumber,
+            Integer pageSize,
             DateTime searchTimeStart,
             DateTime searchTimeEnd,
             String searchTimeField,
@@ -43,27 +43,29 @@ public interface AccountService {
             BanmaerpProperties banmaerpProperties
     );
 
+    List<AccountDTO> getAccountList(Integer pageNumber, BanmaerpProperties banmaerpProperties);
+
     /**
      * 查询单个用户
      *
-     * @param id 用户id
+     * @param id                 用户id
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    AccountDTO getAccountById(int id, BanmaerpProperties banmaerpProperties);
+    AccountDTO getAccountById(Integer id, BanmaerpProperties banmaerpProperties);
 
     /**
      * 添加子账号
      *
-     * @param phone      中国大陆11位手机号
-     * @param email      用户邮箱
-     * @param realName   用户名称
-     * @param department 部门
-     * @param useVirtual 是否用虚拟账号，true则会生成虚拟手机号
+     * @param phone              中国大陆11位手机号
+     * @param email              用户邮箱
+     * @param realName           用户名称
+     * @param department         部门
+     * @param useVirtual         是否用虚拟账号，true则会生成虚拟手机号
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO<Boolean> addAccount(
+    AccountDTO addAccount(
             String phone,
             String email,
             String realName,
@@ -75,18 +77,19 @@ public interface AccountService {
     /**
      * 注销账号
      *
-     * @param id 用户ID
+     * @param id                 用户ID
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO<Boolean> logoutAccount(int id, BanmaerpProperties banmaerpProperties);
+    BanmaErpResponseDTO<Boolean> logoutAccount(Integer id, BanmaerpProperties banmaerpProperties);
 
     /**
      * 查询用户店铺权限
+     *
      * @param id 用户id
      * @return
      */
-    DataAccessDTO getDataAccess(int id, BanmaerpProperties banmaerpProperties);
+    DataAccessDTO getDataAccess(Integer id, BanmaerpProperties banmaerpProperties);
 
     List<AccountDTO> saveAccountList(List<AccountDTO> accountDTOList);
 

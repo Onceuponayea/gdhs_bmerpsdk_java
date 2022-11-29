@@ -39,8 +39,8 @@ public class ProductOptionsDTO {
     private List<String> values;
 
     @JsonIgnore
-    @JoinColumn(name = "product_optionId",nullable = false,insertable = false,updatable = false)
-    @ManyToOne
+    @JoinColumn(name = "product_id")
+    @ManyToOne(fetch = FetchType.LAZY)
     private ProductDTO productDTO;
 
 }

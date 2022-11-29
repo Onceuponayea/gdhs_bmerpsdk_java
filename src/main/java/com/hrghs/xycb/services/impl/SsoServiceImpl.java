@@ -1,5 +1,6 @@
 package com.hrghs.xycb.services.impl;
 
+import cn.hutool.json.JSONUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -7,10 +8,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
 import com.hrghs.xycb.config.BanmaerpProperties;
-import com.hrghs.xycb.domains.BanmaerpSigningVO;
-import com.hrghs.xycb.domains.BanmaerpURL;
-import com.hrghs.xycb.domains.GetSsoPassportResponse;
+import com.hrghs.xycb.domains.*;
 import com.hrghs.xycb.domains.banmaerpDTO.AccountDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.AppsInfoDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.services.SsoService;
 import com.hrghs.xycb.utils.BanmaTokenUtils;
@@ -52,7 +52,7 @@ public class SsoServiceImpl implements SsoService {
      */
     @Override
     @CheckBanmaerpProperties
-    public GetSsoPassportResponse ssoPassport(String account, String clientIp, int userId, int mode, BanmaerpProperties banmaerpProperties) {
+    public GetSsoPassportResponse ssoPassport(String account, String clientIp, Integer userId, Integer mode, BanmaerpProperties banmaerpProperties) {
         String apiUrl = String.format(BanmaerpURL.banmaerp_sso_GET,account,clientIp,mode);
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
         HttpHeaders httpHeaders = new HttpHeaders();
@@ -73,5 +73,32 @@ public class SsoServiceImpl implements SsoService {
         }
 
         return ssoPassportResponse;
+    }
+
+    /**
+     * 注册账号
+     * @param accountDTO 账号信息
+     * @param appsInfoDTO APP信息
+     * @return
+     */
+    @Override
+    @CheckBanmaerpProperties
+    public BanmaErpResponseDTO<SsoRegisterResponse> register(AccountDTO accountDTO, AppsInfoDTO appsInfoDTO,BanmaerpProperties banmaerpProperties) {
+        SsoRegisterRequest ssoRegisterRequest = new SsoRegisterRequest(accountDTO,appsInfoDTO);
+        String requestBodyJson = JSONUtil.toJsonStr(ssoRegisterRequest);
+        String apiUrl = String.format(BanmaerpURL.banmaerp_ssoRegister_POST);
+        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+        //todo signing
+        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
+        httpHeaders.set("Content-Type","application/json");
+        HttpEntity requestBody = new HttpEntity(requestBodyJson,httpHeaders);
+        BanmaErpResponseDTO<SsoRegisterResponse> body = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.POST, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<SsoRegisterResponse>>() {
+                })
+                .getBody();
+
+        return body;
     }
 }

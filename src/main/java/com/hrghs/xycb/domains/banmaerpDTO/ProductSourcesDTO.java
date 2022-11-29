@@ -34,7 +34,7 @@ public class ProductSourcesDTO {
     private boolean isDefault;
 
     @JsonIgnore
-    @JoinColumn(name = "product_SourceId",nullable = false,insertable = false,updatable = false)
-    @ManyToOne
+    @JoinColumn(name = "product_id")
+    @ManyToOne(fetch = FetchType.LAZY)
     private ProductDTO productDTO;
 }

@@ -31,7 +31,7 @@ public class ProductImagesDTO {
     private int sort;
 
     @JsonIgnore
-    @JoinColumn(name = "product_ImageId",nullable = false,insertable = false,updatable = false)
-    @ManyToOne
+    @JoinColumn(name = "product_id")
+    @ManyToOne(fetch = FetchType.LAZY)
     private ProductDTO productDTO;
 }

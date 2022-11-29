@@ -7,10 +7,12 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Type;
 import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.UUID;
 import javax.persistence.*;
 
 @Component
@@ -21,14 +23,19 @@ import javax.persistence.*;
 @Table(name = "bmerp_product_skus")
 public class ProductSkusDTO implements Serializable {
 
-    @Column(name = "sku_id")
+    @JsonIgnore
     @Id
+    @GeneratedValue
+    @Type(type = "uuid-char")
+    private UUID id;
+
+    @Column(name = "sku_id")
     @JsonProperty(value = "SKUID")
     private Long SKUID;
 
     @JsonIgnore
-    @JoinColumn(name = "sku_id",nullable = false,insertable = false,updatable = false)
-    @ManyToOne
+    @JoinColumn(name = "product_id")
+    @ManyToOne(fetch = FetchType.LAZY)
     private ProductDTO productDTO;
 
     @JsonProperty(value = "Code")
@@ -72,11 +79,13 @@ public class ProductSkusDTO implements Serializable {
     @JsonProperty(value = "Type")
     private String type;
 
-    @OneToMany(mappedBy = "productSkusDTO",cascade= CascadeType.ALL,fetch=FetchType.LAZY)
+    @OneToMany(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @JoinColumn(name = "psku_id")
     @JsonProperty(value = "CombineData")
     private List<ProductSkusCombineDataDTO> combineData;
 
-    @OneToMany(mappedBy = "productSkusDTO",cascade= CascadeType.ALL,fetch=FetchType.LAZY)
+    @OneToMany(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @JoinColumn(name = "psku_id")
     @JsonProperty(value = "Options")
     private List<ProductSkusOptionsDTO> options;
 

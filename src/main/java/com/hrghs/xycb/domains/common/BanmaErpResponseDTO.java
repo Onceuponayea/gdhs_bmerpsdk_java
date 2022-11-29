@@ -103,7 +103,7 @@ public class BanmaErpResponseDTO<T> {
                         type = new TypeToken<Collection<ProductTagsDTO>>(){}.getType();
                         break;
                     case BANMAERP_FIELD_SUPPLIERS:
-                        type = new TypeToken<Collection<ProductSuppliersDTO>>(){}.getType();
+                        type = new TypeToken<Collection<ProductSuppliersInfoDTO>>(){}.getType();
                         break;
                     case BANMAERP_FIELD_STORAGES:
                         type = new TypeToken<Collection<StorageDTO>>(){}.getType();

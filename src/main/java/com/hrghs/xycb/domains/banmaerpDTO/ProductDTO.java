@@ -22,7 +22,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Entity
 @Table(name = "bmerp_product")
-@JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT,use = JsonTypeInfo.Id.NAME)
+@JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT, use = JsonTypeInfo.Id.NAME)
 @JsonTypeName("Product")
 public class ProductDTO implements Serializable {
     /**
@@ -35,51 +35,58 @@ public class ProductDTO implements Serializable {
     @GeneratedValue
     private UUID productUUId;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "product_spuid",referencedColumnName = "spu_id")
-//    @JsonSerialize(contentUsing = ProductSerialiser.ProductSpuSerializer.class)
+    //    @JsonSerialize(contentUsing = ProductSerialiser.ProductSpuSerializer.class)
 //    @JsonDeserialize(contentUsing = ProductDeserialiser.ProductSpuDeserializer.class)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true, optional = true)
+    @JoinColumn(name = "product_spuid", referencedColumnName = "spu_id")
+    @JsonManagedReference
     @JsonProperty(value = "SPU")
     private ProductSpuDTO SPU;
 
-    @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_DescriptionId",referencedColumnName = "pd_id")
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true, optional = true)
+    @JoinColumn(name = "product_DescriptionId", referencedColumnName = "pd_id")
+    @JsonManagedReference
     @JsonProperty(value = "Descriptions")
     private ProductDescriptionsDTO descriptions;
 
-    @JsonIgnore
-    private Long product_skuid;
-
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "productDTO")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id")
     @JsonProperty(value = "SKUs")
     private List<ProductSkusDTO> SKUs;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "productDTO")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonProperty(value = "Options")
+    @JoinColumn(name = "product_id")
     private List<ProductOptionsDTO> options;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "productDTO")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonProperty(value = "Images")
+    @JoinColumn(name = "product_id")
     private List<ProductImagesDTO> images;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "productDTO")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonProperty(value = "Suppliers")
+    @JoinColumn(name = "product_id")
     private List<ProductSuppliersDTO> suppliers;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "productDTO")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonProperty(value = "Requirements")
+    @JoinColumn(name = "product_id")
     private List<ProductRequirementsDTO> requirements;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "productDTO")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonProperty(value = "Sources")
+    @JoinColumn(name = "product_id")
     private List<ProductSourcesDTO> sources;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "productDTO")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonProperty(value = "Tags")
+    @JoinColumn(name = "product_id")
     private List<ProductTagsDTO> tags;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "productDTO")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonProperty(value = "PackMaterials")
+    @JoinColumn(name = "product_id")
     private List<ProductPackMaterialsDTO> packMaterials;
 
 }

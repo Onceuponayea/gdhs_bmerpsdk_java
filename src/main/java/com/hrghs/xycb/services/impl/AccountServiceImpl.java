@@ -1,5 +1,6 @@
 package com.hrghs.xycb.services.impl;
 
+import cn.hutool.json.JSONUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,6 +10,7 @@ import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
 import com.hrghs.xycb.config.BanmaerpProperties;
 import com.hrghs.xycb.domains.BanmaerpSigningVO;
 import com.hrghs.xycb.domains.BanmaerpURL;
+import com.hrghs.xycb.domains.SsoRegisterResponse;
 import com.hrghs.xycb.domains.banmaerpDTO.AccountDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.DataAccessDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
@@ -66,7 +68,7 @@ public class AccountServiceImpl implements AccountService {
      */
     @Override
     @CheckBanmaerpProperties
-    public List<AccountDTO> getAccountList(String ids, String email, String realName, String phone, int pageNumber, int pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy, BanmaerpProperties banmaerpProperties) {
+    public List<AccountDTO> getAccountList(String ids, String email, String realName, String phone, Integer pageNumber, Integer pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy, BanmaerpProperties banmaerpProperties) {
         String apiUrl = String.format(BanmaerpURL.banmaerp_accountlist_GET,ids,email,realName,phone,pageNumber,pageSize,
                 searchTimeStart, searchTimeEnd,searchTimeField,sortField,sortBy);
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
@@ -85,6 +87,11 @@ public class AccountServiceImpl implements AccountService {
         return accountDTOList;
     }
 
+    @Override
+    public List<AccountDTO> getAccountList(Integer pageNumber, BanmaerpProperties banmaerpProperties) {
+        return getAccountList(null,null,null,null,pageNumber,null,null,null,null,null,null,banmaerpProperties);
+    }
+
     /**
      * 查询单个用户
      *
@@ -93,7 +100,7 @@ public class AccountServiceImpl implements AccountService {
      */
     @Override
     @CheckBanmaerpProperties
-    public AccountDTO getAccountById(int id, BanmaerpProperties banmaerpProperties) {
+    public AccountDTO getAccountById(Integer id, BanmaerpProperties banmaerpProperties) {
         String apiUrl = String.format(BanmaerpURL.banmaerp_account_GET,id);
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
         HttpHeaders httpHeaders = new HttpHeaders();
@@ -108,7 +115,7 @@ public class AccountServiceImpl implements AccountService {
                 .getBody();
         AccountDTO accountDTO = null;
         try {
-            accountDTO = objectMapper.readValue(body.getData().toString(), new TypeReference<AccountDTO>() {
+            accountDTO = objectMapper.readValue(body.getData().get("Account").toString(), new TypeReference<AccountDTO>() {
             });
         } catch (JsonProcessingException e) {
             e.printStackTrace();
@@ -130,30 +137,32 @@ public class AccountServiceImpl implements AccountService {
      */
     @Override
     @CheckBanmaerpProperties
-    public BanmaErpResponseDTO<Boolean> addAccount(String phone, String email, String realName, String department,boolean useVirtual ,BanmaerpProperties banmaerpProperties) {
+    public AccountDTO addAccount(String phone, String email, String realName, String department,boolean useVirtual ,BanmaerpProperties banmaerpProperties) {
         AccountDTO accountDTO = new AccountDTO(
-                0,realName,email,phone,department,null,null
+                0,realName,email,phone,department,null,null,0,0
         );
+        String accountJson = JSONUtil.toJsonStr(accountDTO);
         String apiUrl = String.format(BanmaerpURL.banmaerp_accountAdd_POST);
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
         HttpHeaders httpHeaders = new HttpHeaders();
         BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
         //todo signing
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
-        HttpEntity requestBody = new HttpEntity(accountDTO,httpHeaders);
+        httpHeaders.set("Content-Type","application/json");
+        HttpEntity requestBody = new HttpEntity(accountJson,httpHeaders);
         BanmaErpResponseDTO<JsonNode> body = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
                 .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.POST, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {
                 })
                 .getBody();
-        BanmaErpResponseDTO<Boolean> banmaErpResponseDTO = null;
+        AccountDTO account = null;
         try {
-            banmaErpResponseDTO = objectMapper.readValue(body.getData().toString(), new TypeReference<BanmaErpResponseDTO>() {
+            account = objectMapper.readValue(body.getData().get("Account").toString(), new TypeReference<AccountDTO>() {
             });
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
 
-        return banmaErpResponseDTO;
+        return account;
     }
 
     /**
@@ -164,7 +173,7 @@ public class AccountServiceImpl implements AccountService {
      */
     @Override
     @CheckBanmaerpProperties
-    public BanmaErpResponseDTO<Boolean> logoutAccount(int id, BanmaerpProperties banmaerpProperties) {
+    public BanmaErpResponseDTO<Boolean> logoutAccount(Integer id, BanmaerpProperties banmaerpProperties) {
         String apiUrl = String.format(BanmaerpURL.banmaerp_accountLogout_DELETE,id);
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
         HttpHeaders httpHeaders = new HttpHeaders();
@@ -172,19 +181,12 @@ public class AccountServiceImpl implements AccountService {
         //todo signing
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
         HttpEntity requestBody = new HttpEntity(null,httpHeaders);
-        BanmaErpResponseDTO<JsonNode> body = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.DELETE, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {
+        BanmaErpResponseDTO<Boolean> body = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.DELETE, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<Boolean>>() {
                 })
                 .getBody();
-        BanmaErpResponseDTO<Boolean> banmaErpResponseDTO = null;
-        try {
-            banmaErpResponseDTO = objectMapper.readValue(body.getData().toString(), new TypeReference<BanmaErpResponseDTO>() {
-            });
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
 
-        return banmaErpResponseDTO;
+        return body;
     }
 
     /**
@@ -194,7 +196,7 @@ public class AccountServiceImpl implements AccountService {
      */
     @Override
     @CheckBanmaerpProperties
-    public DataAccessDTO getDataAccess(int id, BanmaerpProperties banmaerpProperties) {
+    public DataAccessDTO getDataAccess(Integer id, BanmaerpProperties banmaerpProperties) {
         String apiUrl = String.format(BanmaerpURL.banmaerp_accountDataAccess_GET,id);
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
         HttpHeaders httpHeaders = new HttpHeaders();

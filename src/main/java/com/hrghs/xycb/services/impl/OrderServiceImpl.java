@@ -75,7 +75,7 @@ public class OrderServiceImpl implements OrderService {
     @CheckBanmaerpProperties
     public List<OrderDTO> getOrderList(String ids, String storeId, String platform, String status, String payStatus,
                                        String holdStatus, String refundStatus, String inventoryStatus, String countryCode,
-                                       int pageNumber, int pageSize, DateTime searchTimeStart, DateTime searchTimeEnd,
+                                       Integer pageNumber, Integer pageSize, DateTime searchTimeStart, DateTime searchTimeEnd,
                                        String searchTimeField, String sortField, String sortBy,
                                        BanmaerpProperties banmaerpProperties) {
         String apiUrl = String.format(BanmaerpURL.banmaerp_order_GET, pageNumber, pageSize,searchTimeStart,searchTimeEnd,searchTimeField);
@@ -94,6 +94,12 @@ public class OrderServiceImpl implements OrderService {
                 .map(o -> (OrderDTO) o)
                 .collect(Collectors.toList());
         return orderDTOList;
+    }
+
+    @Override
+    public List<OrderDTO> getOrderList(Integer pageNumber, BanmaerpProperties banmaerpProperties) {
+        return getOrderList(null, null, null, null, null, null, null, null, null, pageNumber
+                , null, null, null, null, null, null, banmaerpProperties);
     }
 
     /**

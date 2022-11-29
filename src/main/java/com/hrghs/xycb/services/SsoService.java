@@ -2,6 +2,9 @@ package com.hrghs.xycb.services;
 
 import com.hrghs.xycb.config.BanmaerpProperties;
 import com.hrghs.xycb.domains.GetSsoPassportResponse;
+import com.hrghs.xycb.domains.SsoRegisterResponse;
+import com.hrghs.xycb.domains.banmaerpDTO.AccountDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.AppsInfoDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 
 public interface SsoService {
@@ -22,9 +25,17 @@ public interface SsoService {
     GetSsoPassportResponse ssoPassport(
             String account,
             String clientIp,
-            int userId,
-            int mode,
+            Integer userId,
+            Integer mode,
             BanmaerpProperties banmaerpProperties
     );
+
+    /**
+     * 注册账号
+     * @param accountDTO 账号信息
+     * @param appsInfoDTO APP信息
+     * @return
+     */
+    BanmaErpResponseDTO<SsoRegisterResponse> register(AccountDTO accountDTO, AppsInfoDTO appsInfoDTO,BanmaerpProperties banmaerpProperties);
 
 }
