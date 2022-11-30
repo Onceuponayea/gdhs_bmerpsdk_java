@@ -4,8 +4,6 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
-import org.springframework.stereotype.Component;
-
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.Arrays;

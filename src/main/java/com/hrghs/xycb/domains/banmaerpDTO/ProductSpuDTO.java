@@ -1,11 +1,7 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
 import com.fasterxml.jackson.annotation.*;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.hrghs.xycb.utils.converters.JodaDateTimeConverter;
-import com.hrghs.xycb.utils.converters.JodaDateTimeDeserialiser;
-import com.hrghs.xycb.utils.converters.JodaDateTimeSerialiser;
 import lombok.Data;
 import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
@@ -68,15 +64,11 @@ public class ProductSpuDTO {
     @JsonProperty(value = "Keywords")
     private String keywords;
 
-//    @JsonSerialize(contentUsing = JodaDateTimeSerialiser.class)
-//    @JsonDeserialize(contentUsing = JodaDateTimeDeserialiser.class)
     @Convert(converter = JodaDateTimeConverter.class)
     @Column(name = "create_time")
     @JsonProperty(value = "CreateTime")
     private DateTime createTime;
 
-//    @JsonSerialize(contentUsing = JodaDateTimeSerialiser.class)
-//    @JsonDeserialize(contentUsing = JodaDateTimeDeserialiser.class)
     @Convert(converter = JodaDateTimeConverter.class)
     @Column(name = "update_time")
     @JsonProperty(value = "UpdateTime")

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.*;

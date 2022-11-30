@@ -1,10 +1,8 @@
 package com.hrghs.xycb.services;
 
-import com.hrghs.xycb.config.BanmaerpProperties;
+import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.OrderDTO;
-import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import org.joda.time.DateTime;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 

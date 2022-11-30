@@ -1,6 +1,6 @@
 package com.hrghs.xycb.services;
 
-import com.hrghs.xycb.config.BanmaerpProperties;
+import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.GetSsoPassportResponse;
 import com.hrghs.xycb.domains.SsoRegisterResponse;
 import com.hrghs.xycb.domains.banmaerpDTO.AccountDTO;
@@ -29,6 +29,10 @@ public interface SsoService {
             Integer mode,
             BanmaerpProperties banmaerpProperties
     );
+
+    GetSsoPassportResponse ssoPassport(String account,BanmaerpProperties banmaerpProperties);
+
+    GetSsoPassportResponse ssoPassport(String account,String clientIp,BanmaerpProperties banmaerpProperties);
 
     /**
      * 注册账号

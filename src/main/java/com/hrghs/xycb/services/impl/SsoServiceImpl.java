@@ -1,29 +1,32 @@
 package com.hrghs.xycb.services.impl;
 
-import cn.hutool.json.JSONUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.google.gson.GsonBuilder;
 import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
-import com.hrghs.xycb.config.BanmaerpProperties;
+import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.*;
 import com.hrghs.xycb.domains.banmaerpDTO.AccountDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.AppsInfoDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
+import com.hrghs.xycb.repositories.BanmaerpPropertiesRepository;
 import com.hrghs.xycb.services.SsoService;
 import com.hrghs.xycb.utils.BanmaTokenUtils;
 import com.hrghs.xycb.utils.EncryptionUtils;
 import com.hrghs.xycb.utils.HttpClientsUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.redis.core.ReactiveRedisOperations;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+
+import static com.hrghs.xycb.domains.Constants.*;
+import static jodd.util.StringPool.COLON;
 
 @Service
 @Lazy
@@ -37,7 +40,10 @@ public class SsoServiceImpl implements SsoService {
     @Autowired
     @Lazy
     private ObjectMapper objectMapper;
-
+    @Autowired
+    private ReactiveRedisOperations<String,String> redisOperations;
+    @Autowired
+    private BanmaerpPropertiesRepository  banmaerpPropertiesRepository;
     /**
      * 获取认证令牌
      * @param account 登录账号（手机号或者邮箱，必填）
@@ -57,22 +63,29 @@ public class SsoServiceImpl implements SsoService {
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
         HttpHeaders httpHeaders = new HttpHeaders();
         BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
-        //todo signing
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
         HttpEntity requestBody = new HttpEntity(null,httpHeaders);
-        BanmaErpResponseDTO<JsonNode> body = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {
-                })
-                .getBody();
-        GetSsoPassportResponse ssoPassportResponse = null;
-        try {
-            ssoPassportResponse = objectMapper.readValue(body.getData().toString(), new TypeReference<GetSsoPassportResponse>() {
-            });
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
+        return httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<GetSsoPassportResponse>>() {})
+                .getBody().getData();
+    }
 
-        return ssoPassportResponse;
+    @Override
+    public GetSsoPassportResponse ssoPassport(String account, BanmaerpProperties banmaerpProperties) {
+        return
+        redisOperations.opsForValue().get(ssoRedisKey(banmaerpProperties)).switchIfEmpty(Mono.just(httpClients.getLocalIp()))
+                .map(clientIp -> ssoPassport(account,clientIp,null,null,banmaerpProperties))
+                .block();
+    }
+
+    @Override
+    public GetSsoPassportResponse ssoPassport(String account, String clientIp, BanmaerpProperties banmaerpProperties) {
+        return ssoPassport(account,clientIp,null,null,banmaerpProperties);
+    }
+
+    private String ssoRedisKey(BanmaerpProperties banmaerpProperties){
+        return BANMAERP_FIELD_PREFIX.concat(COLON).concat(BANMAERP_FIELD_CLIENTIP).concat(COLON)
+                .concat(banmaerpProperties.getX_BANMA_MASTER_APP_ID());
     }
 
     /**
@@ -85,20 +98,25 @@ public class SsoServiceImpl implements SsoService {
     @CheckBanmaerpProperties
     public BanmaErpResponseDTO<SsoRegisterResponse> register(AccountDTO accountDTO, AppsInfoDTO appsInfoDTO,BanmaerpProperties banmaerpProperties) {
         SsoRegisterRequest ssoRegisterRequest = new SsoRegisterRequest(accountDTO,appsInfoDTO);
-        String requestBodyJson = JSONUtil.toJsonStr(ssoRegisterRequest);
+        String requestBodyJson = null;
+        try {
+            requestBodyJson = objectMapper.writeValueAsString(ssoRegisterRequest);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            requestBodyJson = new GsonBuilder().disableHtmlEscaping().create().toJson(ssoRegisterRequest);
+        }
+//        String requestBodyJson = JSONUtil.toJsonStr(ssoRegisterRequest);
         String apiUrl = String.format(BanmaerpURL.banmaerp_ssoRegister_POST);
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
         HttpHeaders httpHeaders = new HttpHeaders();
         BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
-        //todo signing
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
-        httpHeaders.set("Content-Type","application/json");
+        httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         HttpEntity requestBody = new HttpEntity(requestBodyJson,httpHeaders);
         BanmaErpResponseDTO<SsoRegisterResponse> body = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.POST, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<SsoRegisterResponse>>() {
-                })
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.POST, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<SsoRegisterResponse>>() {})
                 .getBody();
-
+        banmaerpPropertiesRepository.saveAndFlush(body.getData().toBanmaerpProperties());
         return body;
     }
 }

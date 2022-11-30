@@ -4,13 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
-import com.hrghs.xycb.config.BanmaerpProperties;
+import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.BanmaerpSigningVO;
 import com.hrghs.xycb.domains.BanmaerpURL;
-import com.hrghs.xycb.domains.banmaerpDTO.AccountDTO;
-import com.hrghs.xycb.domains.banmaerpDTO.CategoryDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.OrderDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.repositories.OrderRepository;
@@ -20,7 +17,6 @@ import com.hrghs.xycb.utils.EncryptionUtils;
 import com.hrghs.xycb.utils.HttpClientsUtils;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -32,7 +28,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_CATEGORYS;
 import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_ORDERS;
 
 @Service
@@ -118,18 +113,9 @@ public class OrderServiceImpl implements OrderService {
         //todo signing
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
         HttpEntity requestBody = new HttpEntity(null,httpHeaders);
-        BanmaErpResponseDTO<JsonNode> body = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {
-                })
-                .getBody();
-        OrderDTO orderDTO = null;
-        try {
-            orderDTO = objectMapper.readValue(body.getData().toString(), new TypeReference<OrderDTO>() {
-            });
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-        return orderDTO;
+        return httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<OrderDTO>>() {})
+                .getBody().getData();
     }
 
     @Override

@@ -1,15 +1,11 @@
 package com.hrghs.xycb.utils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hrghs.xycb.config.BanmaerpProperties;
+import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.TokenResponseDTO;
-import com.hrghs.xycb.utils.BanmaTokenUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.*;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.BufferingClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -19,10 +15,16 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Collections;
 
-import static com.hrghs.xycb.config.BanmaerpProperties.*;
-import static com.hrghs.xycb.config.BanmaerpProperties.BANMA_HEADER_SIGNMETHOD;
+import static com.hrghs.xycb.domains.BanmaerpProperties.*;
+import static com.hrghs.xycb.domains.BanmaerpProperties.BANMA_HEADER_SIGNMETHOD;
+import static com.hrghs.xycb.domains.Constants.IpAquireUrls;
 
 @Component
 @Lazy
@@ -77,7 +79,7 @@ public class HttpClientsUtils {
     }
     public RestTemplate restTemplateWithBanmaMasterToken(BanmaerpProperties banmaerpProperties){
         BanmaTokenUtils tokenUtils = applicationContext.getBean(BanmaTokenUtils.class);
-        TokenResponseDTO tokenResponse = tokenUtils.getBanmaErpMasterToken(banmaerpProperties);
+        TokenResponseDTO tokenResponse = tokenUtils.getBanmaErpMasterToken(banmaerpProperties).block();
         String access_token = tokenResponse.getAccessToken();
         this.restTemplate.setInterceptors(Collections.singletonList((httpRequest, bytes, clientHttpRequestExecution) -> {
             HttpHeaders headers = httpRequest.getHeaders();
@@ -86,6 +88,23 @@ public class HttpClientsUtils {
         }));
         return restTemplate;
     }
+    public String getLocalIp(){
+        String localIp="";
+        for (String ipAquireUrl: IpAquireUrls){
+            try {
+                URL url = new URL(ipAquireUrl);
+                BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
+                localIp = br.readLine();
+                break;
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+        }
+        return localIp;
+    }
+
     //todo probably using client_credentials grant type
     public WebClient webClientWithBanmaEmployeeTokenViaClient_credentials(String client_id,String client_secret){
         return webClientBuilder()

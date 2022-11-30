@@ -1,10 +1,6 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
 import com.fasterxml.jackson.annotation.*;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.hrghs.xycb.utils.converters.ProductDeserialiser;
-import com.hrghs.xycb.utils.converters.ProductSerialiser;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -35,8 +31,6 @@ public class ProductDTO implements Serializable {
     @GeneratedValue
     private UUID productUUId;
 
-    //    @JsonSerialize(contentUsing = ProductSerialiser.ProductSpuSerializer.class)
-//    @JsonDeserialize(contentUsing = ProductDeserialiser.ProductSpuDeserializer.class)
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true, optional = true)
     @JoinColumn(name = "product_spuid", referencedColumnName = "spu_id")
     @JsonManagedReference

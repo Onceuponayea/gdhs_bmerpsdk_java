@@ -16,6 +16,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import org.joda.time.DateTime;
+import org.joda.time.LocalDateTime;
 import org.springframework.stereotype.Component;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -49,6 +50,14 @@ public class BanmaErpResponseDTO<T> {
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
+    }
+    public BanmaErpResponseDTO(Integer code,Boolean success,String message){
+        this.code = code;
+        this.time = LocalDateTime.now().toString();
+        this.success = success;
+        this.message = message;
+        this.tick = null;
+        this.data = null;
     }
     @JsonProperty(value = "Code")
     private Integer code;

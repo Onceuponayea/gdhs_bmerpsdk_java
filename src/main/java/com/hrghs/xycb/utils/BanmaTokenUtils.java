@@ -1,23 +1,17 @@
 package com.hrghs.xycb.utils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.hrghs.xycb.config.BanmaerpProperties;
-import com.hrghs.xycb.domains.banmaerpDTO.ProductSuppliersInfoDTO;
+import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.TokenResponseDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.domains.BanmaerpSigningVO;
 import com.hrghs.xycb.domains.BanmaerpURL;
 import com.hrghs.xycb.domains.enums.BanmaerpAuthEnums;
+import com.hrghs.xycb.services.SsoService;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeUtils;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.redis.core.ReactiveRedisOperations;
@@ -26,20 +20,15 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-
 import java.nio.charset.Charset;
-import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
-
-import static com.hrghs.xycb.config.BanmaerpProperties.*;
+import static com.hrghs.xycb.domains.BanmaerpProperties.*;
 import static com.hrghs.xycb.domains.BanmaerpURL.banmaerp_GetToken_GET;
 import static com.hrghs.xycb.domains.BanmaerpURL.banmaerp_RefreshToken_GET;
+import static com.hrghs.xycb.domains.Constants.*;
 import static jodd.util.StringPool.COLON;
-import static jodd.util.StringPool.SLASH;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 
 @Component
@@ -62,6 +51,7 @@ public class BanmaTokenUtils {
      * @param banmaerpProperties
      * @return
      */
+    @Deprecated
     public Mono<TokenResponseDTO> getBanmaErpMasterTokenMono(BanmaerpProperties banmaerpProperties){
         BanmaerpSigningVO banmaerpSigningVO = banmaerpSigningVO(banmaerpProperties);
         return
@@ -77,15 +67,20 @@ public class BanmaTokenUtils {
         .map(banmaErpResponseDTO -> banmaErpResponseDTO.getData());
     }
 
-    public TokenResponseDTO getBanmaErpMasterToken(BanmaerpProperties banmaerpProperties){
-        String redisKey = "banmaerp".concat(COLON).concat("token").concat(COLON)
+    /**
+     * get token from redis and check its validity when it's present in redis,
+     * otherwise retrieve token from banmaerp via api
+     * @param banmaerpProperties
+     * @return
+     */
+    public Mono<TokenResponseDTO> getBanmaErpMasterToken(BanmaerpProperties banmaerpProperties){
+        String redisKey = BANMAERP_FIELD_PREFIX.concat(COLON).concat(BANMAERP_FIELD_TOKEN).concat(COLON)
                 .concat(banmaerpProperties.getX_BANMA_MASTER_APP_ID());
-        TokenResponseDTO tokenResp=null;
         BanmaerpSigningVO banmaerpSigningVO = banmaerpSigningVO(banmaerpProperties);
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders = banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
         HttpEntity requestBody = new HttpEntity(null,httpHeaders);
-        tokenResp =
+        return
         tokenRespReactiveRedisOperations.opsForValue().get(redisKey)
         .map(tokenResponseDTO -> validateToken(tokenResponseDTO,requestBody,redisKey))
         .switchIfEmpty(Mono.defer(() -> {
@@ -95,9 +90,7 @@ public class BanmaTokenUtils {
                     .getBody().getData();
             tokenResponseDTO = validateToken(tokenResponseDTO,requestBody,redisKey);
             return Mono.just(tokenResponseDTO);
-        }))
-        .block();
-        return tokenResp;
+        }));
     }
     private TokenResponseDTO validateToken(TokenResponseDTO _tokenResponseDTO,HttpEntity requestBody,String redisKey){
         TokenResponseDTO tokenResponseDTO = _tokenResponseDTO;

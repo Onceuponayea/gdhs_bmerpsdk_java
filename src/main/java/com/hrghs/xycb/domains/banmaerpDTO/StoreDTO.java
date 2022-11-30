@@ -18,7 +18,6 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT,use = JsonTypeInfo.Id.NAME)
-//@JsonTypeInfo(include = JsonTypeInfo.As.EXISTING_PROPERTY, use = JsonTypeInfo.Id.NAME, visible = true, property = "Stores")
 @JsonTypeName("Store")
 @Entity
 @Table(name = "bmerp_store")

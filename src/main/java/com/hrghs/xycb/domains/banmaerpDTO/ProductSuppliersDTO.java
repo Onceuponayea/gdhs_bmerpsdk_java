@@ -3,7 +3,6 @@ package com.hrghs.xycb.domains.banmaerpDTO;
 import com.fasterxml.jackson.annotation.*;
 import lombok.Data;
 import org.springframework.stereotype.Component;
-
 import javax.persistence.*;
 
 @Component

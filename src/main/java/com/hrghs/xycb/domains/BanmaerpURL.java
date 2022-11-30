@@ -1,8 +1,5 @@
 package com.hrghs.xycb.domains;
 
-import com.hrghs.xycb.domains.enums.BanmaerpPlatformEnums;
-import org.joda.time.DateTime;
-
 public class BanmaerpURL {
     public static String banmaerp_gateway = "https://gateway.banmaerp.com";
     public final static String banmaerp_GetToken_GET = "/v1/Auth/GetToken";
@@ -39,7 +36,6 @@ public class BanmaerpURL {
     public final static String banmaerp_storage_base64_POST = "/v1/storage/base64?name=%s";
     public final static String banmaerp_storagelist_GET = "/v1/storage?PageNumber=%d&PageSize=%d&SearchTimeStart=%s&SearchTimeEnd=%s&SearchTimeField=%s";
     public final static String banmaerp_storage_GET = "/v1/storage/%s";
-//    private final static String banmaerp_gateway = "";
-//    private final static String banmaerp_gateway = "";
+
 
 }

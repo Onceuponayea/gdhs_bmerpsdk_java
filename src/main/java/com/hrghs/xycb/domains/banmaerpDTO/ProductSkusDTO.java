@@ -23,12 +23,8 @@ import javax.persistence.*;
 @Table(name = "bmerp_product_skus")
 public class ProductSkusDTO implements Serializable {
 
-    @JsonIgnore
-    @Id
-    @GeneratedValue
-    @Type(type = "uuid-char")
-    private UUID id;
 
+    @Id
     @Column(name = "sku_id")
     @JsonProperty(value = "SKUID")
     private Long SKUID;

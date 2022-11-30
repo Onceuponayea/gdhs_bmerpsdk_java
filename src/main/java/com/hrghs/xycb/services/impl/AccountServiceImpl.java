@@ -1,32 +1,31 @@
 package com.hrghs.xycb.services.impl;
 
-import cn.hutool.json.JSONUtil;
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.gson.GsonBuilder;
 import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
-import com.hrghs.xycb.config.BanmaerpProperties;
+import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.BanmaerpSigningVO;
 import com.hrghs.xycb.domains.BanmaerpURL;
-import com.hrghs.xycb.domains.SsoRegisterResponse;
 import com.hrghs.xycb.domains.banmaerpDTO.AccountDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.DataAccessDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.TokenResponseDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.repositories.AccountRepository;
+import com.hrghs.xycb.repositories.BanmaerpPropertiesRepository;
 import com.hrghs.xycb.services.AccountService;
 import com.hrghs.xycb.utils.BanmaTokenUtils;
 import com.hrghs.xycb.utils.EncryptionUtils;
 import com.hrghs.xycb.utils.HttpClientsUtils;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.List;
@@ -49,6 +48,8 @@ public class AccountServiceImpl implements AccountService {
     @Autowired
     @Lazy
     private ObjectMapper objectMapper;
+    @Autowired
+    private BanmaerpPropertiesRepository banmaerpPropertiesRepository;
 
     /**
      * 查询用户列表
@@ -92,6 +93,13 @@ public class AccountServiceImpl implements AccountService {
         return getAccountList(null,null,null,null,pageNumber,null,null,null,null,null,null,banmaerpProperties);
     }
 
+    @Override
+    public List<AccountDTO> getAndSaveAccountList(Integer pageNumber, BanmaerpProperties banmaerpProperties) {
+        List<AccountDTO> accountDTOS =getAccountList(null,null,null,null,pageNumber,null,null,null,null,null,null,banmaerpProperties);
+        banmaerpProperties.setBanmaErpAccounts(accountDTOS);
+        return banmaerpPropertiesRepository.saveAndFlush(banmaerpProperties).getBanmaErpAccounts();
+    }
+
     /**
      * 查询单个用户
      *
@@ -109,19 +117,9 @@ public class AccountServiceImpl implements AccountService {
         //todo signing
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
         HttpEntity requestBody = new HttpEntity(null,httpHeaders);
-        BanmaErpResponseDTO<JsonNode> body = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {
-                })
-                .getBody();
-        AccountDTO accountDTO = null;
-        try {
-            accountDTO = objectMapper.readValue(body.getData().get("Account").toString(), new TypeReference<AccountDTO>() {
-            });
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-
-        return accountDTO;
+        return httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<AccountDTO>>() {})
+                .getBody().getData();
     }
 
 
@@ -138,31 +136,24 @@ public class AccountServiceImpl implements AccountService {
     @Override
     @CheckBanmaerpProperties
     public AccountDTO addAccount(String phone, String email, String realName, String department,boolean useVirtual ,BanmaerpProperties banmaerpProperties) {
-        AccountDTO accountDTO = new AccountDTO(
-                0,realName,email,phone,department,null,null,0,0
-        );
-        String accountJson = JSONUtil.toJsonStr(accountDTO);
+        AccountDTO accountDTO = new AccountDTO(realName,email,phone,department);
+        String accountJson = null;
+        try {
+            accountJson = objectMapper.writeValueAsString(accountDTO);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            accountJson = new GsonBuilder().disableHtmlEscaping().create().toJson(accountDTO);
+        }
         String apiUrl = String.format(BanmaerpURL.banmaerp_accountAdd_POST);
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
         HttpHeaders httpHeaders = new HttpHeaders();
         BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
-        //todo signing
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
-        httpHeaders.set("Content-Type","application/json");
+        httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         HttpEntity requestBody = new HttpEntity(accountJson,httpHeaders);
-        BanmaErpResponseDTO<JsonNode> body = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.POST, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {
-                })
-                .getBody();
-        AccountDTO account = null;
-        try {
-            account = objectMapper.readValue(body.getData().get("Account").toString(), new TypeReference<AccountDTO>() {
-            });
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-
-        return account;
+        return httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.POST, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<AccountDTO>>() {})
+                .getBody().getData();
     }
 
     /**
@@ -178,14 +169,11 @@ public class AccountServiceImpl implements AccountService {
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
         HttpHeaders httpHeaders = new HttpHeaders();
         BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
-        //todo signing
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
         HttpEntity requestBody = new HttpEntity(null,httpHeaders);
         BanmaErpResponseDTO<Boolean> body = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.DELETE, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<Boolean>>() {
-                })
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.DELETE, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<Boolean>>() {})
                 .getBody();
-
         return body;
     }
 
@@ -201,22 +189,11 @@ public class AccountServiceImpl implements AccountService {
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
         HttpHeaders httpHeaders = new HttpHeaders();
         BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
-        //todo signing
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
         HttpEntity requestBody = new HttpEntity(null,httpHeaders);
-        BanmaErpResponseDTO<JsonNode> body = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {
-                })
-                .getBody();
-        DataAccessDTO dataAccessDTO = null;
-        try {
-            dataAccessDTO = objectMapper.readValue(body.getData().toString(), new TypeReference<DataAccessDTO>() {
-            });
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-
-        return dataAccessDTO;
+        return httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<DataAccessDTO>>() {})
+                .getBody().getData();
     }
 
     @Override
@@ -227,6 +204,11 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public AccountDTO saveAccount(AccountDTO accountDTO) {
         return accountRepository.saveAndFlush(accountDTO);
+    }
+
+    @Override
+    public TokenResponseDTO getAccessToken(BanmaerpProperties banmaerpProperties) {
+        return banmaTokenUtils.getBanmaErpMasterToken(banmaerpProperties).block();
     }
 
 

@@ -1,12 +1,11 @@
 package com.hrghs.xycb.runtimeTest;
 
-import cn.hutool.json.JSONUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.hrghs.xycb.config.BanmaerpProperties;
+import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.GetSsoPassportResponse;
 import com.hrghs.xycb.domains.SsoRegisterResponse;
 import com.hrghs.xycb.domains.banmaerpDTO.*;
@@ -87,10 +86,10 @@ public class BanmaerpApiTests {
 //        getStoreById();
 //        getOrderById();
 //        getOrderList();
-        getProductById();
-//        getProductList();
+//        getProductById();
+        getProductList();
 //        getProductSkuList();
-//        getProductSkuById();
+ //       getProductSkuById();
 //        getProductTagsList();
 //        getProductSuppliersList();
 //        addAccount();
@@ -212,6 +211,7 @@ public class BanmaerpApiTests {
     // 查询单个sku
     private void getProductSkuById() {
         ProductSkusDTO productSkusDTO = productService.getProductSkuById("1497490072574889984", null);
+        System.out.println("getProductSkuById........");
         if (productSkusDTO != null) {
             ProductSkusDTO productDTO1 = productSkusRepository.saveAndFlush(productSkusDTO);
             System.out.println("productSkusDTO-all:" + productDTO1.getSKUID());
@@ -326,17 +326,17 @@ public class BanmaerpApiTests {
     private void register() {
         AccountDTO accountDTO = new AccountDTO();
         accountDTO.setRealName("测试");
-        accountDTO.setPhone("15000000100");
+        accountDTO.setPhone("11990000100");
         accountDTO.setDepartment("采购部");
-        accountDTO.setEmail("105271@qq.com");
+        accountDTO.setEmail("101415272@qq.com");
         AppsInfoDTO appsInfoDTO = new AppsInfoDTO();
-        appsInfoDTO.setName("测试1");
+        appsInfoDTO.setName("测试11");
+        System.out.println("保存注册用户...............");
         BanmaErpResponseDTO<SsoRegisterResponse> register = ssoService.register(accountDTO, appsInfoDTO, null);
         AccountDTO accountDTO1 = accountService.saveAccount(register.getData().getAccount());
-        BmerpPropertiesDTO banmaerpProperties = banmaerpPropertiesRepository.saveAndFlush(register.getData().toBanmaerpProperties());
+
         try {
             System.out.println(objectMapper.writeValueAsString(register.getData()));
-            System.out.println(objectMapper.writeValueAsString(banmaerpProperties));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }

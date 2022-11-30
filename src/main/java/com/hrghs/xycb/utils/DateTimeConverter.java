@@ -1,24 +1,11 @@
 package com.hrghs.xycb.utils;
 
-import com.fasterxml.jackson.core.JacksonException;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.gson.*;
-import com.hrghs.xycb.utils.DateTimeUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.TimeZone;
 
 public class DateTimeConverter implements JsonSerializer<DateTime>, JsonDeserializer<DateTime> {
     private static DateTimeFormatter dateTimeFormatter;

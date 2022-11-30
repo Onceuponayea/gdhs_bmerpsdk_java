@@ -10,7 +10,6 @@ public class JodaDateTimeDeserialiser extends com.fasterxml.jackson.databind.Jso
     public static DateTimeUtils dateTimeUtils = new DateTimeUtils();
     @Override
     public DateTime deserialize(com.fasterxml.jackson.core.JsonParser p, DeserializationContext ctxt) throws IOException {
-        System.out.println("JodaDateTimeDeserialiser............");
         return  DateTime.parse(p.getText(), dateTimeUtils.detectPattern(p.getText()));
     }
 }

@@ -1,10 +1,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.hrghs.xycb</groupId>
   <artifactId>banmaerp</artifactId>
   <packaging>jar</packaging>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.1-SNAPSHOT</version>
   <name>banmaerp</name>
   <url>http://maven.apache.org</url>
   <properties>
@@ -19,7 +19,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-<!--    <version>2.7.2</version>--><!-- redisson 版本问题 -->
+    <!--    <version>2.7.2</version>--><!-- redisson 版本问题 -->
     <version>2.7.5</version>
   </parent>
   <dependencies>
@@ -100,11 +100,11 @@
       <artifactId>joda-time</artifactId>
       <version>2.12.1</version>
     </dependency>
-    <dependency>
-      <groupId>joda-time</groupId>
-      <artifactId>joda-time-hibernate</artifactId>
-      <version>1.4</version>
-    </dependency>
+    <!--    <dependency>-->
+    <!--      <groupId>joda-time</groupId>-->
+    <!--      <artifactId>joda-time-hibernate</artifactId>-->
+    <!--      <version>1.4</version>-->
+    <!--    </dependency>-->
     <dependency>
       <groupId>com.fasterxml.jackson.datatype</groupId>
       <artifactId>jackson-datatype-joda</artifactId>
@@ -130,29 +130,23 @@
       <artifactId>commons-imaging</artifactId>
       <version>1.0-alpha3</version>
     </dependency>
-    <!--hutool-->
     <dependency>
       <groupId>cn.hutool</groupId>
-      <artifactId>hutool-all</artifactId>
-      <version>5.7.17</version>
+      <artifactId>hutool-crypto</artifactId>
+      <version>5.8.10</version>
     </dependency>
   </dependencies>
-  <dependencyManagement></dependencyManagement>
 
   <build>
-    <finalName>hrghs-banmaerp</finalName>
     <plugins>
-<!--      <plugin>-->
-<!--        <groupId>org.springframework.boot</groupId>-->
-<!--        <artifactId>spring-boot-maven-plugin</artifactId>-->
-<!--        <configuration>-->
-<!--          <mainClass>com.hrghs.xycb.BanmaerpStarter</mainClass>-->
-<!--        </configuration>-->
-<!--      </plugin>-->
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>${maven.compiler.version}</version>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptors>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+            <descriptorRef>src</descriptorRef>
+          </descriptors>
+        </configuration>
       </plugin>
     </plugins>
   </build>

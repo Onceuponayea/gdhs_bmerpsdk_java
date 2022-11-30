@@ -1,9 +1,7 @@
 package com.hrghs.xycb.services;
 
-import com.hrghs.xycb.config.BanmaerpProperties;
-import com.hrghs.xycb.domains.banmaerpDTO.AccountDTO;
+import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.CategoryDTO;
-import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 
 import java.util.List;
 
