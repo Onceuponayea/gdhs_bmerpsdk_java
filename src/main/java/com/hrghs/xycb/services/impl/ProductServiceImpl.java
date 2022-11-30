@@ -103,6 +103,16 @@ public class ProductServiceImpl implements ProductService {
         //todo signing
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
         HttpEntity requestBody = new HttpEntity(null,httpHeaders);
+//        BanmaErpResponseDTO<JsonNode> body = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+//                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+//                .getBody();
+//        ProductDTO productDTO = null;
+//        try {
+//            productDTO = objectMapper.readValue(body.getData().toString(), new TypeReference<ProductDTO>() {});
+//        } catch (JsonProcessingException e) {
+//            e.printStackTrace();
+//        }
+//        return productDTO;
         return httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
                 .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<ProductDTO>>() {})
                 .getBody().getData();

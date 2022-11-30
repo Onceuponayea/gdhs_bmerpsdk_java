@@ -1,45 +1,136 @@
 package com.hrghs.xycb;
 
-import com.hrghs.xycb.config.BanmaerpProperties;
-import com.hrghs.xycb.domains.BanmaerpURL;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.hrghs.xycb.domains.GetSsoPassportResponse;
+import com.hrghs.xycb.domains.banmaerpDTO.ProductDTO;
+import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.domains.enums.BanmaerpAuthEnums;
-import com.hrghs.xycb.domains.enums.BanmaerpPlatformEnums;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.imaging.ImageFormats;
-import org.hibernate.dialect.MySQL8Dialect;
-import org.joda.time.DateTime;
-import org.joda.time.LocalDateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.ISODateTimeFormat;
 
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
-
-import static jodd.util.StringPool.COMMA;
 //import com.atomikos.icatch.jta.hibernate3.TransactionManagerLookup;
 
 public class SimpleTests {
-    public static void main(String[] args) {
-        List<String>  strings = Arrays.asList("1","a","afa","fsfs");
-        StringBuilder stringBuilder = new StringBuilder();
-        for (String s : strings){
-            stringBuilder.append(s).append(COMMA);
-        }
-        String dbData = stringBuilder.substring(0,stringBuilder.length()-1);
-        System.out.println(dbData);
-        List<String> result =
-        Arrays.stream(dbData.split(COMMA))
-                .collect(Collectors.toList());
-        System.out.println(result.get(0)+"\t"+result.size());
+    public static void main(String[] args) throws UnknownHostException, SocketException, MalformedURLException, JsonProcessingException {
+        String test="{\n" +
+                "    \"Product\": {\n" +
+                "        \"SPU\": {\n" +
+                "            \"SPUID\": \"1497121263854817280\",\n" +
+                "            \"Code\": \"22112200001\",\n" +
+                "            \"Title\": \"重磅卫衣男秋冬款连帽加绒加厚美式复古运动外套春秋潮牌宽松男装\",\n" +
+                "            \"LeiMuID\": \"32781a0f-50bd-4fd5-b15a-af5500e69a33\",\n" +
+                "            \"Image\": \"https://gw.alicdn.com/imgextra/i3/2966343102/O1CN01Z8e6HU1YmlNKvfP4k_!!2966343102.jpg_Q75.jpg_.webp\",\n" +
+                "            \"Source\": \"手工创建\",\n" +
+                "            \"DefaultSupplierID\": \"b4643438-15b5-4fee-9071-af5600fdece6\",\n" +
+                "            \"Remark\": \"\",\n" +
+                "            \"IsExemptQuality\": true,\n" +
+                "            \"Keywords\": \"爆款\",\n" +
+                "            \"CreateTime\": \"2022-11-22T14:25:24\",\n" +
+                "            \"UpdateTime\": \"2022-11-23T15:26:46\"\n" +
+                "        },\n" +
+                "        \"Descriptions\": {\n" +
+                "            \"Html\": \"<p><span style=\\\"font-family: &quot;PingFang SC&quot;; font-size: 20px; font-weight: 900; background-color: rgb(255, 255, 255);\\\">重磅卫衣男秋冬款连帽加绒加厚美式复古运动外套春秋潮牌宽松男装</span></p>\",\n" +
+                "            \"Text\": \"\",\n" +
+                "            \"Short\": \"\"\n" +
+                "        },\n" +
+                "        \"SKUs\": [\n" +
+                "            {\n" +
+                "                \"SKUID\": \"1497490072574889984\",\n" +
+                "                \"Code\": \"22112200001-White-One-Size\",\n" +
+                "                \"Specification\": \"White;One Size\",\n" +
+                "                \"CostPrice\": 112.0,\n" +
+                "                \"Image\": \"https://gw.alicdn.com/imgextra/i3/2966343102/O1CN01Z8e6HU1YmlNKvfP4k_!!2966343102.jpg_Q75.jpg_.webp\",\n" +
+                "                \"Weight\": 60,\n" +
+                "                \"Length\": 60,\n" +
+                "                \"Width\": 60,\n" +
+                "                \"Height\": 60,\n" +
+                "                \"IsValid\": true,\n" +
+                "                \"Remark\": \"\",\n" +
+                "                \"Sort\": 0,\n" +
+                "                \"Type\": \"普通\",\n" +
+                "                \"CombineData\": [],\n" +
+                "                \"Options\": [\n" +
+                "                    {\n" +
+                "                        \"Name\": \"Color\",\n" +
+                "                        \"Value\": \"White\"\n" +
+                "                    },\n" +
+                "                    {\n" +
+                "                        \"Name\": \"Size\",\n" +
+                "                        \"Value\": \"One Size\"\n" +
+                "                    }\n" +
+                "                ]\n" +
+                "            }\n" +
+                "        ],\n" +
+                "        \"Suppliers\": [\n" +
+                "            {\n" +
+                "                \"ID\": \"b4643438-15b5-4fee-9071-af5600fdece6\",\n" +
+                "                \"Remark\": \"\",\n" +
+                "                \"Sort\": 0,\n" +
+                "                \"Info\": {\n" +
+                "                    \"ID\": \"b4643438-15b5-4fee-9071-af5600fdece6\",\n" +
+                "                    \"Name\": \"zzz\",\n" +
+                "                    \"Contact\": \"将之心\",\n" +
+                "                    \"Phone\": \"13799820202\",\n" +
+                "                    \"Address\": \"福建省厦门市\",\n" +
+                "                    \"Remark\": \"\",\n" +
+                "                    \"Url\": \"\",\n" +
+                "                    \"QQ\": \"\",\n" +
+                "                    \"WeChat\": \"\",\n" +
+                "                    \"WangWang\": \"\",\n" +
+                "                    \"SettlementType\": \"货到付款\"\n" +
+                "                }\n" +
+                "            }\n" +
+                "        ],\n" +
+                "        \"Options\": [\n" +
+                "            {\n" +
+                "                \"Name\": \"Color\",\n" +
+                "                \"Sort\": 0,\n" +
+                "                \"Values\": [\n" +
+                "                    \"White\"\n" +
+                "                ]\n" +
+                "            },\n" +
+                "            {\n" +
+                "                \"Name\": \"Size\",\n" +
+                "                \"Sort\": 0,\n" +
+                "                \"Values\": [\n" +
+                "                    \"One Size\"\n" +
+                "                ]\n" +
+                "            }\n" +
+                "        ],\n" +
+                "        \"Requirements\": [],\n" +
+                "        \"Sources\": [],\n" +
+                "        \"Images\": [\n" +
+                "            {\n" +
+                "                \"Src\": \"https://gw.alicdn.com/imgextra/i3/2966343102/O1CN01Z8e6HU1YmlNKvfP4k_!!2966343102.jpg_Q75.jpg_.webp\",\n" +
+                "                \"Sort\": 0\n" +
+                "            }\n" +
+                "        ],\n" +
+                "        \"Tags\": [\n" +
+                "            {\n" +
+                "                \"Name\": \"休闲\"\n" +
+                "            }\n" +
+                "        ],\n" +
+                "        \"PackMaterials\": [\n" +
+                "            {\n" +
+                "                \"ID\": \"1497488256156045312\",\n" +
+                "                \"Name\": \"羊羔绒\",\n" +
+                "                \"Remark\": \"\",\n" +
+                "                \"Quantity\": 1\n" +
+                "            }\n" +
+                "        ]\n" +
+                "    }\n" +
+                "}";
+        ObjectMapper objectMapper = new ObjectMapper().registerModule(new JodaModule());
+//        ProductDTO banmaErpResponseDTO = objectMapper.readValue(test, new TypeReference<ProductDTO>() {});
+        ProductDTO banmaErpResponseDTO = objectMapper.readValue(test, ProductDTO.class);
+        System.out.println(banmaErpResponseDTO.getSPU().getTitle());
+
     }
     private void banmaSign(){
         boolean isIP = ("IP白名单" == BanmaerpAuthEnums.AuthMethod.IP_WHITELIST.getAuthType());

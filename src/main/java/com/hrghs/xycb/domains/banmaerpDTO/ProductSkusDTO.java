@@ -21,6 +21,8 @@ import javax.persistence.*;
 @NoArgsConstructor
 @Entity
 @Table(name = "bmerp_product_skus")
+@JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT,use = JsonTypeInfo.Id.NAME)
+@JsonTypeName(value = "SKU")
 public class ProductSkusDTO implements Serializable {
 
 

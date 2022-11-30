@@ -1,6 +1,10 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
 import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.hrghs.xycb.utils.converters.ProductDeserialiser;
+import com.hrghs.xycb.utils.converters.ProductSerialiser;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -43,6 +47,8 @@ public class ProductDTO implements Serializable {
     @JsonProperty(value = "Descriptions")
     private ProductDescriptionsDTO descriptions;
 
+    @JsonSerialize(using = ProductSerialiser.ProductSkusSerializer.class)
+    @JsonDeserialize(using = ProductDeserialiser.ProductSkusDeserializer.class)
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id")
     @JsonProperty(value = "SKUs")
