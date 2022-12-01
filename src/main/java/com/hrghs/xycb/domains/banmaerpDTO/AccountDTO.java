@@ -1,9 +1,7 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.*;
+import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.utils.converters.JodaDateTimeConverter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,11 +15,16 @@ import javax.persistence.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-//@JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT,use = JsonTypeInfo.Id.NAME)
-//@JsonTypeName("Account")
 @Entity
 @Table(name = "bmerp_account")
 public class AccountDTO {
+
+    public AccountDTO(String _realName,String _email,String _phone, String _department){
+        this.realName = _realName;
+        this.email = _email;
+        this.phone = _phone;
+        this.department = _department;
+    }
 
     @Id
     @Column(name = "id")
@@ -56,5 +59,12 @@ public class AccountDTO {
 
     @JsonProperty(value = "userType")
     private int userType;
+    /**
+     * todo 暂时不清楚斑马erp的Account是关联主账号还是app，如果一个主账号创建多个app，用app1接口创建的子账号能够被app2使用吗
+     */
+    @JsonIgnore
+    @JoinColumn(name = "bmerp_account")
+    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    BanmaerpProperties banmaerpProperties;
 
 }

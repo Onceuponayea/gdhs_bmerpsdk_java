@@ -7,7 +7,6 @@ import com.hrghs.xycb.utils.converters.JpaListStringConverter;
 import lombok.Data;
 import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
-
 import javax.persistence.*;
 import java.util.List;
 import java.util.UUID;
@@ -256,7 +255,6 @@ public class OrderMasterDTO {
      * 要求交货时间/预计交货时间/期望交货时间时间段，如 10:00-16:00,上午/午前=06:00-12:00,下午/午后=12:00-18:00,夜间=18:00-21:00
      */
     @Column(name = "requested_delivery_time")
-//    @Convert(converter = JodaDateTimeConverter.class)
     @JsonProperty(value = "RequestedDeliveryTime")
     private String requestedDeliveryTime;
 

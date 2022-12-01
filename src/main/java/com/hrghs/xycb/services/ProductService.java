@@ -1,6 +1,6 @@
 package com.hrghs.xycb.services;
 
-import com.hrghs.xycb.config.BanmaerpProperties;
+import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.ProductDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.ProductSkusDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.ProductSuppliersInfoDTO;

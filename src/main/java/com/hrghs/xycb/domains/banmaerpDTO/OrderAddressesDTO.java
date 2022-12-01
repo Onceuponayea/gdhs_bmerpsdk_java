@@ -27,7 +27,6 @@ public class OrderAddressesDTO {
     private UUID order_address_id;
 
     @JsonIgnore
-//    @JoinColumn(name = "order_address_id",nullable = false,insertable = false,updatable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
     private OrderDTO orderDTO;

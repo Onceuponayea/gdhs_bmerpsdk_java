@@ -4,9 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
-import com.hrghs.xycb.config.BanmaerpProperties;
+import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.StoreDTO;
 import com.hrghs.xycb.repositories.StoreRepository;
 import com.hrghs.xycb.utils.BanmaTokenUtils;
@@ -19,7 +18,6 @@ import com.hrghs.xycb.services.StoreService;
 import com.hrghs.xycb.utils.EncryptionUtils;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -36,17 +34,18 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.hrghs.xycb.config.BanmaerpProperties.BANMA_HEADER_SIGN;
+import static com.hrghs.xycb.domains.BanmaerpProperties.BANMA_HEADER_SIGN;
 import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_STORES;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 
 @Service
 @Lazy
-//@Transactional(transactionManager = "banmaerpXATransactionManager")
+@Transactional(transactionManager = "banmaerpXATransactionManager")
 public class StoreServiceImpl implements StoreService {
     @Autowired
     private HttpClientsUtils httpClients;
     @Autowired
+    @Lazy
     private BanmaTokenUtils banmaTokenUtils;
     @Autowired
     private EncryptionUtils encryptionUtils;
@@ -79,17 +78,16 @@ public class StoreServiceImpl implements StoreService {
         String apiUrl = String.format(BanmaerpURL.banmaerp_storelist_GET,ids,name,platform==null?"":platform.toString(),pageNumber,pageSize,
                 searchTimeStart, searchTimeEnd,searchTimeField,sortField,sortBy);
         BanmaerpSigningVO banmaerpSigningVO = new BanmaerpSigningVO();
-        //todo banmaerpSigningVO set parameters
         Mono<WebClient> webClientMono = (banmaerpProperties==null)? httpClients.webClientWithBanmaMasterToken(): httpClients.webClientWithBanmaMasterToken(banmaerpProperties);
         //Mono<List<StoreDTO>> responseDTOMono =
-                webClientMono
-                .flatMap(webClient -> webClient.method(HttpMethod.GET).uri(apiUrl)
-               .header(BANMA_HEADER_SIGN,encryptionUtils.banmaerpSigning(banmaerpSigningVO))
-               .accept(MediaType.APPLICATION_JSON).accept(APPLICATION_JSON_UTF8).acceptCharset(Charset.defaultCharset())
-               .retrieve().bodyToMono(new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
-               .map(responseDTO -> responseDTO.toDataList(BANMAERP_FIELD_STORES))
-                             //   .map(objects -> )
-                );
+        webClientMono
+            .flatMap(webClient -> webClient.method(HttpMethod.GET).uri(apiUrl)
+           .header(BANMA_HEADER_SIGN,encryptionUtils.banmaerpSigning(banmaerpSigningVO))
+           .accept(MediaType.APPLICATION_JSON).accept(APPLICATION_JSON_UTF8).acceptCharset(Charset.defaultCharset())
+           .retrieve().bodyToMono(new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+           .map(responseDTO -> responseDTO.toDataList(BANMAERP_FIELD_STORES))
+                         //   .map(objects -> )
+            );
         //return responseDTOMono;
         return Mono.empty();
     }
@@ -137,22 +135,11 @@ public class StoreServiceImpl implements StoreService {
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
         HttpHeaders httpHeaders = new HttpHeaders();
         BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,apiUrl);
-        //todo signing
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
         HttpEntity requestBody = new HttpEntity(null,httpHeaders);
-        BanmaErpResponseDTO<JsonNode> body = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {
-                })
-                .getBody();
-        StoreDTO storeDTO = null;
-        try {
-            storeDTO = objectMapper.readValue(body.getData().toString(), new TypeReference<StoreDTO>() {
-            });
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-
-        return storeDTO;
+        return httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<StoreDTO>>() {
+                }).getBody().getData();
     }
 
     @Override

@@ -35,8 +35,6 @@ public class ProductDTO implements Serializable {
     @GeneratedValue
     private UUID productUUId;
 
-    //    @JsonSerialize(contentUsing = ProductSerialiser.ProductSpuSerializer.class)
-//    @JsonDeserialize(contentUsing = ProductDeserialiser.ProductSpuDeserializer.class)
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true, optional = true)
     @JoinColumn(name = "product_spuid", referencedColumnName = "spu_id")
     @JsonManagedReference
@@ -49,6 +47,8 @@ public class ProductDTO implements Serializable {
     @JsonProperty(value = "Descriptions")
     private ProductDescriptionsDTO descriptions;
 
+    @JsonSerialize(using = ProductSerialiser.ProductSkusSerializer.class)
+    @JsonDeserialize(using = ProductDeserialiser.ProductSkusDeserializer.class)
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id")
     @JsonProperty(value = "SKUs")

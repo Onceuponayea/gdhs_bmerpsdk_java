@@ -4,16 +4,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
-import com.hrghs.xycb.config.BanmaerpProperties;
+import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.BanmaerpSigningVO;
 import com.hrghs.xycb.domains.BanmaerpURL;
 import com.hrghs.xycb.domains.banmaerpDTO.StorageDTO;
-import com.hrghs.xycb.domains.banmaerpDTO.StoreDTO;
 import com.hrghs.xycb.repositories.StorageRepository;
 import com.hrghs.xycb.utils.BanmaTokenUtils;
 import com.hrghs.xycb.utils.EncryptionUtils;
@@ -23,7 +18,6 @@ import com.hrghs.xycb.services.StorageService;
 import org.apache.commons.imaging.ImageFormats;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -37,9 +31,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
-import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_STORES;
 import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_STORAGES;
-import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_STORES;
 
 @Service
 @Lazy
@@ -91,8 +83,8 @@ public class StorageServiceImpl implements StorageService {
                 .getBody()
                 .toDataList(BANMAERP_FIELD_STORAGES)
         )
-                .map(o -> (StorageDTO) o)
-                .collect(Collectors.toList());
+        .map(o -> (StorageDTO) o)
+        .collect(Collectors.toList());
         return storageDTOList;
     }
 
@@ -116,22 +108,11 @@ public class StorageServiceImpl implements StorageService {
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
         HttpHeaders httpHeaders = new HttpHeaders();
         BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
-        //todo signing
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
         HttpEntity requestBody = new HttpEntity(null, httpHeaders);
-        BanmaErpResponseDTO<JsonNode> body = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {
-                })
-                .getBody();
-        StorageDTO storageDTO = null;
-        try {
-            storageDTO = objectMapper.readValue(body.getData().toString(), new TypeReference<StorageDTO>() {
-            });
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-
-        return storageDTO;
+        return httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<StorageDTO>>() {
+                }).getBody().getData();
     }
 
     /**

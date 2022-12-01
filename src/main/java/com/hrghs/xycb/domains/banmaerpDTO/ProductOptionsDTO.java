@@ -2,8 +2,6 @@ package com.hrghs.xycb.domains.banmaerpDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.hrghs.xycb.utils.converters.JpaListStringConverter;
 import lombok.Data;
 import org.hibernate.annotations.Type;

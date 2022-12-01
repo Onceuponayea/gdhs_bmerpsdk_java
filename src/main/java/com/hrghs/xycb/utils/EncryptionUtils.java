@@ -1,5 +1,6 @@
 package com.hrghs.xycb.utils;
 
+import cn.hutool.crypto.SecureUtil;
 import com.hrghs.xycb.domains.BanmaerpSigningVO;
 import org.apache.commons.codec.binary.Hex;
 import org.springframework.stereotype.Component;
@@ -9,6 +10,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
+import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_APPID;
+import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_APPSECRET;
 import static jodd.util.StringPool.*;
 
 @Component
@@ -28,9 +31,7 @@ public class EncryptionUtils {
      * @@throws NoSuchAlgorithmException
      */
     public String banmaerpSigning(BanmaerpSigningVO banmaerpSigningVO) {
-        /** the signing order is unalterable! **/
         String requestQuery = captureName(banmaerpSigningVO);
-//        requestQuery = StringUtils.hasText(requestQuery) ? requestQuery.toLowerCase(Locale.ROOT) : "";
         String requestBody = banmaerpSigningVO.getRequest_body();
         requestBody = StringUtils.hasText(requestBody) ? requestBody : "";
         String signText = banmaerpSigningVO.getRequest_method().name()
@@ -38,8 +39,7 @@ public class EncryptionUtils {
                 .concat(requestQuery)
                 .concat(banmaerpSigningVO.getTimestamp().toString())
                 .concat(requestBody);
-        System.out.println("singText:" + signText);
-        return getSign(signText, banmaerpSigningVO.getSign_algorithm());
+        return SecureUtil.sha256(signText);
     }
 
     private String getSign(String signText, String sign_algorithm) {
@@ -116,31 +116,26 @@ public class EncryptionUtils {
         return stringBuffer.substring(0, stringBuffer.length() - 1);
     }
 
-    //
     public static String captureName(BanmaerpSigningVO banmaerpSigningVO) {
         String query = "";
+        //第1步 拼接固定的参数
+        Map<String, String> map = new TreeMap<String, String>(
+                (obj1, obj2) -> {
+                    // 降序排序
+                    return obj1.compareTo(obj2);
+                });
+        map.put(BANMAERP_FIELD_APPID, banmaerpSigningVO.getApp_id());
+        map.put(BANMAERP_FIELD_APPSECRET, banmaerpSigningVO.getApp_secret());
         if (banmaerpSigningVO.getRequest_query() != null && banmaerpSigningVO.getRequest_query() != "") {
-            //第1步 拼接固定的参数
-            Map<String, String> map = new TreeMap<String, String>(
-                    new Comparator<String>() {
-                        public int compare(String obj1, String obj2) {
-                            // 降序排序
-                            return obj1.compareTo(obj2);
-                        }
-                    });
-            map.put("app_id", banmaerpSigningVO.getApp_id());
-            map.put("app_secret", banmaerpSigningVO.getApp_secret());
             //第2步 所有将请求的查询参数拆分到字典里。并且保证参数为小写
             String[] request_querys = banmaerpSigningVO.getRequest_query().split("\\&");
             for (int i = 0; i < request_querys.length; i++) {
                 String[] querys = request_querys[i].split("=");
                 map.put(querys[0].toLowerCase(), querys[1]);
             }
-
-            for (Map.Entry<String, String> entry : map.entrySet()) {
-                query += entry.getKey() + "=" + entry.getValue() + "&";
-                System.out.println("key:" + entry.getKey() + "value:" + entry.getValue());
-            }
+        }
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            query += entry.getKey() + "=" + entry.getValue() + "&";
         }
         return query;
     }

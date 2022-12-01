@@ -9,7 +9,9 @@ import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
 import com.hrghs.xycb.config.BanmaerpProperties;
 import com.hrghs.xycb.domains.BanmaerpSigningVO;
 import com.hrghs.xycb.domains.BanmaerpURL;
-import com.hrghs.xycb.domains.banmaerpDTO.*;
+import com.hrghs.xycb.domains.banmaerpDTO.AccountDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.CategoryDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.OrderDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.repositories.OrderRepository;
 import com.hrghs.xycb.services.OrderService;
@@ -30,7 +32,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.hrghs.xycb.domains.Constants.*;
+import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_CATEGORYS;
+import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_ORDERS;
 
 @Service
 @Lazy
@@ -127,64 +130,6 @@ public class OrderServiceImpl implements OrderService {
             e.printStackTrace();
         }
         return orderDTO;
-    }
-
-    /**
-     * 查询物流履约
-     *
-     * @param orderId            订单id
-     * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
-     * @return
-     */
-    @Override
-    @CheckBanmaerpProperties
-    public List<OrderFulfillmentDTO> getFulfillments(String orderId, BanmaerpProperties banmaerpProperties) {
-        String apiUrl = String.format(BanmaerpURL.banmaerp_orderFulfillments_GET, orderId);
-        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
-        HttpHeaders httpHeaders = new HttpHeaders();
-        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
-        //todo signing
-        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
-        HttpEntity requestBody = new HttpEntity(null, httpHeaders);
-        List<OrderFulfillmentDTO> orderFulfillmentDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<OrderFulfillmentDTO>>() {
-                })
-                .getBody()
-                .toDataList(BANMAERP_FIELD_FULFILLMENTS)
-        )
-                .map(o -> (OrderFulfillmentDTO) o)
-                .collect(Collectors.toList());
-        orderFulfillmentDTOList.forEach(orderFulfillmentDTO -> orderFulfillmentDTO.setOrderId(orderId));
-        return orderFulfillmentDTOList;
-    }
-
-    /**
-     * 查询物流追踪
-     *
-     * @param orderId            订单id
-     * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
-     * @return
-     */
-    @Override
-    @CheckBanmaerpProperties
-    public List<OrderTrackingDTO> getTrackings(String orderId, BanmaerpProperties banmaerpProperties) {
-        String apiUrl = String.format(BanmaerpURL.banmaerp_orderTrackings_GET, orderId);
-        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
-        HttpHeaders httpHeaders = new HttpHeaders();
-        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
-        //todo signing
-        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
-        HttpEntity requestBody = new HttpEntity(null, httpHeaders);
-        List<OrderTrackingDTO> orderTrackingDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<OrderTrackingDTO>>() {
-                })
-                .getBody()
-                .toDataList(BANMAERP_FIELD_TRACKINGS)
-        )
-                .map(o -> (OrderTrackingDTO) o)
-                .collect(Collectors.toList());
-        orderTrackingDTOList.forEach(orderFulfillmentDTO -> orderFulfillmentDTO.setOrderId(orderId));
-        return orderTrackingDTOList;
     }
 
     @Override

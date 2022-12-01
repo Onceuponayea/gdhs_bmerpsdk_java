@@ -62,9 +62,9 @@ public class DbConfigs {
     //初始化
     @Bean
     @ConditionalOnMissingBean
-    public ReactiveRedisConnectionFactory redisConnectionFactory(@Value("${spring.redis.host:localhost}") String host,
+    public ReactiveRedisConnectionFactory redisConnectionFactory(@Value("${spring.redis.host:127.0.0.1}") String host,
                                                                  @Value("${spring.redis.port:3306}")int port,
-                                                                 @Value("${spring.redis.password}")String password,
+                                                                 @Value("${spring.redis.password:}")String password,
                                                                  @Value("${spring.redis.database:1}")int db){
         LettuceClientConfiguration clientConfiguration = LettuceClientConfiguration.builder()
                 .commandTimeout(Duration.ofSeconds(1))

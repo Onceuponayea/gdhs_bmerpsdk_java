@@ -1,9 +1,9 @@
 package com.hrghs.xycb.services;
 
-import com.hrghs.xycb.config.BanmaerpProperties;
+import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.AccountDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.DataAccessDTO;
-import com.hrghs.xycb.domains.banmaerpDTO.StoreDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.TokenResponseDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import org.joda.time.DateTime;
 
@@ -45,6 +45,7 @@ public interface AccountService {
 
     List<AccountDTO> getAccountList(Integer pageNumber, BanmaerpProperties banmaerpProperties);
 
+    List<AccountDTO> getAndSaveAccountList(Integer pageNumber, BanmaerpProperties banmaerpProperties);
     /**
      * 查询单个用户
      *
@@ -94,4 +95,6 @@ public interface AccountService {
     List<AccountDTO> saveAccountList(List<AccountDTO> accountDTOList);
 
     AccountDTO saveAccount(AccountDTO accountDTO);
+
+    TokenResponseDTO getAccessToken(BanmaerpProperties banmaerpProperties);
 }
