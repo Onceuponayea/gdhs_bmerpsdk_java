@@ -137,15 +137,35 @@ public class StorageServiceImpl implements StorageService {
     /**
      * 使用stream文件流的方式上传文件
      *
-     * @param contentType 内容类型（必填）
+//     * @param contentType 内容类型（必填）
      * @param name        文件名称（必填）
      * @param file        文件内容（必填）
      * @return
      */
     @Override
-    public BanmaErpResponseDTO uploadTheFileToStream(String contentType, String name, String file,
+    public BanmaErpResponseDTO<StorageDTO> uploadTheFileToStream(String name, String file,
                                                      BanmaerpProperties banmaerpProperties) {
-        return null;
+        if (isFileNameValid(name)) {
+            String apiUrl = String.format(BanmaerpURL.banmaerp_storage_stream_POST, name);
+            apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+            httpHeaders.setAccept(Arrays.asList(MediaType.APPLICATION_OCTET_STREAM));
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+            httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
+            HttpEntity requestBody = new HttpEntity(file, httpHeaders);
+            BanmaErpResponseDTO<StorageDTO> responseDTO =
+                    httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),
+                                    HttpMethod.POST, requestBody,
+                                    new ParameterizedTypeReference<BanmaErpResponseDTO<StorageDTO>>() {
+                                    })
+                            .getBody();
+            storageRepository.saveAndFlush(responseDTO.getData());
+            return responseDTO;
+        } else {
+            throw new IllegalArgumentException(name + "  is not a valid image file type!");
+        }
     }
 
     /**
@@ -183,16 +203,33 @@ public class StorageServiceImpl implements StorageService {
     }
 
     /**
-     * 使用base64文件流的方式上传文件
+     * 使用form-data文件流的方式上传文件
      *
-     * @param contentType 内容类型（必填）
-     * @param file        文件内容（必填）
+     * @param contentType        内容类型（必填）
+     * @param file               文件内容（必填）
+     * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
     @Override
-    public BanmaErpResponseDTO<StorageDTO> uploadTheFileToForm(String contentType, String file,
-                                                               BanmaerpProperties banmaerpProperties) {
-        return null;
+    public BanmaErpResponseDTO<StorageDTO> uploadTheFileToForm(String file,BanmaerpProperties banmaerpProperties) {
+
+            String apiUrl = String.format(BanmaerpURL.banmaerp_storage_form_POST);
+            apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
+            httpHeaders.setAccept(Arrays.asList(MediaType.MULTIPART_FORM_DATA));
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+            httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
+            HttpEntity requestBody = new HttpEntity(file, httpHeaders);
+            BanmaErpResponseDTO<StorageDTO> responseDTO =
+                    httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),
+                                    HttpMethod.POST, requestBody,
+                                    new ParameterizedTypeReference<BanmaErpResponseDTO<StorageDTO>>() {
+                                    })
+                            .getBody();
+            storageRepository.saveAndFlush(responseDTO.getData());
+            return responseDTO;
     }
 
     @Override

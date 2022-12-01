@@ -56,14 +56,13 @@ public interface StorageService {
     /**
      * 使用stream文件流的方式上传文件
      *
-     * @param contentType        内容类型（必填）
+//     * @param contentType        内容类型（必填）
      * @param name               文件名称（必填）
      * @param file               文件内容（必填）
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
     BanmaErpResponseDTO<StorageDTO> uploadTheFileToStream(
-            String contentType,
             String name,
             String file,
             BanmaerpProperties banmaerpProperties
@@ -92,7 +91,6 @@ public interface StorageService {
      * @return
      */
     BanmaErpResponseDTO<StorageDTO> uploadTheFileToForm(
-            String contentType,
             String file,
             BanmaerpProperties banmaerpProperties
     );

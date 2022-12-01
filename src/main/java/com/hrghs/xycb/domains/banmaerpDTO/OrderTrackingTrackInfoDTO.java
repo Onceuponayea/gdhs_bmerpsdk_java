@@ -1,0 +1,49 @@
+package com.hrghs.xycb.domains.banmaerpDTO;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hrghs.xycb.utils.converters.JodaDateTimeConverter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Type;
+import org.joda.time.DateTime;
+import org.springframework.stereotype.Component;
+
+import javax.persistence.*;
+import java.util.UUID;
+
+@Component
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name = "bmerp_order_tracking_info")
+public class OrderTrackingTrackInfoDTO {
+
+    @JsonIgnore
+    @Column()
+    @GeneratedValue
+    @Type(type = "uuid-char")
+    @Id
+    private UUID id;
+
+    @JsonProperty(value = "Date")
+    @Convert(converter = JodaDateTimeConverter.class)
+    private DateTime date;
+
+    @JsonProperty(value = "Description")
+    private String description;
+
+    @JsonProperty(value = "Location")
+    private String location;
+
+    @JsonProperty(value = "Status")
+    private String status;
+
+    @JsonIgnore
+    @JoinColumn(name = "track_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private OrderTrackingDTO trackingDTO;
+
+}

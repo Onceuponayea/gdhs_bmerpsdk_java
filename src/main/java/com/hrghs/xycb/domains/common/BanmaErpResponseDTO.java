@@ -114,6 +114,12 @@ public class BanmaErpResponseDTO<T> {
                     case BANMAERP_FIELD_ACCOUNTS:
                         type = new TypeToken<Collection<AccountDTO>>(){}.getType();
                         break;
+                    case BANMAERP_FIELD_FULFILLMENTS:
+                        type = new TypeToken<Collection<OrderFulfillmentDTO>>(){}.getType();
+                        break;
+                    case BANMAERP_FIELD_TRACKINGS:
+                        type = new TypeToken<Collection<OrderTrackingDTO>>(){}.getType();
+                        break;
                 }
                 datas = gson.fromJson(jsonNodeSrc.toString(),type);
             }

@@ -2,6 +2,8 @@ package com.hrghs.xycb.services;
 
 import com.hrghs.xycb.config.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.OrderDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.OrderFulfillmentDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.OrderTrackingDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import org.joda.time.DateTime;
 import org.springframework.stereotype.Service;
@@ -63,6 +65,24 @@ public interface OrderService {
      */
     OrderDTO getOrderById(String id,
                           BanmaerpProperties banmaerpProperties);
+
+    /**
+     * 查询物流履约
+     *
+     * @param orderId            订单id
+     * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
+     * @return
+     */
+    List<OrderFulfillmentDTO> getFulfillments(String orderId, BanmaerpProperties banmaerpProperties);
+
+    /**
+     * 查询物流追踪
+     *
+     * @param orderId            订单id
+     * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
+     * @return
+     */
+    List<OrderTrackingDTO> getTrackings(String orderId, BanmaerpProperties banmaerpProperties);
 
     List<OrderDTO> saveAll(Iterable<OrderDTO> orderDTOS);
 
