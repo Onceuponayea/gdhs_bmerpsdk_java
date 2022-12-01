@@ -5,17 +5,14 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.GetSsoPassportResponse;
 import com.hrghs.xycb.domains.SsoRegisterResponse;
 import com.hrghs.xycb.domains.banmaerpDTO.*;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.domains.enums.BanmaerpPlatformEnums;
-import com.hrghs.xycb.repositories.BanmaerpPropertiesRepository;
-import com.hrghs.xycb.repositories.ProductSkusRepository;
-import com.hrghs.xycb.repositories.ProductSuppliersRepository;
-import com.hrghs.xycb.repositories.ProductTagsRepository;
+import com.hrghs.xycb.repositories.*;
 import com.hrghs.xycb.services.*;
+import com.hrghs.xycb.utils.WechatUtil;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -25,6 +22,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -59,6 +57,14 @@ public class BanmaerpApiTests {
     private ProductSuppliersRepository productSuppliersRepository;
     @Autowired
     private BanmaerpPropertiesRepository banmaerpPropertiesRepository;
+    @Autowired
+    private OrderFulfillmentRepository fulfillmentRepository;
+    @Autowired
+    private OrderTrackingRepository trackingRepository;
+    @Autowired
+    private DataAccessRepository dataAccessRepository;
+    @Autowired
+    private WechatUtil wechatUtil;
 //    @Autowired
 //    @Lazy
 //
@@ -87,18 +93,24 @@ public class BanmaerpApiTests {
 //        getOrderById();
 //        getOrderList();
 //        getProductById();
-        getProductList();
+//        getProductList();
 //        getProductSkuList();
- //       getProductSkuById();
+//        getProductSkuById();
 //        getProductTagsList();
 //        getProductSuppliersList();
 //        addAccount();
-//        register();
+        register();
 //        SSOlogin();
 //        logout();
 //        addProduct();
 //        updateProduct();
 //        getStorageById();
+//        getFulfillments();
+//        getTrackings();
+//        getDataAccess();
+//        getStorages();
+//        wechatUtil.sendText("手机号已被注册","15000000100","1052@qq.com");
+
     }
 
     // 查询用户列表
@@ -211,7 +223,6 @@ public class BanmaerpApiTests {
     // 查询单个sku
     private void getProductSkuById() {
         ProductSkusDTO productSkusDTO = productService.getProductSkuById("1497490072574889984", null);
-        System.out.println("getProductSkuById........");
         if (productSkusDTO != null) {
             ProductSkusDTO productDTO1 = productSkusRepository.saveAndFlush(productSkusDTO);
             System.out.println("productSkusDTO-all:" + productDTO1.getSKUID());
@@ -318,47 +329,167 @@ public class BanmaerpApiTests {
 
     // SSO认证登录
     private void SSOlogin() {
-        GetSsoPassportResponse ssoPassportResponse = ssoService.ssoPassport("13696919609", "120.41.226.176", 0, 0, null);
-        System.out.println(ssoPassportResponse.getAccount());
+        GetSsoPassportResponse ssoPassportResponse = ssoService.ssoPassport("15060715230", "120.41.226.177", 0, 0, null);
+        System.out.println(ssoPassportResponse.getAccount() + "\t" + ssoPassportResponse.getClientIP());
     }
 
     // SSO注册账号
-    private void register() {
+    private void register() throws JsonProcessingException {
         AccountDTO accountDTO = new AccountDTO();
         accountDTO.setRealName("测试");
-        accountDTO.setPhone("11990000100");
+        accountDTO.setPhone("15000000100");
         accountDTO.setDepartment("采购部");
-        accountDTO.setEmail("101415272@qq.com");
+        accountDTO.setEmail("105271@qq.com");
         AppsInfoDTO appsInfoDTO = new AppsInfoDTO();
-        appsInfoDTO.setName("测试11");
-        System.out.println("保存注册用户...............");
+        appsInfoDTO.setName("测试1");
         BanmaErpResponseDTO<SsoRegisterResponse> register = ssoService.register(accountDTO, appsInfoDTO, null);
-        AccountDTO accountDTO1 = accountService.saveAccount(register.getData().getAccount());
+    }
 
-        try {
-            System.out.println(objectMapper.writeValueAsString(register.getData()));
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-        System.out.println(accountDTO1.getID());
+    // 查询文件列表
+    private void getStorages() throws JsonProcessingException {
+        String json = "{\n" +
+                "    \"Code\": 200,\n" +
+                "    \"Time\": \"2021-12-12T15:23:34\",    \n" +
+                "    \"Data\": {\n" +
+                "        \"Storages\": [\n" +
+                "            {\n" +
+                "                \"ID\": \"f7ce3d85-2724-4ed6-8c05-a9f601212569\",\n" +
+                "                \"Name\": \"61798bf2bb5a1.jpg\",\n" +
+                "                \"Url\": \"https://storage.banmaerp.com/s/0/61798bf2bb5a1.jpg\",\n" +
+                "                \"FileCategoryID\": \"c737c88c-a8c4-448b-9d1c-5870c424a138\",\n" +
+                "                \"FileType\": \"Image\",\n" +
+                "                \"Size\": \"108159\",\n" +
+                "                \"CreateTime\": \"2019-02-16T17:32:37\",\n" +
+                "                \"UpdateTime\": \"2020-04-03T22:31:37\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "                \"ID\": \"f7ce3d85-2724-4ed6-8c05-a9f601234544\",\n" +
+                "                \"Name\": \"8bf2bb5a1.jpg\",\n" +
+                "                \"Url\": \"https://storage.banmaerp.com/s/0/8bf2bb5a1.jpg\",\n" +
+                "                \"FileCategoryID\": \"c737c88c-a8c4-448b-9d1c-5870c424a138\",\n" +
+                "                \"FileType\": \"Image\",\n" +
+                "                \"Size\": \"108159\",\n" +
+                "                \"CreateTime\": \"2019-02-16T17:32:37\",\n" +
+                "                \"UpdateTime\": \"2020-04-03T22:31:37\"\n" +
+                "            }\n" +
+                "        ],\n" +
+                "        \"Page\": {\n" +
+                "            \"PageNumber\": 1,\n" +
+                "            \"PageCount\": 1,\n" +
+                "            \"PageSize\": 20,\n" +
+                "            \"TotalCount\": 2,\n" +
+                "            \"HasMore\": false\n" +
+                "        }\n" +
+                "    },\n" +
+                "    \"Success\": true,\n" +
+                "    \"Message\": \"成功\"\n" +
+                "}\n";
+        BanmaErpResponseDTO<JsonNode> storeListRaw = objectMapper.readValue(json, new TypeReference<BanmaErpResponseDTO<JsonNode>>() {
+        });
+        Object[] objects = storeListRaw.toDataList(BANMAERP_FIELD_STORAGES);
+        List<StorageDTO> storageDTOList =
+                Arrays.stream(objects).map(o -> (StorageDTO) o)
+                        .collect(Collectors.toList());
+        storageDTOList.forEach(storageDTO -> System.out.println("storageDTO:" + storageDTO.toString()));
+        List<StorageDTO> storageDTOList1 = storageService.saveAll(storageDTOList);
+        storageDTOList1.forEach(storageDTO -> System.out.println(storageDTO.toString()));
+
     }
 
     // 查询单个文件
-    private void getStorageById() {
+    private void getStorageById() throws JsonProcessingException {
         StorageDTO storageById = storageService.getStorageById("fe68d741-55e4-49b3-8bbc-af5c00a800c4", null);
-
-        try {
-            System.out.println(objectMapper.writeValueAsString(storageById));
-            if (storageById != null) {
-                StorageDTO save = storageService.save(storageById);
-                System.out.println("save:"+objectMapper.writeValueAsString(save));
-            }
-
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
+        System.out.println(objectMapper.writeValueAsString(storageById));
+        if (storageById != null) {
+            StorageDTO save = storageService.save(storageById);
+            System.out.println("save:" + objectMapper.writeValueAsString(save));
         }
 
+    }
 
+    // 查询物流履约
+    private void getFulfillments() throws JsonProcessingException {
+        String json = "{\n" +
+                "    \"Code\": 200,\n" +
+                "    \"Time\": \"2021-12-12T15:23:34\",    \n" +
+                "    \"Data\": {\n" +
+                "        \"Fulfillments\": [{\n" +
+                "            \"ExpressCompany\":\"YUNTU\",\n" +
+                "            \"ExpressNo\":\"YT21134212220167\",\n" +
+                "            \"DeliveryTime\":\"2021-08-24T14:36:43\"\n" +
+                "        }]\n" +
+                "    },\n" +
+                "    \"Success\": true,\n" +
+                "    \"Message\": \"成功\"\n" +
+                "}";
+//        List<OrderFulfillmentDTO> fulfillments = orderService.getFulfillments("1497122489925373952", null);
+//
+//            System.out.println(objectMapper.writeValueAsString(fulfillments));
+
+        BanmaErpResponseDTO<JsonNode> storeListRaw = objectMapper.readValue(json, new TypeReference<BanmaErpResponseDTO<JsonNode>>() {
+        });
+        Object[] objects = storeListRaw.toDataList(BANMAERP_FIELD_FULFILLMENTS);
+        List<OrderFulfillmentDTO> fulfillments =
+                Arrays.stream(objects).map(o -> (OrderFulfillmentDTO) o)
+                        .collect(Collectors.toList());
+        fulfillments.forEach(orderFulfillmentDTO -> System.out.println("orderFulfillmentDTO:" + orderFulfillmentDTO.toString()));
+        List<OrderFulfillmentDTO> orderFulfillmentDTOList = fulfillmentRepository.saveAllAndFlush(fulfillments);
+        orderFulfillmentDTOList.forEach(orderFulfillmentDTO -> System.out.println(orderFulfillmentDTO.toString()));
+
+    }
+
+    // 查询物流追踪
+    private void getTrackings() throws JsonProcessingException {
+//        List<OrderTrackingDTO> trackingDTOList = orderService.getTrackings("1497122489925373952", null);
+        String json = "{\n" +
+                "    \"Code\": 200,\n" +
+                "    \"Success\": true,\n" +
+                "    \"Message\": null,\n" +
+                "    \"Time\": \"2022-11-29T11:59:25\",\n" +
+                "    \"Data\": {\n" +
+                "        \"Trackings\": [{\n" +
+                "            \"ExpressNo\": \"YT21134212220167\",\n" +
+                "            \"Status\": \"运输中\",\n" +
+                "            \"ReceiptedTime\": null,\n" +
+                "            \"TrackInfo\": [{\n" +
+                "                \"Date\": \"2021-08-24T14:36:43\",\n" +
+                "                \"Description\": \"货物电子信息已经收到\",\n" +
+                "                \"Location\": \"\",\n" +
+                "                \"Status\": null\n" +
+                "            }],\n" +
+                "            \"UpdateTime\": \"2021-12-22T16:52:29\"\n" +
+                "        }]\n" +
+                "    }\n" +
+                "} \n";
+        BanmaErpResponseDTO<JsonNode> storeListRaw = objectMapper.readValue(json, new TypeReference<BanmaErpResponseDTO<JsonNode>>() {
+        });
+        Object[] objects = storeListRaw.toDataList(BANMAERP_FIELD_TRACKINGS);
+        List<OrderTrackingDTO> trackingDTOList =
+                Arrays.stream(objects).map(o -> (OrderTrackingDTO) o)
+                        .collect(Collectors.toList());
+        trackingDTOList.forEach(trackingDTO -> System.out.println("trackingDTO:" + trackingDTO.toString()));
+        List<OrderTrackingDTO> orderTrackingDTOList = trackingRepository.saveAllAndFlush(trackingDTOList);
+        orderTrackingDTOList.forEach(orderTrackingDTO -> System.out.println(orderTrackingDTO.toString()));
+
+    }
+
+    // 查询用户店铺权限
+    private void getDataAccess() throws JsonProcessingException {
+        String json = "{\n" +
+                "        \"DataAccess\": {\n" +
+                "            \"DataAccessMode\": \"指定权限\",\n" +
+                "            \"Data\": [\n" +
+                "                1317388665567055872,\n" +
+                "                1328195640257159168,\n" +
+                "                1335142862190288896\n" +
+                "            ]\n" +
+                "        }\n" +
+                "}\n";
+        DataAccessDTO dataAccessDTO = objectMapper.readValue(json, new TypeReference<DataAccessDTO>() {
+        });
+        System.out.println("dataAccessDTO:" + dataAccessDTO.toString());
+        DataAccessDTO dataAccessDTO1 = dataAccessRepository.saveAndFlush(dataAccessDTO);
+        System.out.println("dataAccessDTO1:" + dataAccessDTO1.toString());
     }
 
     private void getStoreListMono() {

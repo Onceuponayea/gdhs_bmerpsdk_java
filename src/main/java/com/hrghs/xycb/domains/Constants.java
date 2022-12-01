@@ -1,5 +1,9 @@
 package com.hrghs.xycb.domains;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 public class Constants {
     public static final String DB_HIKARI_MAX_SIZE = "spring.datasource.banmaerp.hikari.maximum-pool-size";
     public static final String DB_HIKARI_MAX_LIFE = "spring.datasource.banmaerp.hikari.max-lifetime";
@@ -49,6 +53,19 @@ public class Constants {
     public static final String BANMAERP_FIELD_SUPPLIERS = "Suppliers";
     public static final String BANMAERP_FIELD_STORAGES = "Storages";
     public static final String BANMAERP_FIELD_PAGE = "Page";
+    public static final String BANMAERP_FIELD_PRODUCT = "Product";
+    public static final String BANMAERP_FIELD_FULFILLMENTS = "Fulfillments";
+    public static final String BANMAERP_FIELD_TRACKINGS = "Trackings";
+    public static final String BANMAERP_FIELD_PREFIX = "banmaerp";
+    public static final String BANMAERP_FIELD_TOKEN = "token";
+    public static final String BANMAERP_FIELD_SSOTOKEN = "ssotoken";
+    public static final String BANMAERP_FIELD_CLIENTIP = "clientIp";
+    public static final String BANMAERP_FIELD_APPID = "app_id";
+    public static final String BANMAERP_FIELD_APPSECRET = "app_secret";
+    public static final String BANMAERP_MESSAGE_UNKNOWNERROR = "Unknown Error!";
+    public static final Set<String> IpAquireUrls = Stream.of("http://checkip.amazonaws.com/"
+            ,"https://ipv4.icanhazip.com/","http://myexternalip.com/raw","http://ipecho.net/plain")
+            .collect(Collectors.toSet());
 
     public static final String DATETIME_FORMAT_DASH_SHORT ="yyyy-MM-dd HH:mm:ss";
     public static final String DATETIME_FORMAT_SLASH_SHORT ="MM/dd/yyyy HH:mm:ss";

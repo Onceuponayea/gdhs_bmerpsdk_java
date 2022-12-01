@@ -11,7 +11,7 @@
  Target Server Version : 80030
  File Encoding         : 65001
 
- Date: 29/11/2022 18:02:14
+ Date: 30/11/2022 13:04:39
 */
 
 SET NAMES utf8mb4;
@@ -20,8 +20,8 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ----------------------------
 -- Table structure for bmerp_account
 -- ----------------------------
-DROP TABLE IF EXISTS `bmerp_account`;
-CREATE TABLE `bmerp_account`  (
+
+CREATE TABLE IF NOT EXISTS `bmerp_account`  (
   `id` bigint(0) NOT NULL COMMENT '用户id',
   `real_name` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT ' 用户名称',
   `email` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT ' 用户邮箱',
@@ -35,10 +35,23 @@ CREATE TABLE `bmerp_account`  (
 ) ENGINE = InnoDB CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
+-- Table structure for bmerp_account_data_access
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `bmerp_account_data_access`  (
+  `id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'id',
+  `data_access_mode` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '权限模式',
+  `data` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '店铺id',
+  `create_time` datetime(0) NULL DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime(0) NULL DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
 -- Table structure for bmerp_category
 -- ----------------------------
-DROP TABLE IF EXISTS `bmerp_category`;
-CREATE TABLE `bmerp_category`  (
+
+CREATE TABLE IF NOT EXISTS `bmerp_category`  (
   `id` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '类目id',
   `parent_id` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '类目父级id',
   `name` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '类目名称',
@@ -53,8 +66,8 @@ CREATE TABLE `bmerp_category`  (
 -- ----------------------------
 -- Table structure for bmerp_order
 -- ----------------------------
-DROP TABLE IF EXISTS `bmerp_order`;
-CREATE TABLE `bmerp_order`  (
+
+CREATE TABLE IF NOT EXISTS `bmerp_order`  (
   `order_UUID` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `order_masterId` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
   PRIMARY KEY (`order_UUID`) USING BTREE
@@ -63,8 +76,8 @@ CREATE TABLE `bmerp_order`  (
 -- ----------------------------
 -- Table structure for bmerp_order_address
 -- ----------------------------
-DROP TABLE IF EXISTS `bmerp_order_address`;
-CREATE TABLE `bmerp_order_address`  (
+
+CREATE TABLE IF NOT EXISTS `bmerp_order_address`  (
   `order_address_id` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '订单地址id',
   `name` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '姓名',
   `name_kana` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '收件人片假名',
@@ -89,8 +102,8 @@ CREATE TABLE `bmerp_order_address`  (
 -- ----------------------------
 -- Table structure for bmerp_order_details
 -- ----------------------------
-DROP TABLE IF EXISTS `bmerp_order_details`;
-CREATE TABLE `bmerp_order_details`  (
+
+CREATE TABLE IF NOT EXISTS `bmerp_order_details`  (
   `id` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '订单明显id',
   `package_id` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '包裹id',
   `original_detail_id` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '平台上的订单明细id',
@@ -132,8 +145,8 @@ CREATE TABLE `bmerp_order_details`  (
 -- ----------------------------
 -- Table structure for bmerp_order_details_inventorydata
 -- ----------------------------
-DROP TABLE IF EXISTS `bmerp_order_details_inventorydata`;
-CREATE TABLE `bmerp_order_details_inventorydata`  (
+
+CREATE TABLE IF NOT EXISTS `bmerp_order_details_inventorydata`  (
   `order_inventoryData_id` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT 'id',
   `sku_id` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT 'skuid',
   `sku_code` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT 'skucode',
@@ -145,10 +158,23 @@ CREATE TABLE `bmerp_order_details_inventorydata`  (
 ) ENGINE = InnoDB CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
+-- Table structure for bmerp_order_fulfillment
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `bmerp_order_fulfillment`  (
+  `id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'id',
+  `express_company` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '物流公司',
+  `express_no` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '物流单号',
+  `delivery_time` datetime(0) NULL DEFAULT NULL COMMENT '发货时间，可能为null',
+  `order_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '订单id',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
 -- Table structure for bmerp_order_master
 -- ----------------------------
-DROP TABLE IF EXISTS `bmerp_order_master`;
-CREATE TABLE `bmerp_order_master`  (
+
+CREATE TABLE IF NOT EXISTS `bmerp_order_master`  (
   `id` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '订单id',
   `store_id` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '店铺id',
   `platform` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '平台',
@@ -213,8 +239,8 @@ CREATE TABLE `bmerp_order_master`  (
 -- ----------------------------
 -- Table structure for bmerp_order_refunds
 -- ----------------------------
-DROP TABLE IF EXISTS `bmerp_order_refunds`;
-CREATE TABLE `bmerp_order_refunds`  (
+
+CREATE TABLE IF NOT EXISTS `bmerp_order_refunds`  (
   `order_refund_id` int(0) NOT NULL COMMENT '退款id',
   `detail_id` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '详情id',
   `original_refund_id` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '原始退款id',
@@ -229,8 +255,8 @@ CREATE TABLE `bmerp_order_refunds`  (
 -- ----------------------------
 -- Table structure for bmerp_order_remarks
 -- ----------------------------
-DROP TABLE IF EXISTS `bmerp_order_remarks`;
-CREATE TABLE `bmerp_order_remarks`  (
+
+CREATE TABLE IF NOT EXISTS `bmerp_order_remarks`  (
   `id` int(0) NOT NULL COMMENT 'id',
   `category` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '备注类型',
   `content` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '内容',
@@ -240,10 +266,38 @@ CREATE TABLE `bmerp_order_remarks`  (
 ) ENGINE = InnoDB CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
+-- Table structure for bmerp_order_tracking
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `bmerp_order_tracking`  (
+  `id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'id',
+  `status` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '状态',
+  `express_no` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '物流单号',
+  `receipted_time` datetime(0) NULL DEFAULT NULL COMMENT '签收时间，可以为null',
+  `update_time` datetime(0) NULL DEFAULT NULL COMMENT '更新时间',
+  `order_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '订单id',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for bmerp_order_tracking_info
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `bmerp_order_tracking_info`  (
+  `id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'id',
+  `date` datetime(0) NULL DEFAULT NULL COMMENT '时间',
+  `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '描述信息',
+  `location` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '位置信息，可能为空',
+  `status` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '原始状态',
+  `track_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '物流跟踪id',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
 -- Table structure for bmerp_product
 -- ----------------------------
-DROP TABLE IF EXISTS `bmerp_product`;
-CREATE TABLE `bmerp_product`  (
+
+CREATE TABLE IF NOT EXISTS `bmerp_product`  (
   `product_uuid` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `product_spuid` bigint(0) NULL DEFAULT NULL,
   `product_DescriptionId` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
@@ -261,8 +315,8 @@ CREATE TABLE `bmerp_product`  (
 -- ----------------------------
 -- Table structure for bmerp_product_descriptions
 -- ----------------------------
-DROP TABLE IF EXISTS `bmerp_product_descriptions`;
-CREATE TABLE `bmerp_product_descriptions`  (
+
+CREATE TABLE IF NOT EXISTS `bmerp_product_descriptions`  (
   `pd_id` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '文本id',
   `html` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '富文本描述',
   `text` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '纯文本描述',
@@ -274,8 +328,8 @@ CREATE TABLE `bmerp_product_descriptions`  (
 -- ----------------------------
 -- Table structure for bmerp_product_images
 -- ----------------------------
-DROP TABLE IF EXISTS `bmerp_product_images`;
-CREATE TABLE `bmerp_product_images`  (
+
+CREATE TABLE IF NOT EXISTS `bmerp_product_images`  (
   `product_ImageId` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT 'id',
   `src` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '图片地址',
   `sort` int(0) NULL DEFAULT NULL COMMENT '排序',
@@ -286,8 +340,8 @@ CREATE TABLE `bmerp_product_images`  (
 -- ----------------------------
 -- Table structure for bmerp_product_options
 -- ----------------------------
-DROP TABLE IF EXISTS `bmerp_product_options`;
-CREATE TABLE `bmerp_product_options`  (
+
+CREATE TABLE IF NOT EXISTS `bmerp_product_options`  (
   `product_optionId` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT 'id',
   `option_name` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '选项名',
   `option_sort` int(0) NULL DEFAULT NULL COMMENT '排序',
@@ -299,8 +353,8 @@ CREATE TABLE `bmerp_product_options`  (
 -- ----------------------------
 -- Table structure for bmerp_product_packmaterials
 -- ----------------------------
-DROP TABLE IF EXISTS `bmerp_product_packmaterials`;
-CREATE TABLE `bmerp_product_packmaterials`  (
+
+CREATE TABLE IF NOT EXISTS `bmerp_product_packmaterials`  (
   `id` bigint(0) NOT NULL COMMENT ' 包装材料id',
   `name` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '名称',
   `remark` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '备注',
@@ -312,8 +366,8 @@ CREATE TABLE `bmerp_product_packmaterials`  (
 -- ----------------------------
 -- Table structure for bmerp_product_requirements
 -- ----------------------------
-DROP TABLE IF EXISTS `bmerp_product_requirements`;
-CREATE TABLE `bmerp_product_requirements`  (
+
+CREATE TABLE IF NOT EXISTS `bmerp_product_requirements`  (
   `product_RequirementId` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT 'id',
   `name` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '名称',
   `content` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '内容',
@@ -324,9 +378,8 @@ CREATE TABLE `bmerp_product_requirements`  (
 -- ----------------------------
 -- Table structure for bmerp_product_skus
 -- ----------------------------
-DROP TABLE IF EXISTS `bmerp_product_skus`;
-CREATE TABLE `bmerp_product_skus`  (
-  `id` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT 'id',
+
+CREATE TABLE IF NOT EXISTS `bmerp_product_skus`  (
   `sku_id` bigint(0) NOT NULL COMMENT 'skuid',
   `code` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT 'skucode',
   `specification` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '产品规则信息,如颜色尺码',
@@ -342,14 +395,14 @@ CREATE TABLE `bmerp_product_skus`  (
   `type` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '类型',
   `status` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL,
   `product_id` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '产品id',
-  PRIMARY KEY (`id`) USING BTREE
+  PRIMARY KEY (`sku_id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for bmerp_product_skus_combinedata
 -- ----------------------------
-DROP TABLE IF EXISTS `bmerp_product_skus_combinedata`;
-CREATE TABLE `bmerp_product_skus_combinedata`  (
+
+CREATE TABLE IF NOT EXISTS `bmerp_product_skus_combinedata`  (
   `sku_cmbdId` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT 'id',
   `sku_code` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT 'skucode',
   `quantity` int(0) NULL DEFAULT NULL COMMENT '数量',
@@ -360,8 +413,8 @@ CREATE TABLE `bmerp_product_skus_combinedata`  (
 -- ----------------------------
 -- Table structure for bmerp_product_skus_options
 -- ----------------------------
-DROP TABLE IF EXISTS `bmerp_product_skus_options`;
-CREATE TABLE `bmerp_product_skus_options`  (
+
+CREATE TABLE IF NOT EXISTS `bmerp_product_skus_options`  (
   `sku_optionId` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT 'id',
   `name` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '选项名',
   `value` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '选项值',
@@ -372,8 +425,8 @@ CREATE TABLE `bmerp_product_skus_options`  (
 -- ----------------------------
 -- Table structure for bmerp_product_sources
 -- ----------------------------
-DROP TABLE IF EXISTS `bmerp_product_sources`;
-CREATE TABLE `bmerp_product_sources`  (
+
+CREATE TABLE IF NOT EXISTS `bmerp_product_sources`  (
   `product_SourceId` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT 'id',
   `url` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '供应商url',
   `remark` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '备注',
@@ -385,8 +438,8 @@ CREATE TABLE `bmerp_product_sources`  (
 -- ----------------------------
 -- Table structure for bmerp_product_spu
 -- ----------------------------
-DROP TABLE IF EXISTS `bmerp_product_spu`;
-CREATE TABLE `bmerp_product_spu`  (
+
+CREATE TABLE IF NOT EXISTS `bmerp_product_spu`  (
   `spu_id` bigint(0) NOT NULL COMMENT ' spuid',
   `code` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT 'spu',
   `title` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '标题',
@@ -409,8 +462,8 @@ CREATE TABLE `bmerp_product_spu`  (
 -- ----------------------------
 -- Table structure for bmerp_product_suppliers
 -- ----------------------------
-DROP TABLE IF EXISTS `bmerp_product_suppliers`;
-CREATE TABLE `bmerp_product_suppliers`  (
+
+CREATE TABLE IF NOT EXISTS `bmerp_product_suppliers`  (
   `id` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '供应商id',
   `remark` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '备注',
   `sort` int(0) NULL DEFAULT NULL COMMENT '排序',
@@ -422,8 +475,8 @@ CREATE TABLE `bmerp_product_suppliers`  (
 -- ----------------------------
 -- Table structure for bmerp_product_suppliers_info
 -- ----------------------------
-DROP TABLE IF EXISTS `bmerp_product_suppliers_info`;
-CREATE TABLE `bmerp_product_suppliers_info`  (
+
+CREATE TABLE IF NOT EXISTS `bmerp_product_suppliers_info`  (
   `id` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '供应商信息id',
   `name` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '名称',
   `contact` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '联系方式',
@@ -442,8 +495,8 @@ CREATE TABLE `bmerp_product_suppliers_info`  (
 -- ----------------------------
 -- Table structure for bmerp_product_tags
 -- ----------------------------
-DROP TABLE IF EXISTS `bmerp_product_tags`;
-CREATE TABLE `bmerp_product_tags`  (
+
+CREATE TABLE IF NOT EXISTS `bmerp_product_tags`  (
   `product_TagId` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT 'id',
   `name` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT 'tag名称',
   `product_id` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '产品id',
@@ -453,8 +506,8 @@ CREATE TABLE `bmerp_product_tags`  (
 -- ----------------------------
 -- Table structure for bmerp_properties
 -- ----------------------------
-DROP TABLE IF EXISTS `bmerp_properties`;
-CREATE TABLE `bmerp_properties`  (
+
+CREATE TABLE IF NOT EXISTS `bmerp_properties`  (
   `id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'id',
   `X_BANMA_APP_NAME` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '应用名',
   `X_BANMA_MASTER_APP_ID` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '应用id',
@@ -468,8 +521,8 @@ CREATE TABLE `bmerp_properties`  (
 -- ----------------------------
 -- Table structure for bmerp_storage
 -- ----------------------------
-DROP TABLE IF EXISTS `bmerp_storage`;
-CREATE TABLE `bmerp_storage`  (
+
+CREATE TABLE IF NOT EXISTS `bmerp_storage`  (
   `id` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '存储id',
   `name` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '文件名',
   `url` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT 'url地址',
@@ -484,8 +537,7 @@ CREATE TABLE `bmerp_storage`  (
 -- ----------------------------
 -- Table structure for bmerp_store
 -- ----------------------------
-DROP TABLE IF EXISTS `bmerp_store`;
-CREATE TABLE `bmerp_store`  (
+CREATE TABLE IF NOT EXISTS `bmerp_store`  (
   `id` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '店铺id',
   `name` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '店铺名称',
   `platform` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '平台',

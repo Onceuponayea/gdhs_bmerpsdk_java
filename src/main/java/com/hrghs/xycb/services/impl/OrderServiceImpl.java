@@ -4,14 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
-import com.hrghs.xycb.config.BanmaerpProperties;
+import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.BanmaerpSigningVO;
 import com.hrghs.xycb.domains.BanmaerpURL;
-import com.hrghs.xycb.domains.banmaerpDTO.AccountDTO;
-import com.hrghs.xycb.domains.banmaerpDTO.CategoryDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.OrderDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.OrderFulfillmentDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.OrderTrackingDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.repositories.OrderRepository;
 import com.hrghs.xycb.services.OrderService;
@@ -20,7 +19,6 @@ import com.hrghs.xycb.utils.EncryptionUtils;
 import com.hrghs.xycb.utils.HttpClientsUtils;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -32,8 +30,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_CATEGORYS;
-import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_ORDERS;
+import static com.hrghs.xycb.domains.Constants.*;
 
 @Service
 @Lazy
@@ -118,18 +115,67 @@ public class OrderServiceImpl implements OrderService {
         //todo signing
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
         HttpEntity requestBody = new HttpEntity(null,httpHeaders);
-        BanmaErpResponseDTO<JsonNode> body = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {
+        return httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<OrderDTO>>() {})
+                .getBody().getData();
+    }
+
+    /**
+     * 查询物流履约
+     *
+     * @param orderId            订单id
+     * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
+     * @return
+     */
+    @Override
+    @CheckBanmaerpProperties
+    public List<OrderFulfillmentDTO> getFulfillments(String orderId, BanmaerpProperties banmaerpProperties) {
+        String apiUrl = String.format(BanmaerpURL.banmaerp_orderFulfillments_GET, orderId);
+        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+        //todo signing
+        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
+        HttpEntity requestBody = new HttpEntity(null, httpHeaders);
+        List<OrderFulfillmentDTO> orderFulfillmentDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<OrderFulfillmentDTO>>() {
                 })
-                .getBody();
-        OrderDTO orderDTO = null;
-        try {
-            orderDTO = objectMapper.readValue(body.getData().toString(), new TypeReference<OrderDTO>() {
-            });
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-        return orderDTO;
+                .getBody()
+                .toDataList(BANMAERP_FIELD_FULFILLMENTS)
+        )
+                .map(o -> (OrderFulfillmentDTO) o)
+                .collect(Collectors.toList());
+        orderFulfillmentDTOList.forEach(orderFulfillmentDTO -> orderFulfillmentDTO.setOrderId(orderId));
+        return orderFulfillmentDTOList;
+    }
+
+    /**
+     * 查询物流追踪
+     *
+     * @param orderId            订单id
+     * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
+     * @return
+     */
+    @Override
+    @CheckBanmaerpProperties
+    public List<OrderTrackingDTO> getTrackings(String orderId, BanmaerpProperties banmaerpProperties) {
+        String apiUrl = String.format(BanmaerpURL.banmaerp_orderTrackings_GET, orderId);
+        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+        //todo signing
+        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
+        HttpEntity requestBody = new HttpEntity(null, httpHeaders);
+        List<OrderTrackingDTO> orderTrackingDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<OrderTrackingDTO>>() {
+                })
+                .getBody()
+                .toDataList(BANMAERP_FIELD_TRACKINGS)
+        )
+                .map(o -> (OrderTrackingDTO) o)
+                .collect(Collectors.toList());
+        orderTrackingDTOList.forEach(orderFulfillmentDTO -> orderFulfillmentDTO.setOrderId(orderId));
+        return orderTrackingDTOList;
     }
 
     @Override
