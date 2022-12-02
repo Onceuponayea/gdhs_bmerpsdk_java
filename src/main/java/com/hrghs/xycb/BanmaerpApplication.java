@@ -3,6 +3,7 @@ package com.hrghs.xycb;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+
 /**
  * just for verify the application configurations
  * todo 1、saveOrUpdate duplicate key

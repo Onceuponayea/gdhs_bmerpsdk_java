@@ -6,8 +6,8 @@ spring:
     port: 46379
     password: lilishop
     database: 1
-#    cluster:
-#      nodes:
+    #    cluster:
+    #      nodes:
     lettuce:
       pool:
         max-wait: 1000

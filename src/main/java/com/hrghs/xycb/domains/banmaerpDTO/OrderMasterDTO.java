@@ -22,7 +22,7 @@ public class OrderMasterDTO {
     @JsonProperty(value = "ID")
     private String ID;
 
-    @OneToOne()
+    @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     @JoinColumn(name = "order_uuid", referencedColumnName = "order_UUID")
     @JsonBackReference
     private OrderDTO orderDTO;

@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
 @ConditionalOnProperty(value = "enabled",prefix = "erp.banmaerp", havingValue = "true", matchIfMissing = false)
 @AutoConfigureAfter({DataSourceAutoConfiguration.class})
 public class BanmaerpAutoConfiguration {
-
+    //@Bean(name = "objectMapper")
     public ObjectMapper objectMapper(){
         ObjectMapper objectMapper = new ObjectMapper()
                 .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS,false)

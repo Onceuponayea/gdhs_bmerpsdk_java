@@ -5,6 +5,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.hrghs.xycb.domains.GetSsoPassportResponse;
 import com.hrghs.xycb.domains.SsoRegisterResponse;
 import com.hrghs.xycb.domains.banmaerpDTO.*;
@@ -64,6 +67,10 @@ public class BanmaerpApiTests {
     @Autowired
     private DataAccessRepository dataAccessRepository;
     @Autowired
+    private OrderMasterRepository orderMasterRepository;
+    @Autowired
+    private ProductSpuRepository productSpuRepository;
+    @Autowired
     private WechatUtil wechatUtil;
 //    @Autowired
 //    @Lazy
@@ -92,14 +99,14 @@ public class BanmaerpApiTests {
 //        getStoreById();
 //        getOrderById();
 //        getOrderList();
-//        getProductById();
+        getProductById();
 //        getProductList();
 //        getProductSkuList();
 //        getProductSkuById();
 //        getProductTagsList();
 //        getProductSuppliersList();
 //        addAccount();
-        register();
+//        register();
 //        SSOlogin();
 //        logout();
 //        addProduct();
@@ -110,6 +117,8 @@ public class BanmaerpApiTests {
 //        getDataAccess();
 //        getStorages();
 //        wechatUtil.sendText("手机号已被注册","15000000100","1052@qq.com");
+//        wechatUtil.qywxSendText("手机号已被注册","15000000100","1052@qq.com");
+//        wechatUtil.ddSendText("手机号已被注册","15000000100","1052@qq.com");
 
     }
 
@@ -184,10 +193,9 @@ public class BanmaerpApiTests {
     // 查询单个订单
     private void getOrderById() {
         OrderDTO orderDTO = orderService.getOrderById("1497122489925373952", null);
-
         if (orderDTO != null) {
             OrderDTO orderDTO1 = orderService.save(orderDTO);
-            System.out.println("orderDTO-all:" + orderDTO1.getOrderUUID());
+            System.out.println("orderDTO-all:" + orderDTO1.getMaster().getID());
         }
     }
 
@@ -206,7 +214,7 @@ public class BanmaerpApiTests {
         ProductDTO productDTO = productService.getProductById("1497121263854817280", null);
         if (productDTO != null) {
             ProductDTO productDTO1 = productService.save(productDTO);
-            System.out.println("productDTO-all:" + productDTO.getSPU().getSPUID());
+            System.out.println("productDTO1-all:" + productDTO1.getSPU().getSPUID());
         }
     }
 
@@ -239,15 +247,15 @@ public class BanmaerpApiTests {
         }
     }
 
-    // 查询供应商列表
-    private void getProductSuppliersList() {
-        List<ProductSuppliersInfoDTO> productSuppliersInfoDTOList = productService.getProductSuppliersList(null, 1
-                , 100, null, null, null, null, null, null);
-        if (productSuppliersInfoDTOList.size() > 0) {
-            List<ProductSuppliersInfoDTO> productSuppliersInfoDTOList1 = productSuppliersRepository.saveAllAndFlush(productSuppliersInfoDTOList);
-            productSuppliersInfoDTOList1.forEach(productSuppliersInfoDTO -> System.out.println("productSuppliersInfoDTO-all:" + productSuppliersInfoDTO.getName()));
-        }
-    }
+//    // 查询供应商列表
+//    private void getProductSuppliersList() {
+//        List<ProductSuppliersInfoDTO> productSuppliersInfoDTOList = productService.getProductSuppliersList(null, 1
+//                , 100, null, null, null, null, null, null);
+//        if (productSuppliersInfoDTOList.size() > 0) {
+//            List<ProductSuppliersInfoDTO> productSuppliersInfoDTOList1 = productSuppliersRepository.saveAllAndFlush(productSuppliersInfoDTOList);
+//            productSuppliersInfoDTOList1.forEach(productSuppliersInfoDTO -> System.out.println("productSuppliersInfoDTO-all:" + productSuppliersInfoDTO.getName()));
+//        }
+//    }
 
     // 添加产品
     private void addProduct() throws JsonProcessingException {

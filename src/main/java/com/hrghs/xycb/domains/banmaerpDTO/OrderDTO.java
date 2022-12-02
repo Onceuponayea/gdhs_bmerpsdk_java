@@ -29,7 +29,7 @@ public class OrderDTO {
     private UUID orderUUID;
 
     @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY,orphanRemoval = true,optional = true)
-    @JoinColumn(name = "order_masterId",referencedColumnName = "id")
+    @JoinColumn(name = "order_masterId", referencedColumnName = "id")
     @JsonManagedReference
     @JsonProperty(value = "Master")
     private OrderMasterDTO master;

@@ -10,8 +10,10 @@ import com.hrghs.xycb.domains.BanmaerpSigningVO;
 import com.hrghs.xycb.domains.BanmaerpURL;
 import com.hrghs.xycb.domains.banmaerpDTO.OrderDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.OrderFulfillmentDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.OrderMasterDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.OrderTrackingDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
+import com.hrghs.xycb.repositories.OrderMasterRepository;
 import com.hrghs.xycb.repositories.OrderRepository;
 import com.hrghs.xycb.services.OrderService;
 import com.hrghs.xycb.utils.BanmaTokenUtils;
@@ -47,6 +49,8 @@ public class OrderServiceImpl implements OrderService {
     private ObjectMapper objectMapper;
     @Autowired
     private OrderRepository orderRepository;
+    @Autowired
+    private OrderMasterRepository orderMasterRepository;
     /**
      * 查询订单列表
      *
@@ -185,6 +189,10 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderDTO save(OrderDTO orderDTO) {
-        return orderRepository.saveAndFlush(orderDTO);
+        OrderMasterDTO byID = orderMasterRepository.findByID(orderDTO.getMaster().getID());
+        if (byID == null){
+            return orderRepository.saveAndFlush(orderDTO);
+        }
+        return null;
     }
 }

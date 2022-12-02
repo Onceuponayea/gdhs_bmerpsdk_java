@@ -1,8 +1,13 @@
 package com.hrghs.xycb.utils;
 
+import com.hrghs.xycb.domains.BanmaerpSigningVO;
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.*;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,6 +21,8 @@ import java.util.Map;
 @Data
 public class WechatUtil {
 
+    @Autowired
+    private RestTemplate restTemplate;
 
     private String corpid = "wwd3fcf9134cd03abe";
 
@@ -27,10 +34,13 @@ public class WechatUtil {
 
     private String ddWebhook = "https://oapi.dingtalk.com/robot/send?access_token=5502e6e4abdcce21a8d3ae71614c7708421b45f32ad33344a713d6638207e7d7";
 
+    private HttpHeaders httpHeaders = new HttpHeaders();
+
 
 
     // 企业微信机器人
     public void qywxSendText(String massage, String phone, String email) {
+        httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         String msg = "{\n" +
                 "    \"msgtype\": \"markdown\",\n" +
                 "    \"markdown\": {\n" +
@@ -40,6 +50,8 @@ public class WechatUtil {
                 "    }\n" +
                 "}";
 //        HttpUtil.post(webhook, msg);
+        restTemplate.exchange(webhook, HttpMethod.POST, new HttpEntity<>(msg, httpHeaders), new ParameterizedTypeReference<Object>() {
+        });
 
     }
 
@@ -53,6 +65,8 @@ public class WechatUtil {
                 "      }\n" +
                 " }";
 //        HttpUtil.post(ddWebhook, msg);
+        restTemplate.exchange(ddWebhook, HttpMethod.POST, new HttpEntity<>(msg, httpHeaders), new ParameterizedTypeReference<Object>() {
+        });
     }
 
 }

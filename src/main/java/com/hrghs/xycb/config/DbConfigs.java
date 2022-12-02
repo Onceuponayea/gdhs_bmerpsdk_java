@@ -58,6 +58,7 @@ public class DbConfigs {
     @Autowired
     private Environment env;
     @Autowired
+    @Lazy
     private ScheduledExecutorService scheduledExecutorService;
     //初始化
     @Bean
@@ -88,7 +89,7 @@ public class DbConfigs {
     @Lazy
     @DependsOn(value = {"jacksonObjectMapper","jodaModule"})
     public ReactiveRedisOperations<String, TokenResponseDTO> tokenRespReactiveRedisOperations(ReactiveRedisConnectionFactory redisConnectionFactory
-            , @Qualifier(value = "jacksonObjectMapper") ObjectMapper objectMapper, @Qualifier(value = "jodaModule")JodaModule jodaModule){
+            , @Qualifier(value = "jacksonObjectMapper") ObjectMapper objectMapper, @Qualifier(value = "jodaModule") JodaModule jodaModule){
         RedisSerializationContext.RedisSerializationContextBuilder<String,TokenResponseDTO> builder=
                 RedisSerializationContext.newSerializationContext(new StringRedisSerializer());
         Jackson2JsonRedisSerializer<TokenResponseDTO> jsonRedisSerializer = new Jackson2JsonRedisSerializer(TokenResponseDTO.class);
