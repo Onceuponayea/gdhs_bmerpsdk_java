@@ -15,7 +15,7 @@ import javax.persistence.*;
 public class OrderRemarksDTO {
 
     @Id
-    private int id;
+    private Integer id;
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)

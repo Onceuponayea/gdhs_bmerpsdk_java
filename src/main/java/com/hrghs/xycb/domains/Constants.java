@@ -59,15 +59,22 @@ public class Constants {
     public static final String BANMAERP_FIELD_PREFIX = "banmaerp";
     public static final String BANMAERP_FIELD_TOKEN = "token";
     public static final String BANMAERP_FIELD_SSOTOKEN = "ssotoken";
+    public static final String BANMAERP_FIELD_TASK = "task";
     public static final String BANMAERP_FIELD_CLIENTIP = "clientIp";
     public static final String BANMAERP_FIELD_APPID = "app_id";
     public static final String BANMAERP_FIELD_APPSECRET = "app_secret";
     public static final String BANMAERP_MESSAGE_UNKNOWNERROR = "Unknown Error!";
+    public static final String BANMAERP_MESSAGE_REGISTER_ERROR = "账号注册失败!";
+
     public static final Set<String> IpAquireUrls = Stream.of("http://checkip.amazonaws.com/"
             ,"https://ipv4.icanhazip.com/","http://myexternalip.com/raw","http://ipecho.net/plain")
             .collect(Collectors.toSet());
 
     public static final String DATETIME_FORMAT_DASH_SHORT ="yyyy-MM-dd HH:mm:ss";
     public static final String DATETIME_FORMAT_SLASH_SHORT ="MM/dd/yyyy HH:mm:ss";
+
+
+    public static final String WEBHOOK_BASEURL_WECHAT_ENTERPISE= "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=%s";
+    public static final String WEBHOOK_BASEURL_DINGTALK_ENTERPISE= "https://oapi.dingtalk.com/robot/send?access_token=%s";
 
 }

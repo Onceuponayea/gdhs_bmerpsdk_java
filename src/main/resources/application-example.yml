@@ -82,6 +82,23 @@ erp:
     X_BANMA_MASTER_SIGN_METHOD: IP白名单 #IP白名单, 签名+IP白名单
     X_BANMA_MASTER_SIGN_ALGORITHM: SHA256 #SHA256 or SHA_256 MessageDigest not available
 
+    tasks:
+      sync:
+        enabled: true
+        delayInMs: 1000
+        cron: 0 0 0/1 * * ?
+msg:
+  webhook:
+    qywechat:
+      url: https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=a34d8f1c-a22d-4d2c-aeea-5323d7ae35d2
+      key: a34d8f1c-a22d-4d2c-aeea-5323d7ae35d2
+      enable: true
+    dingtalk:
+      url: https://oapi.dingtalk.com/robot/send?access_token=5502e6e4abdcce21a8d3ae71614c7708421b45f32ad33344a713d6638207e7d7
+      access_token: 5502e6e4abdcce21a8d3ae71614c7708421b45f32ad33344a713d6638207e7d7
+      enable: true
+
 logging:
   level:
     root: debug
+

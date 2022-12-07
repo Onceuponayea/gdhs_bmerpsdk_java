@@ -2,6 +2,7 @@ package com.hrghs.xycb.domains.banmaerpDTO;
 
 import com.fasterxml.jackson.annotation.*;
 import com.hrghs.xycb.utils.converters.JodaDateTimeConverter;
+import com.hrghs.xycb.utils.converters.JpaUUIDConverter;
 import lombok.Data;
 import org.hibernate.annotations.Type;
 import org.joda.time.DateTime;
@@ -18,7 +19,8 @@ public class OrderRefundsDTO {
 
     @Id
     @JsonIgnore
-    @GeneratedValue
+    @Convert(converter = JpaUUIDConverter.class)
+    @GeneratedValue(generator = "UUID")
     @Type(type = "uuid-char")
     @Column(name = "order_refund_id")
     private UUID order_refund_id;
@@ -38,7 +40,7 @@ public class OrderRefundsDTO {
 
     @Column(name = "refund_amount")
     @JsonProperty(value = "RefundAmount")
-    private double refundAmount;
+    private Double refundAmount;
 
     @Column(name = "refund_currency")
     @JsonProperty(value = "RefundCurrency")

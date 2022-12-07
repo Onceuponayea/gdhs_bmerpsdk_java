@@ -44,7 +44,7 @@ public class CategoryDTO {
      */
     @JsonProperty(value = "Sort")
     @Column
-    private int sort;
+    private Integer sort;
     @Convert(converter = JodaDateTimeConverter.class)
     @JsonProperty(value = "CreateTime")
     @Column(name = "create_time")

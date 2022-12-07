@@ -48,18 +48,31 @@ public interface ProductService {
             String searchTimeField,
             String sortField,
             String sortBy,
+            Boolean remote,
             BanmaerpProperties banmaerpProperties
     );
 
+    List<ProductDTO> getProductList(Integer pageNumber,Boolean remote,BanmaerpProperties banmaerpProperties);
+
+    List<ProductDTO> getProductList(Integer pageNumber,Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties);
+
+    /**
+     * 获取产品列表并自动保存到数据库，适用定时任务同步
+     * @param pageNumber
+     * @param pageSize
+     * @param banmaerpProperties
+     * @return
+     */
+    List<ProductDTO> getAndSaveProductList(Integer pageNumber,Integer pageSize, BanmaerpProperties banmaerpProperties);
     /**
      * 查询单个产品
      * @param spuId 	SPUID（必填）
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-   ProductDTO getProductById(String spuId,
-                                       BanmaerpProperties banmaerpProperties);
+   ProductDTO getProductBySpuId(Long spuId,Boolean remote,BanmaerpProperties banmaerpProperties);
 
+   ProductDTO getProductByProductUUID(String productUUID);
     /**
      * 添加产品
      * @param productDto
@@ -67,8 +80,7 @@ public interface ProductService {
      * 必填： Spu(描述信息)，Skus（sku信息）,Options（选项）,Images（图片）
      * @return
      */
-    BanmaErpResponseDTO<ProductDTO> insertProduct(ProductDTO productDto,
-                                      BanmaerpProperties banmaerpProperties);
+    BanmaErpResponseDTO<ProductDTO> insertProduct(ProductDTO productDto,BanmaerpProperties banmaerpProperties);
 
     /**
      * 更新产品
@@ -77,8 +89,7 @@ public interface ProductService {
      * 必填： Spu(描述信息)，Skus（sku信息）,Options（选项）,Images（图片）
      * @return
      */
-    BanmaErpResponseDTO<ProductDTO> updateProductById(ProductDTO productDto,
-                                          BanmaerpProperties banmaerpProperties);
+    BanmaErpResponseDTO<ProductDTO> updateProductById(ProductDTO productDto,BanmaerpProperties banmaerpProperties);
 
     /**
      * 查询SKU列表
@@ -110,6 +121,7 @@ public interface ProductService {
             String searchTimeField,
             String sortField,
             String sortBy,
+            Boolean remote,
             BanmaerpProperties banmaerpProperties
     );
 
@@ -119,8 +131,7 @@ public interface ProductService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    ProductSkusDTO getProductSkuById(String skuid,
-                                     BanmaerpProperties banmaerpProperties);
+    ProductSkusDTO getProductSkuById(String skuid,Boolean remote,BanmaerpProperties banmaerpProperties);
 
     /**
      * 查询Tag列表
@@ -144,6 +155,7 @@ public interface ProductService {
             String searchTimeField,
             String sortField,
             String sortBy,
+            Boolean remote,
             BanmaerpProperties banmaerpProperties
     );
 
@@ -169,12 +181,13 @@ public interface ProductService {
             String searchTimeField,
             String sortField,
             String sortBy,
+            Boolean remote,
             BanmaerpProperties banmaerpProperties
     );
 
-    List<ProductDTO> saveALL(List<ProductDTO> products);
+    List<ProductDTO> saveALL(List<ProductDTO> products,BanmaerpProperties banmaerpProperties);
 
-    ProductDTO save(ProductDTO productDTO);
+    ProductDTO save(ProductDTO productDTO,BanmaerpProperties banmaerpProperties);
 
 
 }

@@ -36,7 +36,7 @@ public class StorageDTO {
     @JsonProperty(value = "FileType")
     private String fileType;
     @JsonProperty(value = "Size")
-    private int size;
+    private Integer size;
     @Column(name = "create_time")
     @Convert(converter = JodaDateTimeConverter.class)
     @JsonProperty(value = "CreateTime")

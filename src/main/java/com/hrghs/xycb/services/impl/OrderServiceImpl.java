@@ -1,41 +1,33 @@
 package com.hrghs.xycb.services.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
 import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.BanmaerpSigningVO;
 import com.hrghs.xycb.domains.BanmaerpURL;
-import com.hrghs.xycb.domains.banmaerpDTO.OrderDTO;
-import com.hrghs.xycb.domains.banmaerpDTO.OrderFulfillmentDTO;
-import com.hrghs.xycb.domains.banmaerpDTO.OrderMasterDTO;
-import com.hrghs.xycb.domains.banmaerpDTO.OrderTrackingDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.*;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
+import com.hrghs.xycb.repositories.OrderFulfillmentRepository;
 import com.hrghs.xycb.repositories.OrderMasterRepository;
 import com.hrghs.xycb.repositories.OrderRepository;
+import com.hrghs.xycb.repositories.OrderTrackingRepository;
 import com.hrghs.xycb.services.OrderService;
 import com.hrghs.xycb.utils.BanmaTokenUtils;
 import com.hrghs.xycb.utils.EncryptionUtils;
 import com.hrghs.xycb.utils.HttpClientsUtils;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.stereotype.Service;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-
+import java.util.stream.StreamSupport;
 import static com.hrghs.xycb.domains.Constants.*;
 
-@Service
-@Lazy
 public class OrderServiceImpl implements OrderService {
 
     @Autowired
@@ -45,8 +37,9 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private EncryptionUtils encryptionUtils;
     @Autowired
-    @Lazy
-    private ObjectMapper objectMapper;
+    private OrderTrackingRepository trackingRepository;
+    @Autowired
+    private OrderFulfillmentRepository fulfillmentRepository;
     @Autowired
     private OrderRepository orderRepository;
     @Autowired
@@ -77,30 +70,48 @@ public class OrderServiceImpl implements OrderService {
     public List<OrderDTO> getOrderList(String ids, String storeId, String platform, String status, String payStatus,
                                        String holdStatus, String refundStatus, String inventoryStatus, String countryCode,
                                        Integer pageNumber, Integer pageSize, DateTime searchTimeStart, DateTime searchTimeEnd,
-                                       String searchTimeField, String sortField, String sortBy,
+                                       String searchTimeField, String sortField, String sortBy,Boolean remote,
                                        BanmaerpProperties banmaerpProperties) {
-        String apiUrl = String.format(BanmaerpURL.banmaerp_order_GET, pageNumber, pageSize,searchTimeStart,searchTimeEnd,searchTimeField);
-        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
-        HttpHeaders httpHeaders = new HttpHeaders();
-        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
-        //todo signing
-        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
-        HttpEntity requestBody = new HttpEntity(null, httpHeaders);
-        List<OrderDTO> orderDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {
-                })
-                .getBody()
-                .toDataList(BANMAERP_FIELD_ORDERS)
-        )
-                .map(o -> (OrderDTO) o)
-                .collect(Collectors.toList());
+        List<OrderDTO> orderDTOList;
+        if (remote){
+            String apiUrl = String.format(BanmaerpURL.banmaerp_order_GET, pageNumber, pageSize,searchTimeStart,searchTimeEnd,searchTimeField);
+            apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+            HttpHeaders httpHeaders = new HttpHeaders();
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
+            HttpEntity requestBody = new HttpEntity(null, httpHeaders);
+            orderDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+                            .getBody()
+                            .toDataList(BANMAERP_FIELD_ORDERS))
+                    .map(o -> (OrderDTO) o)
+                    .collect(Collectors.toList());
+        }else{
+            //todo 多条件查询
+            orderDTOList = orderRepository.findAll(PageRequest.of(pageNumber,pageSize)).toList();
+        }
         return orderDTOList;
     }
 
     @Override
-    public List<OrderDTO> getOrderList(Integer pageNumber, BanmaerpProperties banmaerpProperties) {
-        return getOrderList(null, null, null, null, null, null, null, null, null, pageNumber
-                , null, null, null, null, null, null, banmaerpProperties);
+    public List<OrderDTO> getOrderList(Integer pageNumber,Boolean remote, BanmaerpProperties banmaerpProperties) {
+        return getOrderList(null, null, null, null, null, null, null, null, null, pageNumber, null, null, null, null, null, null, remote,banmaerpProperties);
+    }
+
+    @Override
+    public List<OrderDTO> getOrderList(Integer pageNumber, Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties) {
+        return getOrderList(null, null, null, null, null, null, null, null, null, pageNumber, pageSize, null, null, null, null, null, remote,banmaerpProperties);
+    }
+
+    @Override
+    public List<OrderDTO> getAndSaveOrderList(Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties) {
+        List<OrderDTO> orderDTOList =
+        getOrderList(null, null, null, null, null, null, null, null, null, pageNumber, pageSize, null, null, null, null, null, true,banmaerpProperties);
+        orderDTOList = orderRepository.saveAll(orderDTOList);
+        orderDTOList.forEach(orderDTO -> {
+            orderDTO.getMaster().setOrderDTO(orderDTO);
+        });
+        return orderRepository.saveAllAndFlush(orderDTOList);
     }
 
     /**
@@ -111,17 +122,20 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     @CheckBanmaerpProperties
-    public OrderDTO getOrderById(String id, BanmaerpProperties banmaerpProperties) {
-        String apiUrl = String.format(BanmaerpURL.banmaerp_orderdetail_GET,id);
-        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
-        HttpHeaders httpHeaders = new HttpHeaders();
-        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
-        //todo signing
-        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
-        HttpEntity requestBody = new HttpEntity(null,httpHeaders);
-        return httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<OrderDTO>>() {})
-                .getBody().getData();
+    public OrderDTO getOrderById(String id, Boolean remote,BanmaerpProperties banmaerpProperties) {
+        if (remote){
+            String apiUrl = String.format(BanmaerpURL.banmaerp_orderdetail_GET,id);
+            apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+            HttpHeaders httpHeaders = new HttpHeaders();
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
+            HttpEntity requestBody = new HttpEntity(null,httpHeaders);
+            return httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<OrderDTO>>() {})
+                    .getBody().getData();
+        }else{
+           return orderRepository.findOrderDTOByMaster(new OrderMasterDTO(id));
+        }
     }
 
     /**
@@ -133,66 +147,87 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     @CheckBanmaerpProperties
-    public List<OrderFulfillmentDTO> getFulfillments(String orderId, BanmaerpProperties banmaerpProperties) {
-        String apiUrl = String.format(BanmaerpURL.banmaerp_orderFulfillments_GET, orderId);
-        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
-        HttpHeaders httpHeaders = new HttpHeaders();
-        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
-        //todo signing
-        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
-        HttpEntity requestBody = new HttpEntity(null, httpHeaders);
-        List<OrderFulfillmentDTO> orderFulfillmentDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<OrderFulfillmentDTO>>() {
-                })
-                .getBody()
-                .toDataList(BANMAERP_FIELD_FULFILLMENTS)
-        )
-                .map(o -> (OrderFulfillmentDTO) o)
-                .collect(Collectors.toList());
-        orderFulfillmentDTOList.forEach(orderFulfillmentDTO -> orderFulfillmentDTO.setOrderId(orderId));
+    public List<OrderFulfillmentDTO> getFulfillments(String orderId, Boolean remote,BanmaerpProperties banmaerpProperties) {
+        List<OrderFulfillmentDTO> orderFulfillmentDTOList;
+        if (remote){
+            String apiUrl = String.format(BanmaerpURL.banmaerp_orderFulfillments_GET, orderId);
+            apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+            HttpHeaders httpHeaders = new HttpHeaders();
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
+            HttpEntity requestBody = new HttpEntity(null, httpHeaders);
+            orderFulfillmentDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<OrderFulfillmentDTO>>() {})
+                    .getBody()
+                    .toDataList(BANMAERP_FIELD_FULFILLMENTS))
+            .map(o -> (OrderFulfillmentDTO) o)
+            .collect(Collectors.toList());
+            orderFulfillmentDTOList.forEach(orderFulfillmentDTO -> orderFulfillmentDTO.setOrderId(orderId));
+            orderFulfillmentDTOList = fulfillmentRepository.saveAllAndFlush(orderFulfillmentDTOList);
+        }else{
+            orderFulfillmentDTOList = fulfillmentRepository.findOrderFulfillmentDTOSByOrderId(orderId);
+        }
         return orderFulfillmentDTOList;
     }
 
     /**
      * 查询物流追踪
-     *
+     * todo 斑马接口还没实现，无数据，暂时无法测试
      * @param orderId            订单id
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
     @Override
     @CheckBanmaerpProperties
-    public List<OrderTrackingDTO> getTrackings(String orderId, BanmaerpProperties banmaerpProperties) {
-        String apiUrl = String.format(BanmaerpURL.banmaerp_orderTrackings_GET, orderId);
-        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
-        HttpHeaders httpHeaders = new HttpHeaders();
-        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
-        //todo signing
-        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
-        HttpEntity requestBody = new HttpEntity(null, httpHeaders);
-        List<OrderTrackingDTO> orderTrackingDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<OrderTrackingDTO>>() {
-                })
-                .getBody()
-                .toDataList(BANMAERP_FIELD_TRACKINGS)
-        )
-                .map(o -> (OrderTrackingDTO) o)
-                .collect(Collectors.toList());
-        orderTrackingDTOList.forEach(orderFulfillmentDTO -> orderFulfillmentDTO.setOrderId(orderId));
+    public List<OrderTrackingDTO> getTrackings(String orderId,Boolean remote, BanmaerpProperties banmaerpProperties) {
+        List<OrderTrackingDTO> orderTrackingDTOList;
+        if (remote){
+            String apiUrl = String.format(BanmaerpURL.banmaerp_orderTrackings_GET, orderId);
+            apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+            HttpHeaders httpHeaders = new HttpHeaders();
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
+            HttpEntity requestBody = new HttpEntity(null, httpHeaders);
+            orderTrackingDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<OrderTrackingDTO>>() {})
+            .getBody()
+            .toDataList(BANMAERP_FIELD_TRACKINGS))
+            .map(o -> (OrderTrackingDTO) o)
+            .collect(Collectors.toList());
+            orderTrackingDTOList.forEach(orderFulfillmentDTO -> orderFulfillmentDTO.setOrderId(orderId));
+            orderTrackingDTOList = trackingRepository.saveAllAndFlush(orderTrackingDTOList);
+        }else{
+            orderTrackingDTOList = trackingRepository.findOrderTrackingDTOSByOrderId(orderId);
+        }
         return orderTrackingDTOList;
     }
 
     @Override
     public List<OrderDTO> saveAll(Iterable<OrderDTO> orderDTOS) {
+        List<OrderDTO> saveOrUpdateOrders = StreamSupport.stream(orderDTOS.spliterator(),true).collect(Collectors.toList());
+        List<String> orderMasterId = saveOrUpdateOrders.parallelStream()
+                .map(orderDTO -> orderDTO.getMaster().getID())
+                .distinct()
+                .collect(Collectors.toList());
+        List<OrderMasterDTO> existingOrderMasters = orderMasterRepository.findByMasterIds(orderMasterId)
+                .parallelStream()
+                .collect(Collectors.toList());;
+        for (int i=0; i < saveOrUpdateOrders.size(); i++ ){
+            OrderDTO orderDTO = saveOrUpdateOrders.get(i);
+            for (OrderMasterDTO existedOrderMaster :existingOrderMasters) {
+                if (existedOrderMaster.getID().equalsIgnoreCase(orderDTO.getMaster().getID())){
+                    orderDTO.setOrderUUID(existedOrderMaster.getOrderDTO().getOrderUUID());
+                }
+            }
+            saveOrUpdateOrders.set(i,orderDTO);
+        }
         return orderRepository.saveAllAndFlush(orderDTOS);
     }
 
     @Override
     public OrderDTO save(OrderDTO orderDTO) {
-        OrderMasterDTO byID = orderMasterRepository.findByID(orderDTO.getMaster().getID());
-        if (byID == null){
-            return orderRepository.saveAndFlush(orderDTO);
-        }
-        return null;
+        OrderDTO existedOrder = orderRepository.findOrderDTOByMaster(orderDTO.getMaster());
+        orderDTO.setOrderUUID(existedOrder.getOrderUUID());
+        return orderRepository.saveAndFlush(orderDTO);
     }
 }

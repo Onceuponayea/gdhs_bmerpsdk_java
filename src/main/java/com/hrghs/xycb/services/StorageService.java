@@ -27,21 +27,14 @@ public interface StorageService {
      * @return
      */
     List<StorageDTO> getStoragetList(
-            String ids,
-            String name,
-            String fileType,
-            String fileCategoryId,
-            Integer pageNumber,
-            Integer pageSize,
-            DateTime searchTimeStart,
-            DateTime searchTimeEnd,
-            String searchTimeField,
-            String sortField,
-            String sortBy,
-            BanmaerpProperties banmaerpProperties
+            String ids, String name, String fileType, String fileCategoryId, Integer pageNumber, Integer pageSize,
+            DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy,
+            Boolean remote,BanmaerpProperties banmaerpProperties
     );
 
-    List<StorageDTO> getStoragetList(Integer pageNumber, BanmaerpProperties banmaerpProperties);
+    List<StorageDTO> getStoragetList(Integer pageNumber,Boolean remote, BanmaerpProperties banmaerpProperties);
+
+    List<StorageDTO> getStoragetList(Integer pageNumber,Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties);
 
     /**
      * 查询单个文件
@@ -50,22 +43,17 @@ public interface StorageService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    StorageDTO getStorageById(String id, BanmaerpProperties banmaerpProperties);
+    StorageDTO getStorageById(String id,Boolean remote, BanmaerpProperties banmaerpProperties);
 
     /**
      * 使用stream文件流的方式上传文件
      *
-//     * @param contentType        内容类型（必填）
      * @param name               文件名称（必填）
      * @param file               文件内容（必填）
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO<StorageDTO> uploadTheFileToStream(
-            String name,
-            String file,
-            BanmaerpProperties banmaerpProperties
-    );
+    BanmaErpResponseDTO<StorageDTO> uploadTheFileToStream(String name, String file, BanmaerpProperties banmaerpProperties);
 
     /**
      * 使用base64文件流的方式上传文件
@@ -75,24 +63,16 @@ public interface StorageService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO<StorageDTO> uploadTheFileToBase64(
-            String name,
-            String file,
-            BanmaerpProperties banmaerpProperties
-    );
+    BanmaErpResponseDTO<StorageDTO> uploadTheFileToBase64(String name, String file, BanmaerpProperties banmaerpProperties);
 
     /**
      * 使用form-data文件流的方式上传文件
      *
-     * @param contentType        内容类型（必填）
      * @param file               文件内容（必填）
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    BanmaErpResponseDTO<StorageDTO> uploadTheFileToForm(
-            String file,
-            BanmaerpProperties banmaerpProperties
-    );
+    BanmaErpResponseDTO<StorageDTO> uploadTheFileToForm(String file, BanmaerpProperties banmaerpProperties);
 
     List<StorageDTO> saveAll(List<StorageDTO> storageDTOList);
 

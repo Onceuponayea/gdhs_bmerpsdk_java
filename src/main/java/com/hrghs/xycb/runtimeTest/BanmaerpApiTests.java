@@ -5,9 +5,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.hrghs.xycb.domains.GetSsoPassportResponse;
 import com.hrghs.xycb.domains.SsoRegisterResponse;
 import com.hrghs.xycb.domains.banmaerpDTO.*;
@@ -15,7 +12,8 @@ import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.domains.enums.BanmaerpPlatformEnums;
 import com.hrghs.xycb.repositories.*;
 import com.hrghs.xycb.services.*;
-import com.hrghs.xycb.utils.WechatUtil;
+import com.hrghs.xycb.utils.WebHookUtils;
+import lombok.SneakyThrows;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -25,7 +23,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -71,7 +68,7 @@ public class BanmaerpApiTests {
     @Autowired
     private ProductSpuRepository productSpuRepository;
     @Autowired
-    private WechatUtil wechatUtil;
+    private WebHookUtils wechatUtil;
 //    @Autowired
 //    @Lazy
 //
@@ -88,6 +85,7 @@ public class BanmaerpApiTests {
         //List<StoreDTO> storeDTOList = getStoreList();     //working
         //saveStoreList(storeDTOList);    //working
 //        saveAccountList();
+//        saveAccount();
 //        uploadByBase64();   //working
         //saveProductList(); //working
 //        saveOrderList();
@@ -99,7 +97,7 @@ public class BanmaerpApiTests {
 //        getStoreById();
 //        getOrderById();
 //        getOrderList();
-        getProductById();
+//        getProductById();
 //        getProductList();
 //        getProductSkuList();
 //        getProductSkuById();
@@ -119,24 +117,25 @@ public class BanmaerpApiTests {
 //        wechatUtil.sendText("手机号已被注册","15000000100","1052@qq.com");
 //        wechatUtil.qywxSendText("手机号已被注册","15000000100","1052@qq.com");
 //        wechatUtil.ddSendText("手机号已被注册","15000000100","1052@qq.com");
-
+//        saveProductList2();
+//        saveProduct();
     }
 
     // 查询用户列表
     private void getAccountList() {
         List<AccountDTO> accountDTOList = accountService.getAccountList(null, null, null, null, 1
-                , 100, null, null, null, null, null, null);
+                , 100, null, null, null, null, null, true,null);
         if (accountDTOList.size() > 0) {
-            List<AccountDTO> accountDTOList1 = accountService.saveAccountList(accountDTOList);
+            List<AccountDTO> accountDTOList1 = accountService.saveAccountList(accountDTOList,null);
             accountDTOList1.forEach(accountDTO -> System.out.println("account-all:" + accountDTO.getID()));
         }
     }
 
     // 查询单个用户
     private void getAccountById() {
-        AccountDTO accountDTO = accountService.getAccountById(26455, null);
+        AccountDTO accountDTO = accountService.getAccountById(26455, true,null);
         if (accountDTO != null) {
-            AccountDTO accountDTO1 = accountService.saveAccount(accountDTO);
+            AccountDTO accountDTO1 = accountService.saveAccount(accountDTO,null);
             System.out.println("account-all:" + accountDTO1.getID());
         }
     }
@@ -145,7 +144,7 @@ public class BanmaerpApiTests {
     // 查询分类列表
     private void getCategoryList() {
         List<CategoryDTO> categoryDTOList = categoryService.getCategoryList(null, null, null, 1
-                , 100, null, null, null, null, null, null);
+                , 100, null, null, null, null, null, true,null);
         if (categoryDTOList.size() > 0) {
             List<CategoryDTO> categoryDTOList1 = categoryService.saveCategoryList(categoryDTOList);
             categoryDTOList1.forEach(categoryDTO -> System.out.println("categoryDTO-all:" + categoryDTO.getID()));
@@ -154,7 +153,7 @@ public class BanmaerpApiTests {
 
     // 查询单个分类
     private void getCategoryById() {
-        CategoryDTO categoryDTO = categoryService.getCategoryById("32781a0f-50bd-4fd5-b15a-af5500e69a33", null);
+        CategoryDTO categoryDTO = categoryService.getCategoryById("32781a0f-50bd-4fd5-b15a-af5500e69a33", true,null);
         if (categoryDTO != null) {
             CategoryDTO categoryDTO1 = categoryService.saveCategory(categoryDTO);
             System.out.println("categoryDTO-all:" + categoryDTO1.getID());
@@ -164,7 +163,7 @@ public class BanmaerpApiTests {
     // 查询店铺列表
     private void getStoretList() {
         List<StoreDTO> storeDTOList = storeService.getStoretList(null, null, null, 1
-                , 100, null, null, null, null, null, null);
+                , 3, null, null, null, null, null,true, null);
         if (storeDTOList.size() > 0) {
             List<StoreDTO> storeDTOList1 = storeService.saveStoreList(storeDTOList);
             storeDTOList1.forEach(storeDTO -> System.out.println("storeDTO-all:" + storeDTO.getID()));
@@ -173,7 +172,7 @@ public class BanmaerpApiTests {
 
     // 查询单个店铺
     private void getStoreById() {
-        StoreDTO storeDTO = storeService.getStoreById("1492814222537527296", null);
+        StoreDTO storeDTO = storeService.getStoreById("1492814222537527296",true, null);
         if (storeDTO != null) {
             StoreDTO storeDTO1 = storeService.saveStore(storeDTO);
             System.out.println("storeDTO-all:" + storeDTO1.getID());
@@ -183,7 +182,7 @@ public class BanmaerpApiTests {
     // 查询订单列表
     private void getOrderList() {
         List<OrderDTO> orderDTOList = orderService.getOrderList(null, null, null, null, null, null, null, null, null, 1
-                , null, null, null, null, null, null, null);
+                , null, null, null, null, null, null,true, null);
         if (orderDTOList.size() > 0) {
             List<OrderDTO> orderDTOList1 = orderService.saveAll(orderDTOList);
             orderDTOList1.forEach(orderDTO -> System.out.println("orderDTO-all:" + orderDTO.getOrderUUID()));
@@ -192,7 +191,7 @@ public class BanmaerpApiTests {
 
     // 查询单个订单
     private void getOrderById() {
-        OrderDTO orderDTO = orderService.getOrderById("1497122489925373952", null);
+        OrderDTO orderDTO = orderService.getOrderById("1497122489925373952", false,null);
         if (orderDTO != null) {
             OrderDTO orderDTO1 = orderService.save(orderDTO);
             System.out.println("orderDTO-all:" + orderDTO1.getMaster().getID());
@@ -202,18 +201,18 @@ public class BanmaerpApiTests {
     // 查询产品列表
     private void getProductList() {
         List<ProductDTO> productDTOList = productService.getProductList(null, null, null, null, null, null, null, null, 1
-                , 100, null, null, null, null, null, null);
+                , 100, null, null, null, null, null,true, null);
         if (productDTOList.size() > 0) {
-            List<ProductDTO> productDTOList1 = productService.saveALL(productDTOList);
+            List<ProductDTO> productDTOList1 = productService.saveALL(productDTOList,null);
             productDTOList1.forEach(productDTO -> System.out.println("productDTO-all:" + productDTO.getSPU().getSPUID()));
         }
     }
 
     // 查询单个产品
     private void getProductById() {
-        ProductDTO productDTO = productService.getProductById("1497121263854817280", null);
+        ProductDTO productDTO = productService.getProductBySpuId(1497121263854817280l, true,null);
         if (productDTO != null) {
-            ProductDTO productDTO1 = productService.save(productDTO);
+            ProductDTO productDTO1 = productService.save(productDTO,null);
             System.out.println("productDTO1-all:" + productDTO1.getSPU().getSPUID());
         }
     }
@@ -221,7 +220,7 @@ public class BanmaerpApiTests {
     // 查询sku列表
     private void getProductSkuList() {
         List<ProductSkusDTO> productSkusDTOList = productService.getProductSkuList(null, null, null, null, null, 1
-                , 100, null, null, null, null, null, null);
+                , 100, null, null, null, null, null, true,null);
         if (productSkusDTOList.size() > 0) {
             List<ProductSkusDTO> productDTOList1 = productSkusRepository.saveAllAndFlush(productSkusDTOList);
             productDTOList1.forEach(productSkusDTO -> System.out.println("productSkusDTO-all:" + productSkusDTO.getSKUID()));
@@ -230,7 +229,7 @@ public class BanmaerpApiTests {
 
     // 查询单个sku
     private void getProductSkuById() {
-        ProductSkusDTO productSkusDTO = productService.getProductSkuById("1497490072574889984", null);
+        ProductSkusDTO productSkusDTO = productService.getProductSkuById("1497490072574889984", true,null);
         if (productSkusDTO != null) {
             ProductSkusDTO productDTO1 = productSkusRepository.saveAndFlush(productSkusDTO);
             System.out.println("productSkusDTO-all:" + productDTO1.getSKUID());
@@ -240,48 +239,146 @@ public class BanmaerpApiTests {
     // 查询tag列表
     private void getProductTagsList() {
         List<ProductTagsDTO> productTagsDTOList = productService.getProductTagsList(null, 1
-                , 100, null, null, null, null, null, null);
+                , 100, null, null, null, null, null, true,null);
         if (productTagsDTOList.size() > 0) {
             List<ProductTagsDTO> productTagsDTOList1 = productTagsRepository.saveAllAndFlush(productTagsDTOList);
             productTagsDTOList1.forEach(productTagsDTO -> System.out.println("productTagsDTOList-all:" + productTagsDTO.getName()));
         }
     }
 
-//    // 查询供应商列表
-//    private void getProductSuppliersList() {
-//        List<ProductSuppliersInfoDTO> productSuppliersInfoDTOList = productService.getProductSuppliersList(null, 1
-//                , 100, null, null, null, null, null, null);
-//        if (productSuppliersInfoDTOList.size() > 0) {
-//            List<ProductSuppliersInfoDTO> productSuppliersInfoDTOList1 = productSuppliersRepository.saveAllAndFlush(productSuppliersInfoDTOList);
-//            productSuppliersInfoDTOList1.forEach(productSuppliersInfoDTO -> System.out.println("productSuppliersInfoDTO-all:" + productSuppliersInfoDTO.getName()));
-//        }
-//    }
+    // 查询供应商列表
+    private void getProductSuppliersList() {
+        List<ProductSuppliersInfoDTO> productSuppliersInfoDTOList = productService.getProductSuppliersList(null, 1
+                , 100, null, null, null, null, null, true,null);
+        if (productSuppliersInfoDTOList.size() > 0) {
+            List<ProductSuppliersInfoDTO> productSuppliersInfoDTOList1 = productSuppliersRepository.saveAllAndFlush(productSuppliersInfoDTOList);
+            productSuppliersInfoDTOList1.forEach(productSuppliersInfoDTO -> System.out.println("productSuppliersInfoDTO-all:" + productSuppliersInfoDTO.getName()));
+        }
+    }
 
     // 添加产品
     private void addProduct() throws JsonProcessingException {
 
-        String insertProductReq = "{\"Product\":{\"SPU\":{\"SPUID\":\"1497121263814817211\"," +
-                "\"Code\":\"22112200211\",\"Title\":\"重磅卫衣男秋冬款连帽加绒加厚美式复古运动外套春秋潮牌宽松男装\"," +
-                "\"LeiMuID\":\"32781a0f-50bd-4fd5-b15a-af5500e69a35\"," +
-                "\"Image\":\"https://gw.alicdn.com/imgextra/i3/2966343102/O1CN01Z8e6HU1YmlNKvfP4k_!!2966343102.jpg_Q75.jpg_.webp\"" +
-                ",\"Source\":\"手工创建\",\"DefaultSupplierID\":\"b4643438-15b5-4fee-9071-af5600fdece6\"" +
-                ",\"Remark\":\"\",\"IsExemptQuality\":true,\"Keywords\":\"爆款\",\"CreateTime\":\"2022-11-22T14:25:24\"," +
-                "\"UpdateTime\":\"2022-11-23T15:26:46\"}," +
-                "\"Descriptions\":{\"Html\":\"<p><span style=\\\"font-family: &quot;PingFang SC&quot;; " +
-                "font-size: 20px; font-weight: 900; background-color: rgb(255, 255, 255);\\\">重磅卫衣男秋冬款连帽加绒加厚美式复古运动外套春秋潮牌宽松男装</span></p>\",\"Text\":\"\",\"Short\":\"\"}," +
-                "\"SKUs\":[{\"SKUID\":\"1497490072578881985\",\"Code\":\"221122012r01-White-One-Size\",\"Specification\":\"White;One Size\",\"CostPrice\":112.0,\"Image\":\"https://gw.alicdn.com/imgextra/i3/2966343102/O1CN01Z8e6HU1YmlNKvfP4k_!!2966343102.jpg_Q75.jpg_.webp\",\"Weight\":60,\"Length\":60,\"Width\":60,\"Height\":60,\"IsValid\":true,\"Remark\":\"\",\"Sort\":0,\"Type\":\"普通\",\"CombineData\":[],\"Options\":[{\"Name\":\"Color\",\"Value\":\"White\"},{\"Name\":\"Size\",\"Value\":\"One Size\"}]}],\"Suppliers\":[{\"ID\":\"b4643438-15b5-4fee-9071-af5600fdece6\",\"Remark\":\"\",\"Sort\":0,\"Info\":{\"ID\":\"b4643438-15b5-4fee-9071-af5600fdece6\",\"Name\":\"zzz\",\"Contact\":\"将之心\",\"Phone\":\"13799820202\",\"Address\":\"福建省厦门市\",\"Remark\":\"\",\"Url\":\"\",\"QQ\":\"\",\"WeChat\":\"\",\"WangWang\":\"\",\"SettlementType\":\"货到付款\"}}]," +
-                "\"Options\":[{\"Name\":\"Color\",\"Sort\":0,\"Values\":[\"White\"]}," +
-                "{\"Name\":\"Size\",\"Sort\":0,\"Values\":[\"One Size\"]}],\"Requirements\":[],\"Sources\":[]," +
-                "\"Images\":[{\"Src\":\"https://gw.alicdn.com/imgextra/i3/2966343102/O1CN01Z8e6HU1YmlNKvfP4k_!!2966343102.jpg_Q75.jpg_.webp\"," +
-                "\"Sort\":0}],\"Tags\":[{\"Name\":\"休闲\"}],\"PackMaterials\":[{\"ID\":\"1497488256156045313\"," +
-                "\"Name\":\"羊羔绒\",\"Remark\":\"\",\"Quantity\":1}]}}";
+        String insertProductReq = "{\n" +
+                "    \"SPU\": {\n" +
+                "        \"Code\": \"100500203449635822222\",\n" +
+                "        \"Title\": \"男士条纹衬衫翻领短袖夏季透气2021纽扣休闲卡米萨斯街装沙滩夏威夷衬衫11111\",\n" +
+                "        \"LeiMuID\": \"c6ef5d23-8232-e811-8ffd-340804e01078\",\n" +
+                "        \"SourceUrl\": \"\",\n" +
+                "        \"TagIDs\": \"\",\n" +
+                "        \"Image\": \"https://s3.forcloudcdn.com/item/images/dmc/78f44c98-411b-4e96-bd91-800.jpg\",\n" +
+                "        \"Source\": \"平台同步\",\n" +
+                "        \"Remark\": \"\",\n" +
+                "        \"IsExemptQuality\": false\n" +
+                "    },\n" +
+                "    \"SKUs\": [\n" +
+                "        {\n" +
+                "            \"Code\": \"14:10#Red;5:2000009911111\",\n" +
+                "            \"Specification\": \"款式1;4XL\",\n" +
+                "            \"CostPrice\": 77.28,\n" +
+                "            \"Image\": \"https://s3.forcloudcdn.com/item/images/dmc/365115d6-1c32-4cb5-9a82-640.jpg\",\n" +
+                "            \"Weight\": 0,\n" +
+                "            \"Length\": 0,\n" +
+                "            \"Width\": 0,\n" +
+                "            \"Height\": 0,\n" +
+                "            \"IsValid\": true,\n" +
+                "            \"Status\": \"正常\",\n" +
+                "            \"Remark\": \"\",\n" +
+                "            \"Sort\": 0,\n" +
+                "            \"Type\": \"普通\",\n" +
+                "            \"CombineData\": [],\n" +
+                "            \"Options\": [\n" +
+                "                {\n" +
+                "                    \"Name\": \"款式1\",\n" +
+                "                    \"Value\": \"款式1\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"Name\": \"4XL\",\n" +
+                "                    \"Value\": \"4XL\"\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"Code\": \"14:10#Red;5:2000009922221\",\n" +
+                "            \"Specification\": \"款式1;5XL\",\n" +
+                "            \"CostPrice\": 77.28,\n" +
+                "            \"Image\": \"https://s3.forcloudcdn.com/item/images/dmc/365115d6-1c32-4cb5-9a82-af9640.jpg\",\n" +
+                "            \"Weight\": 0,\n" +
+                "            \"Length\": 0,\n" +
+                "            \"Width\": 0,\n" +
+                "            \"Height\": 0,\n" +
+                "            \"IsValid\": true,\n" +
+                "            \"Status\": \"正常\",\n" +
+                "            \"Remark\": \"\",\n" +
+                "            \"Sort\": 1,\n" +
+                "            \"Type\": \"普通\",\n" +
+                "            \"CombineData\": [],\n" +
+                "            \"Options\": [\n" +
+                "                {\n" +
+                "                    \"Name\": \"款式1\",\n" +
+                "                    \"Value\": \"款式1\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"Name\": \"4XL\",\n" +
+                "                    \"Value\": \"5XL\"\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        }\n" +
+                "    ],\n" +
+                "    \"Options\": [\n" +
+                "        {\n" +
+                "            \"Name\": \"款式1\",\n" +
+                "            \"Sort\": 0,\n" +
+                "            \"Values\": [\n" +
+                "                \"款式1\"\n" +
+                "            ]\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"Name\": \"4XL\",\n" +
+                "            \"Sort\": 0,\n" +
+                "            \"Values\": [\n" +
+                "                \"4XL\",\n" +
+                "                \"5XL\"\n" +
+                "            ]\n" +
+                "        }\n" +
+                "    ],\n" +
+                "    \"Images\": [\n" +
+                "        {\n" +
+                "            \"Src\": \"https://s3.forcloudcdn.com/item/images/dmc/78f44c98-411b-4e96-bd91-800.jpg\",\n" +
+                "            \"Sort\": 0\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"Src\": \"https://s3.forcloudcdn.com/item/images/dmc/ff600237-574e-4a93-a091-800.jpg\",\n" +
+                "            \"Sort\": 1\n" +
+                "        },\n" +
+                "    ]，\n" +
+                "    \"Tags\": [\n" +
+                "        {\n" +
+                "            \"Name\": \"热卖\"\n" +
+                "        }，\n" +
+                "        {\n" +
+                "            \"Name\": \"热销\"\n" +
+                "        }，\n" +
+                "    ],\n" +
+                "    \"Suppliers\": [\n" +
+                "        {\n" +
+                "            \"ID\": \"48F8184E-6A2B-443F-8FB4-EB777F7618D9\",\n" +
+                "            \"Remark\": \"test\",\n" +
+                "            \"Sort\": 1\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"ID\": \"B1A86AA7-665C-4196-8509-CFEDF366AA82\",\n" +
+                "            \"Remark\": \"test1\",\n" +
+                "            \"Sort\": 2\n" +
+                "        },\n" +
+                "    ]\n" +
+                "}";
 
-        ProductDTO productDTO = objectMapper.readValue(insertProductReq, new TypeReference<ProductDTO>() {
-        });
+        ProductDTO productDTO = objectMapper.readValue(insertProductReq, new TypeReference<ProductDTO>() {});
 
         BanmaErpResponseDTO<ProductDTO> productDTOBanmaErpResponseDTO = productService.insertProduct(productDTO, null);
         if (productDTOBanmaErpResponseDTO != null) {
-            ProductDTO save = productService.save(productDTOBanmaErpResponseDTO.getData());
+            ProductDTO save = productService.save(productDTOBanmaErpResponseDTO.getData(),null);
             System.out.println(save.getSPU().getSPUID());
         }
     }
@@ -310,7 +407,7 @@ public class BanmaerpApiTests {
 
         BanmaErpResponseDTO<ProductDTO> productDTOBanmaErpResponseDTO = productService.updateProductById(productDTO, null);
         if (productDTOBanmaErpResponseDTO != null) {
-            ProductDTO save = productService.save(productDTOBanmaErpResponseDTO.getData());
+            ProductDTO save = productService.save(productDTOBanmaErpResponseDTO.getData(),null);
             System.out.println(save.getSPU().getSPUID());
         }
     }
@@ -318,15 +415,14 @@ public class BanmaerpApiTests {
     // 添加子账号
     private void addAccount() {
         AccountDTO accountDTO = accountService.addAccount(
-                "13696919609",
-                "11527123@qq.com",
-                "小蒋",
+                "13111919606",
+                "13111919606@qq.com",
+                "小蒋2",
                 "采购部",
                 false,
                 null
         );
-        AccountDTO accountDTO1 = accountService.saveAccount(accountDTO);
-        System.out.println(accountDTO1.getID() + "\t" + accountDTO1.getPhone());
+        System.out.println(accountDTO.getID() + "\t" + accountDTO.getPhone());
     }
 
     // 注销账号
@@ -345,11 +441,12 @@ public class BanmaerpApiTests {
     private void register() throws JsonProcessingException {
         AccountDTO accountDTO = new AccountDTO();
         accountDTO.setRealName("测试");
-        accountDTO.setPhone("15000000100");
+//        accountDTO.setPhone("18801013417");
+        accountDTO.setPhone("13116911600");
         accountDTO.setDepartment("采购部");
-        accountDTO.setEmail("105271@qq.com");
+        accountDTO.setEmail("13116911600@qq.com");
         AppsInfoDTO appsInfoDTO = new AppsInfoDTO();
-        appsInfoDTO.setName("测试1");
+        appsInfoDTO.setName("选品中心11");
         BanmaErpResponseDTO<SsoRegisterResponse> register = ssoService.register(accountDTO, appsInfoDTO, null);
     }
 
@@ -406,7 +503,7 @@ public class BanmaerpApiTests {
 
     // 查询单个文件
     private void getStorageById() throws JsonProcessingException {
-        StorageDTO storageById = storageService.getStorageById("fe68d741-55e4-49b3-8bbc-af5c00a800c4", null);
+        StorageDTO storageById = storageService.getStorageById("fe68d741-55e4-49b3-8bbc-af5c00a800c4", true,null);
         System.out.println(objectMapper.writeValueAsString(storageById));
         if (storageById != null) {
             StorageDTO save = storageService.save(storageById);
@@ -503,7 +600,7 @@ public class BanmaerpApiTests {
     private void getStoreListMono() {
         Mono<BanmaErpResponseDTO<List<StoreDTO>>> storeList = storeService.getStoretListMono(null, null, null, 1,
                 100, new DateTime("2020-12-01T00:00:00"), new DateTime("2021-01-01"), "CreateTime",
-                null, null, null);
+                null, null, true,null);
         System.out.println("getStoreList");
         storeList.subscribe(resp -> System.out.println(resp.getData().size()));
     }
@@ -511,7 +608,7 @@ public class BanmaerpApiTests {
     private List<StoreDTO> getStoreList() {
         List<StoreDTO> storeList = storeService.getStoretList(null, null, BanmaerpPlatformEnums.Platform.Lazada, 1,
                 100, null, null, "CreateTime",
-                null, null, null);
+                null, null,true, null);
         System.out.println("storeList size: " + storeList.size());
         if (storeList.size() > 0) {
             storeList.forEach(storeDTO -> System.out.println(storeDTO.getName()));
@@ -570,9 +667,31 @@ public class BanmaerpApiTests {
                 Arrays.stream(objects).map(o -> (AccountDTO) o)
                         .collect(Collectors.toList());
 
-        //accountRepository.saveAll(accountDTOS);
+        accountService.saveAccountList(accountDTOS,null);
     }
-
+    private void saveAccount() throws JsonProcessingException {
+        String account ="{\n" +
+                "  \"Code\": 200,\n" +
+                "  \"Time\": \"2021-12-12T15:23:34\",\n" +
+                "  \"Data\": {\n" +
+                "    \"Account\": {\n" +
+                "      \"ID\": \"400024\",\n" +
+                "      \"RealName\": \"test\",\n" +
+                "      \"Email\": \"a@b.com\",\n" +
+                "      \"Phone\": \"15000000000\",\n" +
+                "      \"Department\": \"采购部\",\n" +
+                "      \"CreateTime\": \"2019-01-10T16:57:58\",\n" +
+                "      \"UpdateTime\": \"2020-06-13T09:59:25\"\n" +
+                "    }\n" +
+                "  },\n" +
+                "  \"Success\": true,\n" +
+                "  \"Message\": \"成功\"\n" +
+                "}\n";
+        BanmaErpResponseDTO<AccountDTO> accountDTOBanmaErpResponseDTO = objectMapper.readValue(account, new TypeReference<BanmaErpResponseDTO<AccountDTO>>() {
+        });
+        System.out.println(accountDTOBanmaErpResponseDTO.getData().getID());
+        System.out.println("product saveing.............");
+    }
 
     private void saveOrderList() throws JsonProcessingException {
         String orders = "{\n" +
@@ -886,6 +1005,11 @@ public class BanmaerpApiTests {
 
         //productService.save(productDTOBanmaErpResponseDTO.getData());
         System.out.println("product saved.............");
+
+
+    }
+    @SneakyThrows
+    public void saveProductList2(){
         String products = "{\n" +
                 "    \"Code\": 200,\n" +
                 "    \"Time\": \"2021-12-12 15:23:34\",\n" +
@@ -1012,9 +1136,105 @@ public class BanmaerpApiTests {
         List<ProductDTO> productDTOS =
                 Arrays.stream(objects).map(o -> (ProductDTO) o)
                         .collect(Collectors.toList());
-        List<ProductDTO> result = productService.saveALL(productDTOS);
+        List<ProductDTO> result = productService.saveALL(productDTOS,null);
         System.out.println("saving product result...." + result.size());
-
-
+    }
+    @SneakyThrows
+    public void saveProduct(){
+        String productResp="{\n" +
+                "    \"Code\": 200,\n" +
+                "    \"Time\": \"2021-12-12T15:23:34\",    \n" +
+                "    \"Data\": {\n" +
+                "        \"Product\": {\n" +
+                "            \"SPU\": {\n" +
+                "                \"SPUID\": \"1351482672542\",\n" +
+                "                \"Code\": \"100500203\",\n" +
+                "                \"Title\": \"男士条纹衬衫翻领短袖夏季透气2021纽扣休闲卡米萨斯街装沙滩夏威夷衬衫\",\n" +
+                "                \"LeiMuID\": \"c6ef5d23-8232-e811-8ffd-340804e01078\",\n" +
+                "                \"Image\": \"https://www.xxxx.com/images/78f44c98-411b-a5bbd-800x800.jpg\",\n" +
+                "                \"Status\": \"正常\",\n" +
+                "                \"Source\": \"平台同步\",\n" +
+                "                \"DefaultSupplierID\": \"00000000-0000-0000-0000-000000000000\",\n" +
+                "                \"Remark\": \"\",\n" +
+                "                \"IsExemptQuality\": false,\n" +
+                "                \"CreateTime\": \"2020-06-19T15:48:02\",\n" +
+                "                \"UpdateTime\": \"2021-10-16T14:32:46\"\n" +
+                "            },\n" +
+                "            \"Descriptions\": {\n" +
+                "                \"Html\": \"testlhtml\",\n" +
+                "                \"Text\": \"testText\",\n" +
+                "                \"Short\": \"testShort\"\n" +
+                "            },\n" +
+                "            \"SKUs\": [\n" +
+                "                {\n" +
+                "                    \"SKUID\": \"1351482672974663680\",\n" +
+                "                    \"Code\": \"14:10#Red;5:200000990\",\n" +
+                "                    \"Specification\": \"款式1;4XL\",\n" +
+                "                    \"CostPrice\": 77.28,\n" +
+                "                    \"Image\": \"https://www.xxxx.com/images/78f44c98-411b-a5bbd-800x800.jpg\",\n" +
+                "                    \"Weight\": 0,\n" +
+                "                    \"Length\": 0,\n" +
+                "                    \"Width\": 0,\n" +
+                "                    \"Height\": 0,\n" +
+                "                    \"IsValid\": true,\n" +
+                "                    \"Status\": \"正常\",\n" +
+                "                    \"Remark\": \"\",\n" +
+                "                    \"Sort\": 0,\n" +
+                "                    \"Type\": \"普通\",\n" +
+                "                    \"CombineData\": [],\n" +
+                "                    \"Options\": [\n" +
+                "                        {\n" +
+                "                            \"Name\": \"款式1\",\n" +
+                "                            \"Value\": \"款式1\"\n" +
+                "                        },\n" +
+                "                        {\n" +
+                "                            \"Name\": \"4XL\",\n" +
+                "                            \"Value\": \"4XL\"\n" +
+                "                        }\n" +
+                "                    ]\n" +
+                "                }\n" +
+                "            ],\n" +
+                "            \"Suppliers\": [],\n" +
+                "            \"Options\": [\n" +
+                "                {\n" +
+                "                    \"Name\": \"款式1\",\n" +
+                "                    \"Sort\": 0,\n" +
+                "                    \"Values\": [\n" +
+                "                        \"款式1\"\n" +
+                "                    ]\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"Name\": \"4XL\",\n" +
+                "                    \"Sort\": 0,\n" +
+                "                    \"Values\": [\n" +
+                "                        \"4XL\",\n" +
+                "                        \"5XL\",\n" +
+                "                        \"L\",\n" +
+                "                        \"M\",\n" +
+                "                        \"S\",\n" +
+                "                        \"XL\",\n" +
+                "                        \"XXL\",\n" +
+                "                        \"3XL\"\n" +
+                "                    ]\n" +
+                "                }\n" +
+                "            ],\n" +
+                "            \"Requirements\": [],\n" +
+                "            \"Sources\": [],\n" +
+                "            \"Images\": [\n" +
+                "                {\n" +
+                "                    \"Src\": \"https://www.xxxx.com/images/78f44c98-411b-a5bbd-800x800.jpg\",\n" +
+                "                    \"Sort\": 0\n" +
+                "                }\n" +
+                "            ],\n" +
+                "            \"Tags\": [],\n" +
+                "            \"PackMaterials\": []\n" +
+                "        }\n" +
+                "    },\n" +
+                "    \"Success\": true,\n" +
+                "    \"Message\": \"成功\"\n" +
+                "}\n";
+        BanmaErpResponseDTO<ProductDTO> responseDTO = objectMapper.readValue(productResp, new TypeReference<BanmaErpResponseDTO<ProductDTO>>() {});
+        productService.save(responseDTO.getData(),null);
+        System.out.println("saving product result....");
     }
 }

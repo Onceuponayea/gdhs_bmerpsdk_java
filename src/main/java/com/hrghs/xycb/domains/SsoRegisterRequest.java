@@ -14,8 +14,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class SsoRegisterRequest {
 
-    @JsonProperty("Account")
     private AccountDTO account;
-    @JsonProperty("App")
+
     private AppsInfoDTO app;
 }

@@ -3,6 +3,7 @@ package com.hrghs.xycb.domains.banmaerpDTO;
 import com.fasterxml.jackson.annotation.*;
 import com.hrghs.xycb.utils.converters.JodaDateTimeConverter;
 import com.hrghs.xycb.utils.converters.JpaListStringConverter;
+import com.hrghs.xycb.utils.converters.JpaUUIDConverter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,8 +25,8 @@ import java.util.UUID;
 public class DataAccessDTO {
 
     @JsonIgnore
-    @Column()
-    @GeneratedValue
+    @Convert(converter = JpaUUIDConverter.class)
+    @GeneratedValue(generator = "UUID")
     @Type(type = "uuid-char")
     @Id
     private UUID id;

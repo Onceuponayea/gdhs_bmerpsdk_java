@@ -66,7 +66,7 @@ public class OrderDetailsDTO {
     private String SKUSpecification;
 
     @JsonProperty(value = "Price")
-    private double price;
+    private Double price;
 
     @JsonProperty(value = "Title")
     private String title;
@@ -76,14 +76,14 @@ public class OrderDetailsDTO {
     private String originalImage;
 
     @JsonProperty(value = "Quantity")
-    private int quantity;
+    private Integer quantity;
 
     @Column(name = "original_quantity")
     @JsonProperty(value = "OriginalQuantity")
-    private int originalQuantity;
+    private Integer originalQuantity;
 
     @JsonProperty(value = "Amount")
-    private double amount;
+    private Double amount;
 
     @JsonProperty(value = "Status")
     private String status;
@@ -114,7 +114,7 @@ public class OrderDetailsDTO {
 
     @Column(name = "inventory_lock_quantity")
     @JsonProperty(value = "InventoryLockQuantity")
-    private int inventoryLockQuantity;
+    private Integer inventoryLockQuantity;
 
     @Column(name = "sku_change_status")
     @JsonProperty(value = "SkuChangeStatus")
@@ -134,7 +134,7 @@ public class OrderDetailsDTO {
     private List<OrderDetailsInventoryDataDTO> inventoryData;
 
     @JsonProperty(value = "Sort")
-    private int sort;
+    private Integer sort;
 
     @JsonProperty(value = "Type")
     private String type;
@@ -156,7 +156,7 @@ public class OrderDetailsDTO {
     private String deliveryInstructions;
 
     @JsonProperty(value = "Priority")
-    private int priority;
+    private Integer priority;
 
 
 }

@@ -6,9 +6,6 @@ import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.domains.BanmaerpSigningVO;
 import com.hrghs.xycb.domains.BanmaerpURL;
 import com.hrghs.xycb.domains.enums.BanmaerpAuthEnums;
-import com.hrghs.xycb.services.SsoService;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +16,8 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import java.nio.charset.Charset;
@@ -29,18 +27,16 @@ import static com.hrghs.xycb.domains.BanmaerpURL.banmaerp_GetToken_GET;
 import static com.hrghs.xycb.domains.BanmaerpURL.banmaerp_RefreshToken_GET;
 import static com.hrghs.xycb.domains.Constants.*;
 import static jodd.util.StringPool.COLON;
+import static jodd.util.StringPool.QUESTION_MARK;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 
-@Component
-@AllArgsConstructor
-@NoArgsConstructor
 public class BanmaTokenUtils {
 
     private WebClient.Builder webClientBuilder = WebClient.builder();
     @Autowired
     private EncryptionUtils encryptionUtils;
     @Autowired
-    private  HttpClientsUtils httpClients;
+    private RestTemplate restTemplate;
     @Autowired
     @Lazy
     private ReactiveRedisOperations<String,TokenResponseDTO> tokenRespReactiveRedisOperations;
@@ -53,7 +49,7 @@ public class BanmaTokenUtils {
      */
     @Deprecated
     public Mono<TokenResponseDTO> getBanmaErpMasterTokenMono(BanmaerpProperties banmaerpProperties){
-        BanmaerpSigningVO banmaerpSigningVO = banmaerpSigningVO(banmaerpProperties);
+        BanmaerpSigningVO banmaerpSigningVO = banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,banmaerp_GetToken_GET);
         return
         webClientBuilder.baseUrl(BanmaerpURL.banmaerp_gateway.concat(banmaerp_GetToken_GET)).build()
             .method(HttpMethod.GET)
@@ -76,28 +72,30 @@ public class BanmaTokenUtils {
     public Mono<TokenResponseDTO> getBanmaErpMasterToken(BanmaerpProperties banmaerpProperties){
         String redisKey = BANMAERP_FIELD_PREFIX.concat(COLON).concat(BANMAERP_FIELD_TOKEN).concat(COLON)
                 .concat(banmaerpProperties.getX_BANMA_MASTER_APP_ID());
-        BanmaerpSigningVO banmaerpSigningVO = banmaerpSigningVO(banmaerpProperties);
+        BanmaerpSigningVO banmaerpSigningVO = banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,banmaerp_GetToken_GET);
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders = banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
         HttpEntity requestBody = new HttpEntity(null,httpHeaders);
         return
         tokenRespReactiveRedisOperations.opsForValue().get(redisKey)
-        .map(tokenResponseDTO -> validateToken(tokenResponseDTO,requestBody,redisKey))
+        .map(tokenResponseDTO -> validateToken(tokenResponseDTO,banmaerpProperties,redisKey))
         .switchIfEmpty(Mono.defer(() -> {
-            TokenResponseDTO tokenResponseDTO = httpClients.restTemplate()
-                    .exchange(BanmaerpURL.banmaerp_gateway.concat(banmaerp_GetToken_GET),HttpMethod.GET,
+            TokenResponseDTO tokenResponseDTO = restTemplate.exchange(BanmaerpURL.banmaerp_gateway.concat(banmaerp_GetToken_GET),HttpMethod.GET,
                             requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<TokenResponseDTO>>() {})
                     .getBody().getData();
-            tokenResponseDTO = validateToken(tokenResponseDTO,requestBody,redisKey);
+            tokenResponseDTO = validateToken(tokenResponseDTO,banmaerpProperties,redisKey);
             return Mono.just(tokenResponseDTO);
         }));
     }
-    private TokenResponseDTO validateToken(TokenResponseDTO _tokenResponseDTO,HttpEntity requestBody,String redisKey){
+    private TokenResponseDTO validateToken(TokenResponseDTO _tokenResponseDTO,BanmaerpProperties banmaerpProperties,String redisKey){
         TokenResponseDTO tokenResponseDTO = _tokenResponseDTO;
         if (tokenResponseDTO.getAccessTokenExpiryTime().toLocalDateTime().isBefore(LocalDateTime.now())){
             String refreshTokenUri =String.format(banmaerp_RefreshToken_GET,tokenResponseDTO.getRefreshToken());
-            tokenResponseDTO = httpClients.restTemplate()
-                    .exchange(BanmaerpURL.banmaerp_gateway.concat(refreshTokenUri),HttpMethod.GET,
+            BanmaerpSigningVO banmaerpSigningVO = banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,refreshTokenUri);
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders = banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
+            HttpEntity requestBody = new HttpEntity(null,httpHeaders);
+            tokenResponseDTO = restTemplate.exchange(BanmaerpURL.banmaerp_gateway.concat(refreshTokenUri),HttpMethod.GET,
                             requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<TokenResponseDTO>>() {})
                     .getBody().getData();
         }
@@ -106,18 +104,6 @@ public class BanmaTokenUtils {
                 .set(redisKey,tokenResponseDTO, Duration.ofMillis(timeDiff))
                 .subscribe();
         return tokenResponseDTO;
-    }
-
-    public BanmaerpSigningVO banmaerpSigningVO(BanmaerpProperties banmaerpProperties){
-        Long timestamp = System.currentTimeMillis()/1000L;
-        BanmaerpSigningVO banmaerpSigningVO = new BanmaerpSigningVO();
-        banmaerpSigningVO.setApp_id(banmaerpProperties.getX_BANMA_MASTER_APP_ID());
-        banmaerpSigningVO.setApp_secret(banmaerpProperties.getX_BANMA_MASTER_APP_SECRET());
-        banmaerpSigningVO.setSign_algorithm(banmaerpProperties.getX_BANMA_MASTER_SIGN_ALGORITHM());
-        banmaerpSigningVO.setRequest_method(HttpMethod.GET);
-        banmaerpSigningVO.setTimestamp(timestamp);
-        banmaerpSigningVO.setRequest_path(banmaerp_GetToken_GET);
-        return banmaerpSigningVO;
     }
     public HttpHeaders banmaerpCommonHeaders(HttpHeaders httpHeaders,BanmaerpProperties banmaerpProperties,BanmaerpSigningVO banmaerpSigningVO){
         httpHeaders.set(BANMA_HEADER_APPID,banmaerpProperties.getX_BANMA_MASTER_APP_ID());
@@ -130,16 +116,16 @@ public class BanmaTokenUtils {
     }
 
 
-    public BanmaerpSigningVO banmaerpSigningVO(BanmaerpProperties banmaerpProperties, String url) {
+    public BanmaerpSigningVO banmaerpSigningVO(BanmaerpProperties banmaerpProperties,HttpMethod httpMethod, String url) {
         Long timestamp = System.currentTimeMillis() / 1000L;
         BanmaerpSigningVO banmaerpSigningVO = new BanmaerpSigningVO();
         banmaerpSigningVO.setApp_id(banmaerpProperties.getX_BANMA_MASTER_APP_ID());
         banmaerpSigningVO.setApp_secret(banmaerpProperties.getX_BANMA_MASTER_APP_SECRET());
         banmaerpSigningVO.setSign_algorithm(banmaerpProperties.getX_BANMA_MASTER_SIGN_ALGORITHM());
-        banmaerpSigningVO.setRequest_method(HttpMethod.GET);
+        banmaerpSigningVO.setRequest_method(httpMethod);
         banmaerpSigningVO.setTimestamp(timestamp);
-        if (url != null && url != ""){
-            if (url.contains("?")){
+        if (StringUtils.hasText(url)) {
+            if (url.contains(QUESTION_MARK)){
                 String s[] = url.split("\\?");
                 banmaerpSigningVO.setRequest_path(s[0]);
                 banmaerpSigningVO.setRequest_query(s[1]);

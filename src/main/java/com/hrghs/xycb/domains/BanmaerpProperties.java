@@ -2,6 +2,7 @@ package com.hrghs.xycb.domains;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hrghs.xycb.domains.banmaerpDTO.AccountDTO;
+import com.hrghs.xycb.utils.converters.JpaUUIDConverter;
 import lombok.Data;
 import org.hibernate.annotations.Type;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -9,10 +10,13 @@ import org.springframework.boot.context.properties.ConstructorBinding;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.repository.config.BootstrapMode;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.persistence.*;
 import java.util.List;
 import java.util.UUID;
+
+import static javax.xml.crypto.dsig.DigestMethod.SHA256;
 
 @Entity(name = "bmerp_properties")
 @Table(name = "bmerp_properties")
@@ -32,18 +36,9 @@ public class BanmaerpProperties {
     public final static String BANMA_HEADER_SIGNMETHOD = "X-BANMA-SIGN-METHOD";
     public final static String BANMA_HEADER_ACCESSTOKEN = "X-BANMA-ACCESS-TOKEN";
 
-    /**
-     * @@see https://open.banmaerp.com/Docs/3.Authorize.md
-     * @@apiNote property from banmaERP for signning purpose.
-     * sign(app_id, app_secret, timestamp, request_method, request_path, request_query, request_body);
-     */
-    @Id
-    @Column(name = "id")
-    @GeneratedValue
-    @Type(type = "uuid-char")
-    private UUID bmerp_id;
     @Column
     private  String X_BANMA_APP_NAME;
+    @Id
     @Column
     private  String X_BANMA_MASTER_APP_ID;
     @Column
@@ -54,7 +49,12 @@ public class BanmaerpProperties {
     private  String X_BANMA_MASTER_SIGN_METHOD;
     @Column
     private  String X_BANMA_MASTER_SIGN_ALGORITHM;
-
+    @JsonIgnore
+    @Column
+    private  String X_BANMA_MASTER_APP_STATUS;
+    @JsonIgnore
+    @Column
+    private String X_BANMA_MASTER_APP_SCOPES;
     /**
      * ssoToken的有效期，斑马目前还在开发，口头称有20秒的有效期，后期可能会更改，不宜写死
      */
@@ -66,9 +66,13 @@ public class BanmaerpProperties {
      * dynamic added in runtime. must persist to db
      */
     @JsonIgnore
-    @OneToMany(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @OneToMany(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
     @JoinColumn(name = "bmerp_account")
     private List<AccountDTO> banmaErpAccounts;
 
-
+    public String getX_BANMA_MASTER_SIGN_ALGORITHM() {
+        X_BANMA_MASTER_SIGN_ALGORITHM = StringUtils.hasText(X_BANMA_MASTER_SIGN_ALGORITHM)?
+                X_BANMA_MASTER_SIGN_ALGORITHM:SHA256.split("#")[1];
+        return X_BANMA_MASTER_SIGN_ALGORITHM;
+    }
 }

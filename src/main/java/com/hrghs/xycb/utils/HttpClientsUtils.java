@@ -26,17 +26,13 @@ import static com.hrghs.xycb.domains.BanmaerpProperties.*;
 import static com.hrghs.xycb.domains.BanmaerpProperties.BANMA_HEADER_SIGNMETHOD;
 import static com.hrghs.xycb.domains.Constants.IpAquireUrls;
 
-@Component
-@Lazy
+
 public class HttpClientsUtils {
     @Autowired
     private ApplicationContext applicationContext;
-
+    @Autowired
     private RestTemplate restTemplate;
-    @PostConstruct
-    private void init(){
-        this.restTemplate = restTemplate==null? restTemplate():this.restTemplate;
-    }
+
 
     @Bean
     public WebClient.Builder webClientBuilder(){
@@ -71,12 +67,7 @@ public class HttpClientsUtils {
         BanmaerpProperties banmaerpProperties = applicationContext.getBean(BanmaerpProperties.class);
         return webClientWithBanmaMasterToken(banmaerpProperties);
     }
-    @Bean
-    @ConditionalOnMissingBean
-    public RestTemplate restTemplate(){
-        this.restTemplate = new RestTemplate(new BufferingClientHttpRequestFactory(new SimpleClientHttpRequestFactory()));
-        return this.restTemplate;
-    }
+
     public RestTemplate restTemplateWithBanmaMasterToken(BanmaerpProperties banmaerpProperties){
         BanmaTokenUtils tokenUtils = applicationContext.getBean(BanmaTokenUtils.class);
         TokenResponseDTO tokenResponse = tokenUtils.getBanmaErpMasterToken(banmaerpProperties).block();

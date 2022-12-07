@@ -1,6 +1,5 @@
 package com.hrghs.xycb.utils.converters;
 
-import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.hrghs.xycb.utils.DateTimeUtils;
 import org.joda.time.DateTime;

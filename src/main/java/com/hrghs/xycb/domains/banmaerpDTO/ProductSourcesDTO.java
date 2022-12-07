@@ -2,7 +2,9 @@ package com.hrghs.xycb.domains.banmaerpDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hrghs.xycb.utils.converters.JpaUUIDConverter;
 import lombok.Data;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.springframework.stereotype.Component;
 import javax.persistence.*;
@@ -14,9 +16,10 @@ import java.util.UUID;
 @Table(name = "bmerp_product_sources")
 public class ProductSourcesDTO {
     @JsonIgnore
+    @Convert(converter = JpaUUIDConverter.class)
     @Id
-    @GeneratedValue
     @Column(name = "product_SourceId")
+    @GeneratedValue(generator = "UUID")
     @Type(type = "uuid-char")
     private UUID productSourceId;
 
@@ -28,10 +31,10 @@ public class ProductSourcesDTO {
 
     @Column(name = "is_default")
     @JsonProperty(value = "IsDefault")
-    private boolean isDefault;
+    private Boolean isDefault;
 
     @JsonIgnore
     @JoinColumn(name = "product_id")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     private ProductDTO productDTO;
 }

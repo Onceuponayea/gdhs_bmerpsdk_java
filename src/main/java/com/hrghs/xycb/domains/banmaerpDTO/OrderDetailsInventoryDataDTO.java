@@ -2,6 +2,7 @@ package com.hrghs.xycb.domains.banmaerpDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hrghs.xycb.utils.converters.JpaUUIDConverter;
 import lombok.Data;
 import org.hibernate.annotations.Type;
 import org.springframework.stereotype.Component;
@@ -16,7 +17,8 @@ import java.util.UUID;
 public class OrderDetailsInventoryDataDTO {
 
     @JsonIgnore
-    @GeneratedValue
+    @Convert(converter = JpaUUIDConverter.class)
+    @GeneratedValue(generator = "UUID")
     @Column(name = "order_inventoryData_id")
     @Type(type = "uuid-char")
     @Id
@@ -37,11 +39,11 @@ public class OrderDetailsInventoryDataDTO {
 
     @Column(name = "shortage_quantity")
     @JsonProperty(value = "ShortageQuantity")
-    private int shortageQuantity;
+    private Integer shortageQuantity;
 
     @Column(name = "lock_quantity")
     @JsonProperty(value = "LockQuantity")
-    private int lockQuantity;
+    private Integer lockQuantity;
 
     @Column(name = "spu_id")
     @JsonProperty(value = "SPUID")

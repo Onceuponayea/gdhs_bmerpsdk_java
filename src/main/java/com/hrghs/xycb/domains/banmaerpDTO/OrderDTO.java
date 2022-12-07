@@ -1,6 +1,7 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
 import com.fasterxml.jackson.annotation.*;
+import com.hrghs.xycb.utils.converters.JpaUUIDConverter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,13 +23,14 @@ import java.util.UUID;
 public class OrderDTO {
 
     @JsonIgnore
+    @Convert(converter = JpaUUIDConverter.class)
     @Column(name = "order_UUID")
-    @GeneratedValue
+    @GeneratedValue(generator = "UUID")
     @Type(type = "uuid-char")
     @Id
     private UUID orderUUID;
 
-    @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY,orphanRemoval = true,optional = true)
+    @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER,orphanRemoval = true,optional = true)
     @JoinColumn(name = "order_masterId", referencedColumnName = "id")
     @JsonManagedReference
     @JsonProperty(value = "Master")

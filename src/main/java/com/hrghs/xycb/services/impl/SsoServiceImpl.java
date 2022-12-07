@@ -1,23 +1,22 @@
 package com.hrghs.xycb.services.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
 import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.*;
 import com.hrghs.xycb.domains.banmaerpDTO.AccountDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.AppsInfoDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
+import com.hrghs.xycb.domains.enums.BanmaerpAccountEnums;
 import com.hrghs.xycb.repositories.BanmaerpPropertiesRepository;
 import com.hrghs.xycb.services.SsoService;
-import com.hrghs.xycb.utils.BanmaTokenUtils;
-import com.hrghs.xycb.utils.EncryptionUtils;
-import com.hrghs.xycb.utils.HttpClientsUtils;
-import com.hrghs.xycb.utils.WechatUtil;
+import com.hrghs.xycb.utils.*;
+import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
@@ -41,11 +40,17 @@ public class SsoServiceImpl implements SsoService {
     private BanmaTokenUtils banmaTokenUtils;
     @Autowired
     private EncryptionUtils encryptionUtils;
+
     @Autowired
-    private WechatUtil wechatUtil;
-    @Autowired
-    @Lazy
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private WebHookUtils webHookUtils;
+    private Gson gson = new GsonBuilder().disableHtmlEscaping()
+            .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)
+            .registerTypeAdapter(DateTime.class,new DateTimeConverter())
+            .setDateFormat("yyyy-MM-dd HH:mm:ss")
+            .create();;
     @Autowired
     private ReactiveRedisOperations<String,String> redisOperations;
     @Autowired
@@ -68,7 +73,7 @@ public class SsoServiceImpl implements SsoService {
         String apiUrl = String.format(BanmaerpURL.banmaerp_sso_GET,account,clientIp,mode);
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
         HttpHeaders httpHeaders = new HttpHeaders();
-        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
         HttpEntity requestBody = new HttpEntity(null,httpHeaders);
         return httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
@@ -102,51 +107,29 @@ public class SsoServiceImpl implements SsoService {
      */
     @Override
     @CheckBanmaerpProperties
-    public BanmaErpResponseDTO<SsoRegisterResponse> register(AccountDTO accountDTO, AppsInfoDTO appsInfoDTO,BanmaerpProperties banmaerpProperties) {
+    public BanmaErpResponseDTO<SsoRegisterResponse> register(AccountDTO accountDTO, AppsInfoDTO appsInfoDTO
+            ,BanmaerpProperties banmaerpProperties)throws IllegalArgumentException {
         SsoRegisterRequest ssoRegisterRequest = new SsoRegisterRequest(accountDTO,appsInfoDTO);
-        String requestBodyJson = null;
-        try {
-            requestBodyJson = objectMapper.writeValueAsString(ssoRegisterRequest);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            requestBodyJson = new GsonBuilder().disableHtmlEscaping().create().toJson(ssoRegisterRequest);
-        }
+        String requestBodyJson = gson.toJson(ssoRegisterRequest);
         String apiUrl = String.format(BanmaerpURL.banmaerp_ssoRegister_POST);
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
         HttpHeaders httpHeaders = new HttpHeaders();
-        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.POST,apiUrl);
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
         httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         HttpEntity requestBody = new HttpEntity(requestBodyJson,httpHeaders);
         BanmaErpResponseDTO<SsoRegisterResponse> body = null;
         try {
             body = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.POST, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<SsoRegisterResponse>>() {
-                    })
+                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.POST, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<SsoRegisterResponse>>() {})
                     .getBody();
-            banmaerpPropertiesRepository.saveAndFlush(body.getData().toBanmaerpProperties());
+            SsoRegisterResponse  response = body.getData();
+            response.getAccount().setUserType(BanmaerpAccountEnums.UserType.MasterAccount);
+            response.getAccount().setState(BanmaerpAccountEnums.UserState.Normal);
+            banmaerpPropertiesRepository.saveAndFlush(response.toBanmaerpProperties());
         } catch (Exception e) {
-//            String message = e.getMessage();
-//            String response = message.substring(message.indexOf(":") + 3, message.lastIndexOf("\""));
-//            System.out.println(response);
-//            JsonParser parser = new JsonParser();
-//
-//            // 2.获得 根节点元素
-//            JsonElement element = parser.parse(response);
-//
-//            // 3.根据 文档判断根节点属于 什么类型的 Gson节点对象
-//            JsonObject root = element.getAsJsonObject();
-//
-//            String msg = root.get("Message").getAsString();
-//            System.out.println(msg);
-//            if (msg.equals("手机已被注册，请重新输入")) {
-                wechatUtil.qywxSendText("手机已被注册", accountDTO.getPhone(), accountDTO.getEmail());
-                wechatUtil.ddSendText("手机已被注册", accountDTO.getPhone(), accountDTO.getEmail());
-//            }
-//            else if (message.equals("邮箱已被注册，请更换其他邮箱")) {
-//                wechatUtil.qywxSendText("邮箱已被注册", accountDTO.getPhone(), accountDTO.getEmail());
-//                wechatUtil.ddSendText("邮箱已被注册", accountDTO.getPhone(), accountDTO.getEmail());
-//            }
+            webHookUtils.sendNotice(e.getMessage(), accountDTO.getPhone(), accountDTO.getEmail());
+            throw new IllegalArgumentException(e.getMessage());
         }
         return body;
     }

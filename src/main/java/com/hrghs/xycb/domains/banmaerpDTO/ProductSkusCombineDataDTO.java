@@ -1,12 +1,16 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
+import cn.hutool.core.lang.Snowflake;
+import cn.hutool.core.util.IdUtil;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hrghs.xycb.utils.converters.JpaUUIDConverter;
 import lombok.Data;
+import org.hibernate.annotations.Type;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.*;
-import java.rmi.server.UID;
+import java.util.UUID;
 
 @Component
 @Data
@@ -14,14 +18,17 @@ import java.rmi.server.UID;
 @Table(name = "bmerp_product_skus_combinedata")
 public class ProductSkusCombineDataDTO {
     @JsonIgnore
-    @GeneratedValue
+    @Convert(converter = JpaUUIDConverter.class)
+    @GeneratedValue(generator = "UUID")
+    @Type(type = "uuid-char")
     @Id
-    private UID sku_cmbdId;
+    private UUID sku_cmbdId;
+
     @Column(name = "sku_code")
     @JsonProperty(value = "SKUCode")
     private String SKUCode;
     @JsonProperty(value = "Quantity")
-    private int quantity;
+    private Integer quantity;
 
     @JsonIgnore
     @JoinColumn(name = "psku_id")

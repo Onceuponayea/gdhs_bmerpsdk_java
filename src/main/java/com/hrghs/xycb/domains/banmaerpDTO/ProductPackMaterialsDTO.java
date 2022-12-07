@@ -15,16 +15,16 @@ public class ProductPackMaterialsDTO {
 
     @Id
     @JsonProperty(value = "ID")
-    private long ID;
+    private Long ID;
     @JsonProperty(value = "Name")
     private String name;
     @JsonProperty(value = "Remark")
     private String remark;
     @JsonProperty(value = "Quantity")
-    private int quantity;
+    private Integer quantity;
 
     @JsonIgnore
     @JoinColumn(name = "product_id")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     private ProductDTO productDTO;
 }

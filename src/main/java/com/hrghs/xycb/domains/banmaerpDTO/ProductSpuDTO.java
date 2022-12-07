@@ -19,7 +19,7 @@ public class ProductSpuDTO {
     @JsonProperty(value = "SPUID")
     private Long SPUID;
 
-    @OneToOne()
+    @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
     @JoinColumn(name = "product_id", referencedColumnName = "product_uuid")
     @JsonBackReference
     private ProductDTO productDTO;
@@ -59,7 +59,7 @@ public class ProductSpuDTO {
 
     @Column(name = "Is_Exempt_Quality")
     @JsonProperty(value = "IsExemptQuality")
-    private boolean isExemptQuality;
+    private Boolean isExemptQuality;
 
     @JsonProperty(value = "Keywords")
     private String keywords;

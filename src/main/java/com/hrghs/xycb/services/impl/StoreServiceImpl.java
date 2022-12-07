@@ -1,7 +1,5 @@
 package com.hrghs.xycb.services.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
@@ -20,27 +18,22 @@ import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import static com.hrghs.xycb.domains.BanmaerpProperties.BANMA_HEADER_SIGN;
 import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_STORES;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 
-@Service
-@Lazy
-@Transactional(transactionManager = "banmaerpXATransactionManager")
 public class StoreServiceImpl implements StoreService {
     @Autowired
     private HttpClientsUtils httpClients;
@@ -51,9 +44,6 @@ public class StoreServiceImpl implements StoreService {
     private EncryptionUtils encryptionUtils;
     @Autowired
     private StoreRepository storeRepository;
-    @Autowired
-    @Lazy
-    private ObjectMapper objectMapper;
 
     /**
      * 查询店铺列表
@@ -74,7 +64,7 @@ public class StoreServiceImpl implements StoreService {
     @CheckBanmaerpProperties
     public Mono<BanmaErpResponseDTO<List<StoreDTO>>> getStoretListMono(@Nullable String ids, @Nullable String name, @Nullable BanmaerpPlatformEnums.Platform platform, Integer pageNumber, @Nullable Integer pageSize,
                                                                  @Nullable DateTime searchTimeStart, @Nullable DateTime searchTimeEnd, @Nullable String searchTimeField,
-                                                                 @Nullable String sortField, @Nullable String sortBy, BanmaerpProperties banmaerpProperties) {
+                                                                 @Nullable String sortField, @Nullable String sortBy,Boolean remote, BanmaerpProperties banmaerpProperties) {
         String apiUrl = String.format(BanmaerpURL.banmaerp_storelist_GET,ids,name,platform==null?"":platform.toString(),pageNumber,pageSize,
                 searchTimeStart, searchTimeEnd,searchTimeField,sortField,sortBy);
         BanmaerpSigningVO banmaerpSigningVO = new BanmaerpSigningVO();
@@ -95,51 +85,69 @@ public class StoreServiceImpl implements StoreService {
     @Override
     @CheckBanmaerpProperties
     public List<StoreDTO> getStoretList(String ids, String name, BanmaerpPlatformEnums.Platform platform, Integer pageNumber, Integer pageSize, DateTime searchTimeStart,
-                                        DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy,
-                                        BanmaerpProperties banmaerpProperties) {
-        String apiUrl = String.format(BanmaerpURL.banmaerp_storelist_GET,ids,name,platform==null?"":platform.toString(),pageNumber,pageSize,
-                searchTimeStart, searchTimeEnd,searchTimeField,sortField,sortBy);
-        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
-        HttpHeaders httpHeaders = new HttpHeaders();
-        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
-        //todo signing
-        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
-        HttpEntity requestBody = new HttpEntity(null,httpHeaders);
-        List<StoreDTO> storeDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
-            .getBody()
-            .toDataList(BANMAERP_FIELD_STORES)
-        )
-        .map(o -> (StoreDTO)o)
-        .collect(Collectors.toList());
-        storeRepository.saveAll(storeDTOList);
+        DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy, Boolean remote,BanmaerpProperties banmaerpProperties) {
+        List<StoreDTO> storeDTOList;
+        if (remote){
+            String apiUrl = String.format(BanmaerpURL.banmaerp_storelist_GET,ids,name,platform==null?"":platform.toString(),pageNumber,pageSize,
+                    searchTimeStart, searchTimeEnd,searchTimeField,sortField,sortBy);
+            apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+            HttpHeaders httpHeaders = new HttpHeaders();
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
+            HttpEntity requestBody = new HttpEntity(null,httpHeaders);
+            storeDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+                    .getBody()
+                    .toDataList(BANMAERP_FIELD_STORES))
+            .map(o -> (StoreDTO)o)
+            .collect(Collectors.toList());
+            storeRepository.saveAll(storeDTOList);
+        }else {
+            //todo 多条件查询
+            storeDTOList = storeRepository.findAll(PageRequest.of(pageNumber,pageSize)).toList();
+        }
         return storeDTOList;
     }
 
     @Override
-    public List<StoreDTO> getStoretList(Integer pageNumber, BanmaerpProperties banmaerpProperties) {
-        return getStoretList(null, null, null, pageNumber
-                , null, null, null, null, null, null, banmaerpProperties);
+    public List<StoreDTO> getStoretList(Integer pageNumber,Boolean remote, BanmaerpProperties banmaerpProperties) {
+        return getStoretList(null, null, null, pageNumber, null, null, null, null, null, null,remote, banmaerpProperties);
+    }
+
+    @Override
+    public List<StoreDTO> getStoretList(Integer pageNumber, Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties) {
+        return getStoretList(null, null, null, pageNumber, pageSize, null, null, null, null, null,remote, banmaerpProperties);
+    }
+
+    @Override
+    public List<StoreDTO> getAndSaveStoretList(Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties) {
+        List<StoreDTO> storeDTOList =
+        getStoretList(null, null, null, pageNumber, pageSize, null, null, null, null, null,true, banmaerpProperties);
+        return storeRepository.saveAllAndFlush(storeDTOList);
     }
 
     /**
      * 查询单个店铺
-     * @param spuId 店铺ID（必填）
+     * @param storeId 店铺ID（必填）
      * @return
      */
     @Override
     @CheckBanmaerpProperties
-    public StoreDTO getStoreById(String spuId,
-                                 BanmaerpProperties banmaerpProperties) {
-        String apiUrl = String.format(BanmaerpURL.banmaerp_store_GET,spuId);
-        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
-        HttpHeaders httpHeaders = new HttpHeaders();
-        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,apiUrl);
-        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
-        HttpEntity requestBody = new HttpEntity(null,httpHeaders);
-        return httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<StoreDTO>>() {
-                }).getBody().getData();
+    public StoreDTO getStoreById(String storeId, Boolean remote,BanmaerpProperties banmaerpProperties) {
+        if(remote){
+            String apiUrl = String.format(BanmaerpURL.banmaerp_store_GET,storeId);
+            apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+            HttpHeaders httpHeaders = new HttpHeaders();
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties, HttpMethod.GET,apiUrl);
+            httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
+            HttpEntity requestBody = new HttpEntity(null,httpHeaders);
+            return httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<StoreDTO>>() {})
+                    .getBody().getData();
+        }else{
+           return storeRepository.findById(storeId).get();
+        }
+
     }
 
     @Override

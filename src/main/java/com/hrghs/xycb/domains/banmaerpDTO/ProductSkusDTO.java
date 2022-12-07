@@ -7,12 +7,10 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Type;
 import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.UUID;
 import javax.persistence.*;
 
 @Component
@@ -33,7 +31,7 @@ public class ProductSkusDTO implements Serializable {
 
     @JsonIgnore
     @JoinColumn(name = "product_id")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     private ProductDTO productDTO;
 
     @JsonProperty(value = "Code")
@@ -50,20 +48,20 @@ public class ProductSkusDTO implements Serializable {
     private String image;
 
     @JsonProperty(value = "Weight")
-    private int weight;
+    private Integer weight;
 
     @JsonProperty(value = "Length")
-    private int length;
+    private Integer length;
 
     @JsonProperty(value = "Width")
-    private int width;
+    private Integer width;
 
     @JsonProperty(value = "Height")
-    private int height;
+    private Integer height;
 
     @Column(name = "is_valid")
     @JsonProperty(value = "IsValid")
-    private boolean isValid;
+    private Boolean isValid;
 
     @JsonProperty(value = "Status")
     private String status;
@@ -72,7 +70,7 @@ public class ProductSkusDTO implements Serializable {
     private String remark;
 
     @JsonProperty(value = "Sort")
-    private int sort;
+    private Integer sort;
 
     @JsonProperty(value = "Type")
     private String type;

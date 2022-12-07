@@ -29,23 +29,18 @@ public interface AccountService {
      * @return
      */
     List<AccountDTO> getAccountList(
-            String ids,
-            String email,
-            String realName,
-            String phone,
-            Integer pageNumber,
-            Integer pageSize,
-            DateTime searchTimeStart,
-            DateTime searchTimeEnd,
-            String searchTimeField,
-            String sortField,
-            String sortBy,
+            String ids, String email, String realName, String phone,
+            Integer pageNumber, Integer pageSize, DateTime searchTimeStart,
+            DateTime searchTimeEnd, String searchTimeField, String sortField,
+            String sortBy,Boolean remote,
             BanmaerpProperties banmaerpProperties
     );
 
-    List<AccountDTO> getAccountList(Integer pageNumber, BanmaerpProperties banmaerpProperties);
+    List<AccountDTO> getAccountList(Integer pageNumber,Boolean remote, BanmaerpProperties banmaerpProperties);
 
-    List<AccountDTO> getAndSaveAccountList(Integer pageNumber, BanmaerpProperties banmaerpProperties);
+    List<AccountDTO> getAccountList(Integer pageNumber,Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties);
+
+    List<AccountDTO> getAndSaveAccountList(Integer pageNumber,Integer pageSize, BanmaerpProperties banmaerpProperties);
     /**
      * 查询单个用户
      *
@@ -53,7 +48,7 @@ public interface AccountService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    AccountDTO getAccountById(Integer id, BanmaerpProperties banmaerpProperties);
+    AccountDTO getAccountById(Integer id,Boolean remote, BanmaerpProperties banmaerpProperties);
 
     /**
      * 添加子账号
@@ -66,13 +61,8 @@ public interface AccountService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    AccountDTO addAccount(
-            String phone,
-            String email,
-            String realName,
-            String department,
-            boolean useVirtual,
-            BanmaerpProperties banmaerpProperties
+    AccountDTO addAccount(String phone, String email, String realName, String department,
+       Boolean useVirtual, BanmaerpProperties banmaerpProperties
     );
 
     /**
@@ -92,9 +82,15 @@ public interface AccountService {
      */
     DataAccessDTO getDataAccess(Integer id, BanmaerpProperties banmaerpProperties);
 
-    List<AccountDTO> saveAccountList(List<AccountDTO> accountDTOList);
+    List<AccountDTO> saveAccountList(List<AccountDTO> accountDTOList, BanmaerpProperties banmaerpProperties);
 
-    AccountDTO saveAccount(AccountDTO accountDTO);
+    AccountDTO saveAccount(AccountDTO accountDTO, BanmaerpProperties banmaerpProperties);
 
-    TokenResponseDTO getAccessToken(BanmaerpProperties banmaerpProperties);
+    /**
+     * 获取子账号ac token,斑马暂时没有提供
+     * @param banmaerpProperties
+     * @return
+     */
+    @Deprecated
+    TokenResponseDTO getSubAccountAccessToken(BanmaerpProperties banmaerpProperties);
 }

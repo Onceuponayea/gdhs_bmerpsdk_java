@@ -36,26 +36,17 @@ public interface OrderService {
      * @return
      */
     List<OrderDTO> getOrderList(
-            String ids,
-            String storeId,
-            String platform,
-            String status,
-            String payStatus,
-            String holdStatus,
-            String refundStatus,
-            String inventoryStatus,
-            String countryCode,
-            Integer pageNumber,
-            Integer pageSize,
-            DateTime searchTimeStart,
-            DateTime searchTimeEnd,
-            String searchTimeField,
-            String sortField,
-            String sortBy,
-            BanmaerpProperties banmaerpProperties
+            String ids, String storeId, String platform, String status, String payStatus, String holdStatus,
+            String refundStatus, String inventoryStatus, String countryCode, Integer pageNumber, Integer pageSize,
+            DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy,
+            Boolean remote,BanmaerpProperties banmaerpProperties
     );
 
-    List<OrderDTO> getOrderList(Integer pageNumber, BanmaerpProperties banmaerpProperties);
+    List<OrderDTO> getOrderList(Integer pageNumber,Boolean remote, BanmaerpProperties banmaerpProperties);
+
+    List<OrderDTO> getOrderList(Integer pageNumber,Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties);
+
+    List<OrderDTO> getAndSaveOrderList(Integer pageNumber,Integer pageSize,BanmaerpProperties banmaerpProperties);
 
     /**
      * 查询单个订单
@@ -64,8 +55,7 @@ public interface OrderService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    OrderDTO getOrderById(String id,
-                          BanmaerpProperties banmaerpProperties);
+    OrderDTO getOrderById(String id, Boolean remote,BanmaerpProperties banmaerpProperties);
 
     /**
      * 查询物流履约
@@ -74,7 +64,7 @@ public interface OrderService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    List<OrderFulfillmentDTO> getFulfillments(String orderId, BanmaerpProperties banmaerpProperties);
+    List<OrderFulfillmentDTO> getFulfillments(String orderId,Boolean remote, BanmaerpProperties banmaerpProperties);
 
     /**
      * 查询物流追踪
@@ -83,7 +73,7 @@ public interface OrderService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    List<OrderTrackingDTO> getTrackings(String orderId, BanmaerpProperties banmaerpProperties);
+    List<OrderTrackingDTO> getTrackings(String orderId,Boolean remote, BanmaerpProperties banmaerpProperties);
 
     List<OrderDTO> saveAll(Iterable<OrderDTO> orderDTOS);
 

@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.*;
 import com.hrghs.xycb.domains.enums.BanmaerpPlatformEnums;
 import com.hrghs.xycb.utils.converters.JodaDateTimeConverter;
 import com.hrghs.xycb.utils.converters.JpaListStringConverter;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
 import javax.persistence.*;
@@ -13,16 +15,22 @@ import java.util.UUID;
 
 @Component
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(name = "bmerp_order_master")
 public class OrderMasterDTO {
+
+    public OrderMasterDTO(String orderId){
+        this.ID =  orderId;
+    }
 
     @Id
     @Column(name = "id")
     @JsonProperty(value = "ID")
     private String ID;
 
-    @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
     @JoinColumn(name = "order_uuid", referencedColumnName = "order_UUID")
     @JsonBackReference
     private OrderDTO orderDTO;
@@ -53,11 +61,11 @@ public class OrderMasterDTO {
 
     @Column(name = "pay_type")
     @JsonProperty("PayType")
-    private int payType;
+    private Integer payType;
 
     @Column(name = "pay_amount")
     @JsonProperty(value = "PayAmount")
-    private double payAmount;
+    private Double payAmount;
 
     @Column(name = "pay_currency")
     @JsonProperty(value = "PayCurrency")
@@ -65,15 +73,15 @@ public class OrderMasterDTO {
 
     @Column(name = "pay_amount_usd")
     @JsonProperty(value = "PayAmountUSD")
-    private double payAmountUSD;
+    private Double payAmountUSD;
 
     @Column(name = "pay_amount_cny")
     @JsonProperty(value = "PayAmountCNY")
-    private double payAmountCNY;
+    private Double payAmountCNY;
 
     @Column(name = "pay_freight")
     @JsonProperty(value = "PayFreight")
-    private double payFreight;
+    private Double payFreight;
 
     @Column(name = "pay_freight_currency")
     @JsonProperty(value = "PayFreightCurrency")
@@ -81,15 +89,15 @@ public class OrderMasterDTO {
 
     @Column(name = "pay_freight_usd")
     @JsonProperty(value = "PayFreightUSD")
-    private double payFreightUSD;
+    private Double payFreightUSD;
 
     @Column(name = "pay_freight_cny")
     @JsonProperty(value = "PayFreightCNY")
-    private double payFreightCNY;
+    private Double payFreightCNY;
 
     @Column(name = "refund_amount")
     @JsonProperty(value = "RefundAmount")
-    private double refundAmount;
+    private Double refundAmount;
 
     @Column(name = "refund_currency")
     @JsonProperty(value = "RefundCurrency")
@@ -97,15 +105,15 @@ public class OrderMasterDTO {
 
     @Column(name = "refund_amount_usd")
     @JsonProperty(value = "RefundAmountUSD")
-    private double refundAmountUSD;
+    private Double refundAmountUSD;
 
     @Column(name = "refund_amount_cny")
     @JsonProperty(value = "RefundAmountCNY")
-    private double refundAmountCNY;
+    private Double refundAmountCNY;
 
     @Column(name = "discount_amount")
     @JsonProperty(value = "DiscountAmount")
-    private double discountAmount;
+    private Double discountAmount;
 
     @Column(name = "discount_currency")
     @JsonProperty(value = "DiscountCurrency")
@@ -135,11 +143,11 @@ public class OrderMasterDTO {
     private String refundStatus;
 
     @JsonProperty(value = "Quantity")
-    private int Quantity;
+    private Integer Quantity;
 
     @Column(name = "purchase_freight")
     @JsonProperty(value = "PurchaseFreight")
-    private double purchaseFreight;
+    private Double purchaseFreight;
 
     /**
      * @@attention:  斑马erp单词拼错，可能后续会有变动！
@@ -173,11 +181,11 @@ public class OrderMasterDTO {
 
     @Column(name = "have_message")
     @JsonProperty(value = "HaveMessage")
-    private boolean haveMessage;
+    private Boolean haveMessage;
 
     @Column(name = "have_remark")
     @JsonProperty(value = "HaveRemark")
-    private boolean haveRemark;
+    private Boolean haveRemark;
 
     @Column(name = "latest_delivery_time")
     @Convert(converter = JodaDateTimeConverter.class)
@@ -196,7 +204,7 @@ public class OrderMasterDTO {
 
     @Column(name = "is_cod")
     @JsonProperty(value = "IsCOD")
-    private boolean isCOD;
+    private Boolean isCOD;
 
     @Convert(converter = JpaListStringConverter.class)
     @JsonProperty(value = "Flags")
@@ -265,12 +273,5 @@ public class OrderMasterDTO {
     @Column(name = "used_point")
     @JsonProperty(value = "UsedPoint")
     private Integer usedPoint;
-
-    public String getOrder_uuid() {
-        return orderDTO.getOrderUUID().toString();
-    }
-    public void setOrder_uuid(String order_uuid){
-        orderDTO.setOrderUUID(UUID.fromString(order_uuid));
-    }
 
 }

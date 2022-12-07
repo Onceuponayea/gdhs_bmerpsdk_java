@@ -2,7 +2,6 @@ package com.hrghs.xycb.utils.converters;
 
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -11,22 +10,16 @@ import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
 import com.google.gson.reflect.TypeToken;
 import com.hrghs.xycb.domains.banmaerpDTO.OrderMasterDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.ProductDescriptionsDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.ProductSkusDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.ProductSpuDTO;
-import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
-
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-
-import static jodd.util.StringPool.LEFT_SQ_BRACKET;
 
 public class ProductDeserialiser {
     private static ObjectMapper objectMapper = new ObjectMapper().registerModule(new JodaModule());

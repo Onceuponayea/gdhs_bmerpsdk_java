@@ -1,7 +1,5 @@
 package com.hrghs.xycb.services.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
@@ -19,17 +17,15 @@ import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_CATEGORYS;
 
-@Service
-@Lazy
 public class CategoryServiceImpl implements CategoryService {
     @Autowired
     private HttpClientsUtils httpClients;
@@ -59,31 +55,44 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     @CheckBanmaerpProperties
-    public List<CategoryDTO> getCategoryList(String ids, String name, String parentId, Integer pageNumber, Integer pageSize, DateTime searchTimeStart,
-                                               DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy,
-                                               BanmaerpProperties banmaerpProperties) {
-        String apiUrl = String.format(BanmaerpURL.banmaerp_categorylist_GET, pageNumber, pageSize,searchTimeStart,searchTimeEnd,searchTimeField);
-        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
-        HttpHeaders httpHeaders = new HttpHeaders();
-        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
-        //todo signing
-        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
-        HttpEntity requestBody = new HttpEntity(null, httpHeaders);
-        List<CategoryDTO> categoryDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {
-                })
-                .getBody()
-                .toDataList(BANMAERP_FIELD_CATEGORYS)
-        )
-                .map(o -> (CategoryDTO) o)
-                .collect(Collectors.toList());
+    public List<CategoryDTO> getCategoryList(String ids, String name, String parentId, Integer pageNumber, Integer pageSize, DateTime searchTimeStart
+            ,DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy, Boolean remote, BanmaerpProperties banmaerpProperties) {
+        List<CategoryDTO> categoryDTOList;
+        if (remote){
+            String apiUrl = String.format(BanmaerpURL.banmaerp_categorylist_GET, pageNumber, pageSize,searchTimeStart,searchTimeEnd,searchTimeField);
+            apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+            HttpHeaders httpHeaders = new HttpHeaders();
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
+            HttpEntity requestBody = new HttpEntity(null, httpHeaders);
+            categoryDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+                            .getBody()
+                            .toDataList(BANMAERP_FIELD_CATEGORYS))
+            .map(o -> (CategoryDTO) o)
+            .collect(Collectors.toList());
+        }else {
+            //todo 多条件查询
+            categoryDTOList = categoryRepository.findAll(PageRequest.of(pageNumber,pageSize)).toList();
+        }
         return categoryDTOList;
     }
 
     @Override
-    public List<CategoryDTO> getCategoryList(Integer pageNumber, BanmaerpProperties banmaerpProperties) {
-        return getCategoryList(null, null, null, pageNumber
-                , null, null, null, null, null, null, banmaerpProperties);
+    public List<CategoryDTO> getCategoryList(Integer pageNumber, Boolean remote, BanmaerpProperties banmaerpProperties) {
+        return getCategoryList(null, null, null, pageNumber, null, null, null, null, null, null,remote, banmaerpProperties);
+    }
+
+    @Override
+    public List<CategoryDTO> getCategoryList(Integer pageNumber, Integer pageSize, Boolean remote, BanmaerpProperties banmaerpProperties) {
+        return getCategoryList(null, null, null, pageNumber, pageSize, null, null, null, null, null,remote, banmaerpProperties);
+    }
+
+    @Override
+    public List<CategoryDTO> getAndSaveCategoryList(Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties) {
+        List<CategoryDTO> categoryDTOList =
+        getCategoryList(null, null, null, pageNumber, pageSize, null, null, null, null, null,true, banmaerpProperties);
+        return categoryRepository.saveAllAndFlush(categoryDTOList);
     }
 
     /**
@@ -94,17 +103,21 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @CheckBanmaerpProperties
-    public CategoryDTO getCategoryById(String idv, BanmaerpProperties banmaerpProperties) {
-        String apiUrl = String.format(BanmaerpURL.banmaerp_category_GET,idv);
-        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
-        HttpHeaders httpHeaders = new HttpHeaders();
-        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
-        //todo signing
-        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
-        HttpEntity requestBody = new HttpEntity(null,httpHeaders);
-        return  httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<CategoryDTO>>() {})
-                .getBody().getData();
+    public CategoryDTO getCategoryById(String idv, Boolean remote, BanmaerpProperties banmaerpProperties) {
+        if (remote){
+            String apiUrl = String.format(BanmaerpURL.banmaerp_category_GET,idv);
+            apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+            HttpHeaders httpHeaders = new HttpHeaders();
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
+            HttpEntity requestBody = new HttpEntity(null,httpHeaders);
+            return  httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<CategoryDTO>>() {})
+                    .getBody().getData();
+        }else {
+            return categoryRepository.findById(idv).get();
+        }
+
     }
 
     @Override

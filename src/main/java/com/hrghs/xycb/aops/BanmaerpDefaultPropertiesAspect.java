@@ -27,11 +27,11 @@ public class BanmaerpDefaultPropertiesAspect {
         Map<String,BanmaerpProperties> banmaerpPropertiesMap=applicationContext.getBeansOfType(BanmaerpProperties.class);
         BanmaerpProperties banmaerpProperties = banmaerpPropertiesMap.get(defaultBmerpPropertyBeanName);
         banmaerpProperties = banmaerpProperties==null?banmaerpPropertiesMap.get(defaultBmerpPropertyBeanName2):banmaerpProperties;
-        if (banmaerpProperties!=null){
-            int banmaerpProsArgsIndex = -1;
-            for (int i=0;i< parameterTypes.length;i++){
-                banmaerpProsArgsIndex= (parameterTypes[i] == BanmaerpProperties.class)?i:banmaerpProsArgsIndex;
-            }
+        int banmaerpProsArgsIndex = -1;
+        for (int i=0;i< parameterTypes.length;i++){
+            banmaerpProsArgsIndex= (parameterTypes[i] == BanmaerpProperties.class)?i:banmaerpProsArgsIndex;
+        }
+        if (args[banmaerpProsArgsIndex]==null){
             if (banmaerpProsArgsIndex>-1){
                 //说明该方法有BanmaerpProperties类型的参数
                 Object objects = args[banmaerpProsArgsIndex];
@@ -46,11 +46,9 @@ public class BanmaerpDefaultPropertiesAspect {
                 }
             }
             return joinPoint.proceed(newArgs);
-        }else{
-            //原路走
-            return joinPoint.proceed(args);
         }
-
+        //原路走
+        return joinPoint.proceed(args);
     }
 
 }

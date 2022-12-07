@@ -1,9 +1,7 @@
 package com.hrghs.xycb.services.impl;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.BanmaerpSigningVO;
@@ -20,12 +18,11 @@ import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Service;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -33,8 +30,6 @@ import java.util.stream.Collectors;
 
 import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_STORAGES;
 
-@Service
-@Lazy
 public class StorageServiceImpl implements StorageService {
     @Autowired
     private BanmaTokenUtils banmaTokenUtils;
@@ -66,32 +61,38 @@ public class StorageServiceImpl implements StorageService {
      */
     @Override
     @CheckBanmaerpProperties
-    public List<StorageDTO> getStoragetList(String ids, String name, String fileType, String fileCategoryId, Integer pageNumber, Integer pageSize,
-                                            DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField,
-                                            String sortBy, BanmaerpProperties banmaerpProperties) {
-        String apiUrl = String.format(BanmaerpURL.banmaerp_storagelist_GET, pageNumber, pageSize,
-                searchTimeStart, searchTimeEnd, searchTimeField);
-        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
-        HttpHeaders httpHeaders = new HttpHeaders();
-        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
-        //todo signing
-        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
-        HttpEntity requestBody = new HttpEntity(null, httpHeaders);
-        List<StorageDTO> storageDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {
-                })
+    public List<StorageDTO> getStoragetList(String ids, String name, String fileType, String fileCategoryId, Integer pageNumber, Integer pageSize
+            ,DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy,Boolean remote
+            , BanmaerpProperties banmaerpProperties) {
+        List<StorageDTO> storageDTOList;
+        if (remote){
+            String apiUrl = String.format(BanmaerpURL.banmaerp_storagelist_GET, pageNumber, pageSize,
+                    searchTimeStart, searchTimeEnd, searchTimeField);
+            apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+            HttpHeaders httpHeaders = new HttpHeaders();
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
+            HttpEntity requestBody = new HttpEntity(null, httpHeaders);
+            storageDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
                 .getBody()
-                .toDataList(BANMAERP_FIELD_STORAGES)
-        )
-        .map(o -> (StorageDTO) o)
-        .collect(Collectors.toList());
+                .toDataList(BANMAERP_FIELD_STORAGES))
+                .map(o -> (StorageDTO) o)
+                .collect(Collectors.toList());
+        }else{
+            storageDTOList = storageRepository.findAll(PageRequest.of(pageNumber,pageSize)).toList();
+        }
         return storageDTOList;
     }
 
     @Override
-    public List<StorageDTO> getStoragetList(Integer pageNumber, BanmaerpProperties banmaerpProperties) {
-        return getStoragetList(null, null, null, null, pageNumber
-                , null, null, null, null, null, null, banmaerpProperties);
+    public List<StorageDTO> getStoragetList(Integer pageNumber, Boolean remote, BanmaerpProperties banmaerpProperties) {
+        return getStoragetList(null, null, null, null, pageNumber, null, null, null, null, null, null, remote,banmaerpProperties);
+    }
+
+    @Override
+    public List<StorageDTO> getStoragetList(Integer pageNumber, Integer pageSize, Boolean remote, BanmaerpProperties banmaerpProperties) {
+        return getStoragetList(null, null, null, null, pageNumber, pageSize, null, null, null, null, null, remote,banmaerpProperties);
     }
 
     /**
@@ -102,17 +103,20 @@ public class StorageServiceImpl implements StorageService {
      */
     @Override
     @CheckBanmaerpProperties
-    public StorageDTO getStorageById(String id,
-                                     BanmaerpProperties banmaerpProperties) {
-        String apiUrl = String.format(BanmaerpURL.banmaerp_storage_GET, id);
-        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
-        HttpHeaders httpHeaders = new HttpHeaders();
-        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
-        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
-        HttpEntity requestBody = new HttpEntity(null, httpHeaders);
-        return httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<StorageDTO>>() {
-                }).getBody().getData();
+    public StorageDTO getStorageById(String id, Boolean remote, BanmaerpProperties banmaerpProperties) {
+        if (remote){
+            String apiUrl = String.format(BanmaerpURL.banmaerp_storage_GET, id);
+            apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+            HttpHeaders httpHeaders = new HttpHeaders();
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
+            HttpEntity requestBody = new HttpEntity(null, httpHeaders);
+            return httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<StorageDTO>>() {})
+                    .getBody().getData();
+        }else{
+            return storageRepository.findById(id).get();
+        }
     }
 
     /**
@@ -132,16 +136,14 @@ public class StorageServiceImpl implements StorageService {
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders.setContentType(MediaType.APPLICATION_OCTET_STREAM);
             httpHeaders.setAccept(Arrays.asList(MediaType.APPLICATION_OCTET_STREAM));
-            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.POST,apiUrl);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(file, httpHeaders);
             BanmaErpResponseDTO<StorageDTO> responseDTO =
-                    httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),
-                                    HttpMethod.POST, requestBody,
-                                    new ParameterizedTypeReference<BanmaErpResponseDTO<StorageDTO>>() {
-                                    })
-                            .getBody();
+            httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),
+                            HttpMethod.POST, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<StorageDTO>>() {})
+                    .getBody();
             storageRepository.saveAndFlush(responseDTO.getData());
             return responseDTO;
         } else {
@@ -166,16 +168,14 @@ public class StorageServiceImpl implements StorageService {
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders.setContentType(MediaType.TEXT_PLAIN);
             httpHeaders.setAccept(Arrays.asList(MediaType.TEXT_PLAIN));
-            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.POST,apiUrl);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(file, httpHeaders);
             BanmaErpResponseDTO<StorageDTO> responseDTO =
-                    httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),
-                                    HttpMethod.POST, requestBody,
-                                    new ParameterizedTypeReference<BanmaErpResponseDTO<StorageDTO>>() {
-                                    })
-                            .getBody();
+            httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),
+                            HttpMethod.POST, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<StorageDTO>>() {})
+                    .getBody();
             storageRepository.saveAndFlush(responseDTO.getData());
             return responseDTO;
         } else {
@@ -186,7 +186,6 @@ public class StorageServiceImpl implements StorageService {
     /**
      * 使用form-data文件流的方式上传文件
      *
-     * @param contentType        内容类型（必填）
      * @param file               文件内容（必填）
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
@@ -199,16 +198,14 @@ public class StorageServiceImpl implements StorageService {
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
             httpHeaders.setAccept(Arrays.asList(MediaType.MULTIPART_FORM_DATA));
-            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.POST,apiUrl);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(file, httpHeaders);
             BanmaErpResponseDTO<StorageDTO> responseDTO =
                     httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),
-                                    HttpMethod.POST, requestBody,
-                                    new ParameterizedTypeReference<BanmaErpResponseDTO<StorageDTO>>() {
-                                    })
-                            .getBody();
+                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),
+                            HttpMethod.POST, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<StorageDTO>>() {})
+                    .getBody();
             storageRepository.saveAndFlush(responseDTO.getData());
             return responseDTO;
     }

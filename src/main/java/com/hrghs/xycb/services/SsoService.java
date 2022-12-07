@@ -22,13 +22,7 @@ public interface SsoService {
      * @return
      */
 
-    GetSsoPassportResponse ssoPassport(
-            String account,
-            String clientIp,
-            Integer userId,
-            Integer mode,
-            BanmaerpProperties banmaerpProperties
-    );
+    GetSsoPassportResponse ssoPassport(String account, String clientIp, Integer userId, Integer mode, BanmaerpProperties banmaerpProperties);
 
     GetSsoPassportResponse ssoPassport(String account,BanmaerpProperties banmaerpProperties);
 
@@ -40,6 +34,6 @@ public interface SsoService {
      * @param appsInfoDTO APP信息
      * @return
      */
-    BanmaErpResponseDTO<SsoRegisterResponse> register(AccountDTO accountDTO, AppsInfoDTO appsInfoDTO,BanmaerpProperties banmaerpProperties);
+    BanmaErpResponseDTO<SsoRegisterResponse> register(AccountDTO accountDTO, AppsInfoDTO appsInfoDTO,BanmaerpProperties banmaerpProperties)throws IllegalArgumentException;
 
 }

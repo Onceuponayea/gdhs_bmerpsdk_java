@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.hrghs.xycb.utils.converters.JodaDateTimeConverter;
+import com.hrghs.xycb.utils.converters.JpaUUIDConverter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,8 +25,8 @@ import java.util.UUID;
 public class OrderFulfillmentDTO {
 
     @JsonIgnore
-    @Column()
-    @GeneratedValue
+    @Convert(converter = JpaUUIDConverter.class)
+    @GeneratedValue(generator = "UUID")
     @Type(type = "uuid-char")
     @Id
     private UUID id;

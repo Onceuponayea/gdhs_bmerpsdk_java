@@ -53,7 +53,7 @@ import static com.hrghs.xycb.domains.Constants.*;
 @Configuration
 @EntityScan(basePackages = {"com.hrghs.xycb.domains"})
 @EnableTransactionManagement
-public class DbConfigs {
+public class BanmaerpDbAutoConfiguration {
     public static Server h2DBServer;
     @Autowired
     private Environment env;

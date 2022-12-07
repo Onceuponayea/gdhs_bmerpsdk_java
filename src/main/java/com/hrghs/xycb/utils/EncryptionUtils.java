@@ -3,18 +3,15 @@ package com.hrghs.xycb.utils;
 import cn.hutool.crypto.SecureUtil;
 import com.hrghs.xycb.domains.BanmaerpSigningVO;
 import org.apache.commons.codec.binary.Hex;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
-
 import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_APPID;
 import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_APPSECRET;
 import static jodd.util.StringPool.*;
 
-@Component
 public class EncryptionUtils {
     /**
      * @@apiNote banmaErp support multiple signing method:
@@ -59,7 +56,6 @@ public class EncryptionUtils {
         }
         messageDigest.update(signText.getBytes(StandardCharsets.UTF_8));
         byte[] hash = messageDigest.digest(signText.getBytes(StandardCharsets.UTF_8));
-        System.out.println("X-BANMA-SIGN:"+Hex.encodeHexString(hash));
         return Hex.encodeHexString(hash);
     }
 

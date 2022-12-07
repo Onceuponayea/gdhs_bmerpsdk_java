@@ -30,4 +30,21 @@ public class BanmaerpAccountEnums {
             this.dataAccessMode = dataAccessMode;
         }
     }
+
+    public enum UserType {
+        MasterAccount("MasterAccount"), SubAccount("SubAccount"), Unknown("Unknown");
+        private String userType;
+        UserType(String _userType){
+            this.userType =  _userType;
+        }
+
+    }
+    public enum UserState {
+        Normal("正常"),
+        Resigned("离职"),Unknown("未知");
+        private String userState;
+        UserState(String _userState){
+            this.userState = _userState;
+        }
+    }
 }

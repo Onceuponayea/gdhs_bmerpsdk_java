@@ -26,21 +26,16 @@ public interface CategoryService {
      * @return 排序方式，具体值参见:SortBy
      */
     List<CategoryDTO> getCategoryList(
-            String ids,
-            String name,
-            String parentId,
-            Integer pageNumber,
-            Integer pageSize,
-            DateTime searchTimeStart,
-            DateTime searchTimeEnd,
-            String searchTimeField,
-            String sortField,
-            String sortBy,
-            BanmaerpProperties banmaerpProperties
+            String ids, String name, String parentId, Integer pageNumber, Integer pageSize,
+            DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField,
+            String sortBy, Boolean remote,BanmaerpProperties banmaerpProperties
     );
 
-    List<CategoryDTO> getCategoryList(Integer pageNumber, BanmaerpProperties banmaerpProperties);
+    List<CategoryDTO> getCategoryList(Integer pageNumber, Boolean remote, BanmaerpProperties banmaerpProperties);
 
+    List<CategoryDTO> getCategoryList(Integer pageNumber,Integer pageSize, Boolean remote, BanmaerpProperties banmaerpProperties);
+
+    List<CategoryDTO> getAndSaveCategoryList(Integer pageNumber,Integer pageSize,BanmaerpProperties banmaerpProperties);
     /**
      * 查询单个类目
      *
@@ -48,8 +43,7 @@ public interface CategoryService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    CategoryDTO getCategoryById(String id,
-                                BanmaerpProperties banmaerpProperties);
+    CategoryDTO getCategoryById(String id, Boolean remote, BanmaerpProperties banmaerpProperties);
 
     List<CategoryDTO> saveCategoryList(List<CategoryDTO> categoryDTOList);
 

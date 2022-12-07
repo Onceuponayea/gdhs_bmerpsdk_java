@@ -39,24 +39,28 @@ public interface StoreService {
             @Nullable String searchTimeField,
             @Nullable String sortField,
             @Nullable String sortBy,
+            Boolean remote,
             BanmaerpProperties banmaerpProperties
     );
 
     List<StoreDTO> getStoretList(@Nullable String ids, @Nullable String name,
                                  @Nullable BanmaerpPlatformEnums.Platform platform, Integer pageNumber, @Nullable Integer pageSize, @Nullable DateTime searchTimeStart,
                                  @Nullable DateTime searchTimeEnd, @Nullable String searchTimeField, @Nullable String sortField, @Nullable String sortBy,
-                                 BanmaerpProperties banmaerpProperties);
+                                 Boolean remote,BanmaerpProperties banmaerpProperties);
 
-    List<StoreDTO> getStoretList(Integer pageNumber, BanmaerpProperties banmaerpProperties);
+    List<StoreDTO> getStoretList(Integer pageNumber,Boolean remote, BanmaerpProperties banmaerpProperties);
 
+    List<StoreDTO> getStoretList(Integer pageNumber, Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties);
+
+    List<StoreDTO> getAndSaveStoretList(Integer pageNumber, Integer pageSize,BanmaerpProperties banmaerpProperties);
     /**
      * 查询单个店铺
      *
-     * @param spuId              店铺ID（必填）
+     * @param storeId              店铺ID（必填）
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    StoreDTO getStoreById(String spuId, BanmaerpProperties banmaerpProperties);
+    StoreDTO getStoreById(String storeId, Boolean remote,BanmaerpProperties banmaerpProperties);
 
     List<StoreDTO> saveStoreList(List<StoreDTO> storeDTOList);
 

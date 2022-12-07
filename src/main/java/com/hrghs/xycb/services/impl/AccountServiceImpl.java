@@ -1,8 +1,8 @@
 package com.hrghs.xycb.services.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
 import com.hrghs.xycb.domains.BanmaerpProperties;
@@ -12,29 +12,28 @@ import com.hrghs.xycb.domains.banmaerpDTO.AccountDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.DataAccessDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.TokenResponseDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
+import com.hrghs.xycb.domains.enums.BanmaerpAccountEnums;
 import com.hrghs.xycb.repositories.AccountRepository;
 import com.hrghs.xycb.repositories.BanmaerpPropertiesRepository;
 import com.hrghs.xycb.services.AccountService;
 import com.hrghs.xycb.utils.BanmaTokenUtils;
+import com.hrghs.xycb.utils.DateTimeConverter;
 import com.hrghs.xycb.utils.EncryptionUtils;
 import com.hrghs.xycb.utils.HttpClientsUtils;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_ACCOUNTS;
 
 
-@Service
-@Lazy
 public class AccountServiceImpl implements AccountService {
 
     @Autowired
@@ -45,9 +44,12 @@ public class AccountServiceImpl implements AccountService {
     private EncryptionUtils encryptionUtils;
     @Autowired
     private AccountRepository accountRepository;
-    @Autowired
-    @Lazy
-    private ObjectMapper objectMapper;
+
+    private Gson gson = new GsonBuilder().disableHtmlEscaping()
+            .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)
+            .registerTypeAdapter(DateTime.class,new DateTimeConverter())
+            .setDateFormat("yyyy-MM-dd HH:mm:ss")
+            .create();;
     @Autowired
     private BanmaerpPropertiesRepository banmaerpPropertiesRepository;
 
@@ -69,33 +71,45 @@ public class AccountServiceImpl implements AccountService {
      */
     @Override
     @CheckBanmaerpProperties
-    public List<AccountDTO> getAccountList(String ids, String email, String realName, String phone, Integer pageNumber, Integer pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy, BanmaerpProperties banmaerpProperties) {
-        String apiUrl = String.format(BanmaerpURL.banmaerp_accountlist_GET,ids,email,realName,phone,pageNumber,pageSize,
-                searchTimeStart, searchTimeEnd,searchTimeField,sortField,sortBy);
-        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
-        HttpHeaders httpHeaders = new HttpHeaders();
-        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
-        //todo signing
-        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
-        HttpEntity requestBody = new HttpEntity(null,httpHeaders);
-        List<AccountDTO> accountDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
-                .getBody()
-                .toDataList(BANMAERP_FIELD_ACCOUNTS)
-        )
-                .map(o -> (AccountDTO)o)
-                .collect(Collectors.toList());
+    public List<AccountDTO> getAccountList(String ids, String email, String realName, String phone, Integer pageNumber, Integer pageSize
+            , DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy,Boolean remote
+            , BanmaerpProperties banmaerpProperties) {
+        List<AccountDTO> accountDTOList;
+        if (remote){
+            String apiUrl = String.format(BanmaerpURL.banmaerp_accountlist_GET,ids,email,realName,phone,pageNumber,pageSize,
+                    searchTimeStart, searchTimeEnd,searchTimeField,sortField,sortBy);
+            apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+            HttpHeaders httpHeaders = new HttpHeaders();
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
+            HttpEntity requestBody = new HttpEntity(null,httpHeaders);
+            accountDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+                            .getBody()
+                            .toDataList(BANMAERP_FIELD_ACCOUNTS))
+                    .map(o -> (AccountDTO)o)
+                    .collect(Collectors.toList());
+        }else{
+            //todo 多条件查询
+            accountDTOList = accountRepository.findAll(PageRequest.of(pageNumber,pageSize)).toList();
+        }
+
         return accountDTOList;
     }
 
     @Override
-    public List<AccountDTO> getAccountList(Integer pageNumber, BanmaerpProperties banmaerpProperties) {
-        return getAccountList(null,null,null,null,pageNumber,null,null,null,null,null,null,banmaerpProperties);
+    public List<AccountDTO> getAccountList(Integer pageNumber,Boolean remote, BanmaerpProperties banmaerpProperties) {
+        return getAccountList(null,null,null,null,pageNumber,null,null,null,null,null,null,remote,banmaerpProperties);
     }
 
     @Override
-    public List<AccountDTO> getAndSaveAccountList(Integer pageNumber, BanmaerpProperties banmaerpProperties) {
-        List<AccountDTO> accountDTOS =getAccountList(null,null,null,null,pageNumber,null,null,null,null,null,null,banmaerpProperties);
+    public List<AccountDTO> getAccountList(Integer pageNumber, Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties) {
+        return getAccountList(null,null,null,null,pageNumber,pageSize,null,null,null,null,null,remote,banmaerpProperties);
+    }
+
+    @Override
+    public List<AccountDTO> getAndSaveAccountList(Integer pageNumber,Integer pageSize,BanmaerpProperties banmaerpProperties) {
+        List<AccountDTO> accountDTOS =getAccountList(null,null,null,null,pageNumber,null,null,null,null,null,null,true,banmaerpProperties);
         banmaerpProperties.setBanmaErpAccounts(accountDTOS);
         return banmaerpPropertiesRepository.saveAndFlush(banmaerpProperties).getBanmaErpAccounts();
     }
@@ -108,18 +122,21 @@ public class AccountServiceImpl implements AccountService {
      */
     @Override
     @CheckBanmaerpProperties
-    public AccountDTO getAccountById(Integer id, BanmaerpProperties banmaerpProperties) {
-        String apiUrl = String.format(BanmaerpURL.banmaerp_account_GET,id);
-        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
-        HttpHeaders httpHeaders = new HttpHeaders();
-        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+    public AccountDTO getAccountById(Integer id,Boolean remote, BanmaerpProperties banmaerpProperties) {
+        if (remote){
+            String apiUrl = String.format(BanmaerpURL.banmaerp_account_GET,id);
+            apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+            HttpHeaders httpHeaders = new HttpHeaders();
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
+            HttpEntity requestBody = new HttpEntity(null,httpHeaders);
+            return httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<AccountDTO>>() {})
+                    .getBody().getData();
+        }else {
+            return accountRepository.findById(id).get();
+        }
 
-        //todo signing
-        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
-        HttpEntity requestBody = new HttpEntity(null,httpHeaders);
-        return httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<AccountDTO>>() {})
-                .getBody().getData();
     }
 
 
@@ -135,25 +152,23 @@ public class AccountServiceImpl implements AccountService {
      */
     @Override
     @CheckBanmaerpProperties
-    public AccountDTO addAccount(String phone, String email, String realName, String department,boolean useVirtual ,BanmaerpProperties banmaerpProperties) {
+    public AccountDTO addAccount(String phone, String email, String realName, String department,Boolean useVirtual ,BanmaerpProperties banmaerpProperties) {
         AccountDTO accountDTO = new AccountDTO(realName,email,phone,department);
-        String accountJson = null;
-        try {
-            accountJson = objectMapper.writeValueAsString(accountDTO);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            accountJson = new GsonBuilder().disableHtmlEscaping().create().toJson(accountDTO);
-        }
+        String accountJson = gson.toJson(accountDTO);
         String apiUrl = String.format(BanmaerpURL.banmaerp_accountAdd_POST);
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
         HttpHeaders httpHeaders = new HttpHeaders();
-        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.POST,apiUrl);
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
         httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         HttpEntity requestBody = new HttpEntity(accountJson,httpHeaders);
-        return httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+        accountDTO =
+        httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
                 .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.POST, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<AccountDTO>>() {})
                 .getBody().getData();
+        accountDTO.setUserType(BanmaerpAccountEnums.UserType.MasterAccount);
+        accountDTO.setState(BanmaerpAccountEnums.UserState.Normal);
+        return accountRepository.saveAndFlush(accountDTO);
     }
 
     /**
@@ -168,7 +183,7 @@ public class AccountServiceImpl implements AccountService {
         String apiUrl = String.format(BanmaerpURL.banmaerp_accountLogout_DELETE,id);
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
         HttpHeaders httpHeaders = new HttpHeaders();
-        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.DELETE,apiUrl);
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
         HttpEntity requestBody = new HttpEntity(null,httpHeaders);
         BanmaErpResponseDTO<Boolean> body = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
@@ -188,7 +203,7 @@ public class AccountServiceImpl implements AccountService {
         String apiUrl = String.format(BanmaerpURL.banmaerp_accountDataAccess_GET,id);
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
         HttpHeaders httpHeaders = new HttpHeaders();
-        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties);
+        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
         HttpEntity requestBody = new HttpEntity(null,httpHeaders);
         return httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
@@ -197,19 +212,22 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public List<AccountDTO> saveAccountList(List<AccountDTO> accountDTOList) {
+    @CheckBanmaerpProperties
+    public List<AccountDTO> saveAccountList(List<AccountDTO> accountDTOList, BanmaerpProperties banmaerpProperties) {
+        accountDTOList.parallelStream().forEach(accountDTO -> accountDTO.setBanmaerpProperties(banmaerpProperties));
         return accountRepository.saveAllAndFlush(accountDTOList);
     }
 
     @Override
-    public AccountDTO saveAccount(AccountDTO accountDTO) {
+    @CheckBanmaerpProperties
+    public AccountDTO saveAccount(AccountDTO accountDTO, BanmaerpProperties banmaerpProperties) {
+        accountDTO.setBanmaerpProperties(banmaerpProperties);
         return accountRepository.saveAndFlush(accountDTO);
     }
 
     @Override
-    public TokenResponseDTO getAccessToken(BanmaerpProperties banmaerpProperties) {
-        return banmaTokenUtils.getBanmaErpMasterToken(banmaerpProperties).block();
+    public TokenResponseDTO getSubAccountAccessToken(BanmaerpProperties banmaerpProperties) {
+        return null;
     }
-
 
 }

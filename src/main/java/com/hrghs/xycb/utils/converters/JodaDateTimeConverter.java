@@ -4,10 +4,8 @@ import com.hrghs.xycb.utils.DateTimeUtils;
 import org.joda.time.DateTime;
 
 import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
 import java.sql.Timestamp;
 
-@Converter
 public class JodaDateTimeConverter implements AttributeConverter<DateTime, Timestamp> {
     private DateTimeUtils dateTimeUtils = new DateTimeUtils();
     @Override

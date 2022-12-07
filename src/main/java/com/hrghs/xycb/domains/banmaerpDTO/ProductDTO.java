@@ -3,11 +3,13 @@ package com.hrghs.xycb.domains.banmaerpDTO;
 import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.hrghs.xycb.utils.converters.JpaUUIDConverter;
 import com.hrghs.xycb.utils.converters.ProductDeserialiser;
 import com.hrghs.xycb.utils.converters.ProductSerialiser;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.springframework.stereotype.Component;
 
@@ -29,13 +31,14 @@ public class ProductDTO implements Serializable {
      * 商品表可能无限增长，会增长到需要拆表的地步，所以需要提前设计成UUID方式
      */
     @JsonIgnore
+    @Convert(converter = JpaUUIDConverter.class)
     @Column(name = "product_uuid")
-    @Type(type = "uuid-char")
     @Id
-    @GeneratedValue
+    @Type(type = "uuid-char")
+    @GeneratedValue(generator = "UUID")
     private UUID productUUId;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true, optional = true)
+    @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY, orphanRemoval = true, optional = true)
     @JoinColumn(name = "product_spuid", referencedColumnName = "spu_id")
     @JsonManagedReference
     @JsonProperty(value = "SPU")

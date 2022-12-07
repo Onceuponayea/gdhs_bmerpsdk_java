@@ -16,14 +16,14 @@ public class ProductSuppliersDTO {
     @JsonProperty(value = "Remark")
     private String remark;
     @JsonProperty(value = "Sort")
-    private int sort;
+    private Integer sort;
 
     @JsonIgnore
     @JoinColumn(name = "product_id")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     private ProductDTO productDTO;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true, optional = true)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true, optional = true)
     @JoinColumn(name = "supinfo_id", referencedColumnName = "id")
     @JsonProperty(value = "Info")
     @JsonManagedReference

@@ -1,45 +1,55 @@
 package com.hrghs.xycb.utils;
 
-import com.hrghs.xycb.domains.BanmaerpSigningVO;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
-import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
+import javax.annotation.PostConstruct;
 
-import java.util.HashMap;
-import java.util.Map;
+import static com.hrghs.xycb.domains.Constants.*;
 
 /**
  * 企业微信工具类
  *
  * @author hury
  */
-@Component
-@Data
-public class WechatUtil {
+public class WebHookUtils {
 
     @Autowired
     private RestTemplate restTemplate;
-
-    private String corpid = "wwd3fcf9134cd03abe";
-
-    private String corpsecret = "C9SFT8Hpg-fRedRxnYmh-Gc6g7UHphQ4k9qjxbu0tUw";
-
-    private String agentid = "3010046";
-
-    private String webhook = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=a34d8f1c-a22d-4d2c-aeea-5323d7ae35d2";
-
-    private String ddWebhook = "https://oapi.dingtalk.com/robot/send?access_token=5502e6e4abdcce21a8d3ae71614c7708421b45f32ad33344a713d6638207e7d7";
+    @Value("${msg.webhook.qywechat.enable:false}")
+    private Boolean qywechat_enabled;
+    @Value("${msg.webhook.dingtalk.enable:false}")
+    private Boolean dingtalk_enabled;
+    @Value("${msg.webhook.qywechat.key}")
+    private String qywechat_key;
+    @Value("${msg.webhook.dingtalk.access_token}")
+    private String access_token;
+    @Value("${msg.webhook.qywechat.url}")
+    private String qywechat_url = "";
+    @Value("${msg.webhook.dingtalk.url}")
+    private String dingtalk_url = "";
 
     private HttpHeaders httpHeaders = new HttpHeaders();
 
-
-
+    @PostConstruct
+    private void init(){
+        qywechat_url = StringUtils.hasText(qywechat_key)?String.format(WEBHOOK_BASEURL_WECHAT_ENTERPISE,qywechat_key):qywechat_url;
+        dingtalk_url = StringUtils.hasText(access_token)?String.format(WEBHOOK_BASEURL_DINGTALK_ENTERPISE,access_token):dingtalk_url;
+    }
+    public void sendNotice(String massage, String phone, String email){
+        if (qywechat_enabled){
+            qywechatSendText(massage, phone, email);
+        }
+        if (dingtalk_enabled){
+            dingtalkSendText(massage, phone, email);
+        }
+    }
     // 企业微信机器人
-    public void qywxSendText(String massage, String phone, String email) {
+    public void qywechatSendText(String massage, String phone, String email) {
         httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         String msg = "{\n" +
                 "    \"msgtype\": \"markdown\",\n" +
@@ -49,14 +59,13 @@ public class WechatUtil {
                 "         >邮箱：<font color=\\\"comment\\\">" + email + "</font>\"\n" +
                 "    }\n" +
                 "}";
-//        HttpUtil.post(webhook, msg);
-        restTemplate.exchange(webhook, HttpMethod.POST, new HttpEntity<>(msg, httpHeaders), new ParameterizedTypeReference<Object>() {
+        restTemplate.exchange(qywechat_url, HttpMethod.POST, new HttpEntity<>(msg, httpHeaders), new ParameterizedTypeReference<Object>() {
         });
 
     }
 
     // 钉钉机器人
-    public void ddSendText(String massage, String phone, String email) {
+    public void dingtalkSendText(String massage, String phone, String email) {
         String msg = "{\n" +
                 "     \"msgtype\": \"markdown\",\n" +
                 "     \"markdown\": {\n" +
@@ -64,8 +73,7 @@ public class WechatUtil {
                 "         \"text\": \"#### 实时新增用户反馈"+massage+"，选品中心账户无法绑定到斑马，请相关同事注意。 \\n > #### 手机："+phone+"\\n > #### 邮箱："+email+" \\n\"\n" +
                 "      }\n" +
                 " }";
-//        HttpUtil.post(ddWebhook, msg);
-        restTemplate.exchange(ddWebhook, HttpMethod.POST, new HttpEntity<>(msg, httpHeaders), new ParameterizedTypeReference<Object>() {
+        restTemplate.exchange(dingtalk_url, HttpMethod.POST, new HttpEntity<>(msg, httpHeaders), new ParameterizedTypeReference<Object>() {
         });
     }
 
