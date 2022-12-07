@@ -66,9 +66,10 @@ public class DbConfigs {
     public ReactiveRedisConnectionFactory redisConnectionFactory(@Value("${spring.redis.host:127.0.0.1}") String host,
                                                                  @Value("${spring.redis.port:3306}")int port,
                                                                  @Value("${spring.redis.password:}")String password,
-                                                                 @Value("${spring.redis.database:1}")int db){
+                                                                 @Value("${spring.redis.database:1}")int db,
+                                                                 @Value("${spring.redis.timeoutsec:3}")int timeoutSec){
         LettuceClientConfiguration clientConfiguration = LettuceClientConfiguration.builder()
-                .commandTimeout(Duration.ofSeconds(1))
+                .commandTimeout(Duration.ofSeconds(timeoutSec))
                 .shutdownTimeout(Duration.ZERO)
                 .build();
         //todo add suuport for redis cluster
@@ -82,13 +83,13 @@ public class DbConfigs {
     }
     @Bean
     @ConditionalOnMissingBean
-    public ReactiveRedisOperations<String,String> stringReactiveRedisOperations(ReactiveRedisConnectionFactory redisConnectionFactory){
+    public ReactiveRedisOperations<String,String> stringReactiveRedisOperations(@Qualifier("redisConnectionFactory")ReactiveRedisConnectionFactory redisConnectionFactory){
         return new ReactiveStringRedisTemplate(redisConnectionFactory);
     }
     @Bean(name = "tokenRespReactiveRedisOperations")
     @Lazy
     @DependsOn(value = {"jacksonObjectMapper","jodaModule"})
-    public ReactiveRedisOperations<String, TokenResponseDTO> tokenRespReactiveRedisOperations(ReactiveRedisConnectionFactory redisConnectionFactory
+    public ReactiveRedisOperations<String, TokenResponseDTO> tokenRespReactiveRedisOperations(@Qualifier("redisConnectionFactory")ReactiveRedisConnectionFactory redisConnectionFactory
             , @Qualifier(value = "jacksonObjectMapper") ObjectMapper objectMapper, @Qualifier(value = "jodaModule") JodaModule jodaModule){
         RedisSerializationContext.RedisSerializationContextBuilder<String,TokenResponseDTO> builder=
                 RedisSerializationContext.newSerializationContext(new StringRedisSerializer());
@@ -98,13 +99,22 @@ public class DbConfigs {
         return new ReactiveRedisTemplate<>(redisConnectionFactory,builder.value(jsonRedisSerializer).build());
     }
     @Bean
-    public LockProvider lockProvider(ReactiveRedisConnectionFactory connectionFactory){
+    public LockProvider lockProvider(@Qualifier("redisConnectionFactory") ReactiveRedisConnectionFactory connectionFactory){
         return new ReactiveRedisLockProvider.Builder(connectionFactory).build();
     }
     @Primary
     @Bean(name = "dataSourceXABanmaerp")
     public DataSource dataSourceXABanmaerp(BanmaerpDruidXADataSource banmaerpDruidXADataSource) throws SQLException {
         AtomikosDataSourceBean ds = atomikosDataSourceBean(banmaerpDruidXADataSource);
+        //todo
+//        ds.setMinPoolSize();
+//        ds.setMaxPoolSize();
+//        ds.setReapTimeout();
+//        ds.setTestQuery();
+//        ds.setMaintenanceInterval();
+//        ds.setBorrowConnectionTimeout();
+//        ds.setMaxLifetime();
+//        ds.setMaxIdleTime();
         ds.setUniqueResourceName("dataSourceXABanmaerp");
         return ds;
     }
@@ -189,8 +199,8 @@ public class DbConfigs {
         //factoryBean.setPackagesToScan(ENTITY_PACKGES_XYHZSTORE);
         factoryBean.setPackagesToScan(ENTITY_PACKGES_BANMAERP);
         Properties jpaPros = new Properties();
-        jpaPros.put(JPA_PROS_HIBERNATE_SHOW_SQL,true);
-        jpaPros.put(JPA_PROS_HIBERNATE_FORMAT_SQL,true);
+        jpaPros.put(JPA_PROS_HIBERNATE_SHOW_SQL,false);
+        jpaPros.put(JPA_PROS_HIBERNATE_FORMAT_SQL,false);
         jpaPros.put(JPA_PROS_TRANSACTION_TYPE,"jta");
         jpaPros.put(JPA_PROS_HIBERNATE_SESSION_CONTEXT_CLASS,"jta");
         jpaPros.put(JPA_PROS_HIBERNATE_DIALECT, MySQL8Dialect.class.getName());
@@ -234,6 +244,5 @@ public class DbConfigs {
         if (this.h2DBServer!=null){
             this.h2DBServer.shutdown();
         }
-        //todo kill whatever process that possess port 7777
     }
 }

@@ -1,0 +1,110 @@
+infras:
+#  ip: 192.168.18.151
+  ip: rds.xmsuodi.com
+spring:
+  profiles:
+    active: dev
+  redis:
+#    host: rds.xmsuodi.com
+#    port: 46379
+    host: 192.168.18.151
+    port: 6379
+    password: lilishop
+    database: 4
+#    cluster:
+#      nodes:
+    lettuce:
+      pool:
+        max-wait: 1000
+        max-idle: 20
+        min-idle: 10
+        max-active: 2000
+
+  datasource:
+    banmaerp:
+      username: root
+      password: lilishop
+#      url: jdbc:mysql://rds.xmsuodi.com:49906/banmaerp_ljl?characterEncoding=utf8&autoReconnect=true&useUnicode=true&tcpKeepAlive=true&useSSL=false&allowPublicKeyRetrieval=true&useLegacyDateTimeCode=false&serverTimezone=Asia/Shanghai&
+      url: jdbc:mysql://192.168.18.151:3306/banmaerp_ljl?characterEncoding=utf8&autoReconnect=true&useUnicode=true&tcpKeepAlive=true&useSSL=false&allowPublicKeyRetrieval=true&useLegacyDateTimeCode=false&serverTimezone=Asia/Shanghai&
+      druid:
+        username: ${spring.datasource.banmaerp.username}
+        password: ${spring.datasource.banmaerp.password}
+        url: ${spring.datasource.banmaerp.url}
+        initial-size: 3
+        min-idle: 10
+        maxActive: 600
+        maxWait: 60000
+        timeBetweenEvictionRunsMillis: 30000
+        minEvictableIdleTimeMillis: 300000
+        validationQuery: SELECT 1 FROM DUAL
+        testWhileIdle: true
+        testOnBorrow: false
+        testOnReturn: false
+        poolPreparedStatements: true
+        maxPoolPreparedStatementPerConnectionSize: 20
+        connection-error-retry-attempts: 3
+        keep-alive: true
+        keep-alive-between-time-millis: 60000
+        connectionProperties: druid.stat.mergeSql\=true;druid.stat.slowSqlMillis\=5000
+      hikari:
+        maximum-pool-size: 20
+        max-lifetime: 21600000
+        minimum-idle: 5
+        idle-timeout: 600000
+        connection-timeout: 10000
+        keepaliveTime: 60000
+        jdbc-url: ${spring.datasource.banmaerp.url}
+  jpa:
+    hibernate:
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+      ddl-auto: update
+    generate-ddl: true
+
+
+
+jdbc:
+  property:
+    cachePrepStmts: true
+    prepStmtCacheSize: 200
+    prepStmtCacheSqlLimit: 6535
+
+
+#1、先配置好mysql, atomikos 代理ali druid,先用H2DB测试,不需要开启,项目一启动就把实体类导入到h2db
+#2、配置好redisson + lettuce
+h2server:
+  enabled: true
+  port: 7777
+
+#选品中心供应商就是一个Banmaerp Master账号。这边配置的是选品中心的平台账号，也是属于主账号
+erp:
+  banmaerp:
+    enabled: true
+    X_BANMA_APP_NAME: 选品中心
+    X_BANMA_MASTER_APP_ID: 1492055167686688768
+    X_BANMA_MASTER_APP_SECRET: a7437ad68d0f457b9788e17f92e13b0f
+    X_BANMA_MASTER_APP_ACCOUNT: 15060715230
+    X_BANMA_MASTER_SIGN_METHOD: IP白名单 #IP白名单, 签名+IP白名单
+    X_BANMA_MASTER_SIGN_ALGORITHM: SHA256 #SHA256 or SHA_256 MessageDigest not available
+
+    tasks:
+      sync:
+        enabled: true
+        delayInMs: 10000
+        cron: 0 0/10 * * * ?
+
+msg:
+  webhook:
+    qywechat:
+      url: https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=a34d8f1c-a22d-4d2c-aeea-5323d7ae35d2
+      key: a34d8f1c-a22d-4d2c-aeea-5323d7ae35d2
+      enable: true
+    dingtalk:
+      url: https://oapi.dingtalk.com/robot/send?access_token=5502e6e4abdcce21a8d3ae71614c7708421b45f32ad33344a713d6638207e7d7
+      access_token: 5502e6e4abdcce21a8d3ae71614c7708421b45f32ad33344a713d6638207e7d7
+      enable: true
+
+logging:
+  level:
+    root: debug
