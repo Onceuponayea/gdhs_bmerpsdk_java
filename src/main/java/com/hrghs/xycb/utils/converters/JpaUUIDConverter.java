@@ -7,7 +7,6 @@ import static java.util.Optional.ofNullable;
 public class JpaUUIDConverter implements AttributeConverter<UUID,String> {
     @Override
     public String convertToDatabaseColumn(final UUID entityValue) {
-        System.out.println("uuid from entity: "+ entityValue.toString());
         return ofNullable(entityValue)
                 .map(entityUuid -> entityUuid.toString())
                 .orElse(null);
@@ -15,7 +14,6 @@ public class JpaUUIDConverter implements AttributeConverter<UUID,String> {
 
     @Override
     public UUID convertToEntityAttribute(final String databaseValue) {
-        System.out.println("uuid from db: "+ databaseValue);
         return ofNullable(databaseValue)
                 .map(databaseUuid -> UUID.fromString(databaseUuid))
                 .orElse(null);

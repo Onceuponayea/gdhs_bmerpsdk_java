@@ -10,15 +10,17 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import net.javacrumbs.shedlock.core.LockProvider;
 import net.javacrumbs.shedlock.provider.redis.spring.ReactiveRedisLockProvider;
-import org.h2.tools.Server;
 import org.hibernate.dialect.MySQL8Dialect;
+import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.jta.atomikos.AtomikosDataSourceBean;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.*;
 import org.springframework.core.env.Environment;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
@@ -33,7 +35,6 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.jta.JtaTransactionManager;
 import javax.annotation.PreDestroy;
@@ -50,16 +51,20 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import static com.hrghs.xycb.domains.Constants.*;
 
-@Configuration
+@AutoConfigureAfter({DataSourceAutoConfiguration.class})
 @EntityScan(basePackages = {"com.hrghs.xycb.domains"})
 @EnableTransactionManagement
 public class BanmaerpDbAutoConfiguration {
-    public static Server h2DBServer;
     @Autowired
     private Environment env;
     @Autowired
+    private ApplicationContext ctx;
+    private org.h2.tools.Server h2DBServer;
+    @Autowired
     @Lazy
     private ScheduledExecutorService scheduledExecutorService;
+    @Value("${h2server.enabled:false}")
+    private boolean h2ServerEnabled;
     //初始化
     @Bean
     @ConditionalOnMissingBean
@@ -102,24 +107,10 @@ public class BanmaerpDbAutoConfiguration {
     public LockProvider lockProvider(@Qualifier("redisConnectionFactory") ReactiveRedisConnectionFactory connectionFactory){
         return new ReactiveRedisLockProvider.Builder(connectionFactory).build();
     }
-    @Primary
-    @Bean(name = "dataSourceXABanmaerp")
-    public DataSource dataSourceXABanmaerp(BanmaerpDruidXADataSource banmaerpDruidXADataSource) throws SQLException {
-        AtomikosDataSourceBean ds = atomikosDataSourceBean(banmaerpDruidXADataSource);
-        //todo
-//        ds.setMinPoolSize();
-//        ds.setMaxPoolSize();
-//        ds.setReapTimeout();
-//        ds.setTestQuery();
-//        ds.setMaintenanceInterval();
-//        ds.setBorrowConnectionTimeout();
-//        ds.setMaxLifetime();
-//        ds.setMaxIdleTime();
-        ds.setUniqueResourceName("dataSourceXABanmaerp");
-        return ds;
-    }
-    @Bean(name = "dataSourceBanmaerp")
-    public DataSource dataSourceBanmaerp(){
+
+    @Bean(name = "dataSourceHikariBanmaerp")
+    @Lazy
+    private HikariDataSource dataSourceHikariBanmaerp(){
         HikariConfig hikariConfig = hikariConfig();
         boolean useH2DB = Arrays.stream(env.getActiveProfiles())
                 .anyMatch(s -> s.toLowerCase(Locale.ROOT).equalsIgnoreCase(ENV_PROFILES_H2DB));
@@ -138,8 +129,8 @@ public class BanmaerpDbAutoConfiguration {
      * @return
      * @throws SQLException
      */
-    @Bean
-    @ConditionalOnMissingBean
+    @Bean(name = "dataSourceAtomikosBanmaerp")
+    @Lazy
     public AtomikosDataSourceBean atomikosDataSourceBean(BanmaerpDruidXADataSource banmaerpDruidXADataSource) throws SQLException {
         AtomikosDataSourceBean dataSourceBean = new AtomikosDataSourceBean();
         dataSourceBean.setMaxPoolSize(banmaerpDruidXADataSource.getMaxActive());
@@ -187,11 +178,15 @@ public class BanmaerpDbAutoConfiguration {
         hikariConfig.setMaxLifetime(Long.parseLong(env.getProperty(DB_HIKARI_MAX_LIFE)));
         hikariConfig.setConnectionTimeout(Long.parseLong(env.getProperty(DB_HIKARI_CONNECT_TIMEOUT)));
         hikariConfig.setIdleTimeout(Long.parseLong(env.getProperty(DB_HIKARI_IDLE_TIMEOUT)));
-        hikariConfig.setKeepaliveTime(hikariKeepAlive);
+        /**
+         * not compatible with old Hikari Version
+         * hikariConfig.setKeepaliveTime(hikariKeepAlive);
+         */
         hikariConfig.setScheduledExecutor(scheduledExecutorService);
         return hikariConfig;
     }
     @Bean(name = "banmaerpEntityManagerFactory")
+    @DependsOn("dataSourceAtomikosBanmaerp")
     public EntityManagerFactory entityManagerFactory(AtomikosDataSourceBean dataSourceBean){
         LocalContainerEntityManagerFactoryBean factoryBean = new LocalContainerEntityManagerFactoryBean();
         factoryBean.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
@@ -218,7 +213,6 @@ public class BanmaerpDbAutoConfiguration {
      * @throws SystemException
      */
     @Bean(name = "banmaerpXATransactionManager")
-    @ConditionalOnMissingBean
     public JtaTransactionManager jtaTransactionManager(@Value("${spring.jta.atomikos.transaction.timeout:30000}")int timeoutMs) throws SystemException {
         UserTransactionManager userTransactionManager = new UserTransactionManager();
         userTransactionManager.setForceShutdown(true);
@@ -234,15 +228,17 @@ public class BanmaerpDbAutoConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "h2server", name = "enabled",havingValue = "true")
-    public Server h2Server(@Value("${h2server.port:7777}")String h2DBPort) throws SQLException {
-        this.h2DBServer = Server.createPgServer("-web","-webAllowOthers","-webPort",h2DBPort).start();
-        return this.h2DBServer;
+    public org.h2.tools.Server h2Server(@Value("${h2server.port:7777}")String h2DBPort) throws SQLException {
+        org.h2.tools.Server server = h2ServerEnabled?org.h2.tools.Server.createPgServer("-web","-webAllowOthers","-webPort",h2DBPort).start() :null;
+        return server;
     }
 
     @PreDestroy
     public void shutdownH2DB(){
-        if (this.h2DBServer!=null){
-            this.h2DBServer.shutdown();
+        if (h2ServerEnabled){
+            if (h2DBServer!=null){
+                h2DBServer.shutdown();
+            }
         }
     }
 }

@@ -19,9 +19,14 @@ import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Predicate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -88,7 +93,8 @@ public class OrderServiceImpl implements OrderService {
                     .collect(Collectors.toList());
         }else{
             //todo 多条件查询
-            orderDTOList = orderRepository.findAll(PageRequest.of(pageNumber,pageSize)).toList();
+            Specification<OrderDTO> specification = createSpecification(ids, storeId, platform,status,payStatus,holdStatus,refundStatus,inventoryStatus,countryCode, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
+            orderDTOList = orderRepository.findAll(specification,PageRequest.of(pageNumber,pageSize)).toList();
         }
         return orderDTOList;
     }
@@ -106,7 +112,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<OrderDTO> getAndSaveOrderList(Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties) {
         List<OrderDTO> orderDTOList =
-        getOrderList(null, null, null, null, null, null, null, null, null, pageNumber, pageSize, null, null, null, null, null, true,banmaerpProperties);
+                getOrderList(null, null, null, null, null, null, null, null, null, pageNumber, pageSize, null, null, null, null, null, true,banmaerpProperties);
         orderDTOList = orderRepository.saveAll(orderDTOList);
         orderDTOList.forEach(orderDTO -> {
             orderDTO.getMaster().setOrderDTO(orderDTO);
@@ -134,7 +140,7 @@ public class OrderServiceImpl implements OrderService {
                     .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<OrderDTO>>() {})
                     .getBody().getData();
         }else{
-           return orderRepository.findOrderDTOByMaster(new OrderMasterDTO(id));
+            return orderRepository.findOrderDTOByMaster(new OrderMasterDTO(id));
         }
     }
 
@@ -157,11 +163,11 @@ public class OrderServiceImpl implements OrderService {
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
             orderFulfillmentDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<OrderFulfillmentDTO>>() {})
-                    .getBody()
-                    .toDataList(BANMAERP_FIELD_FULFILLMENTS))
-            .map(o -> (OrderFulfillmentDTO) o)
-            .collect(Collectors.toList());
+                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<OrderFulfillmentDTO>>() {})
+                            .getBody()
+                            .toDataList(BANMAERP_FIELD_FULFILLMENTS))
+                    .map(o -> (OrderFulfillmentDTO) o)
+                    .collect(Collectors.toList());
             orderFulfillmentDTOList.forEach(orderFulfillmentDTO -> orderFulfillmentDTO.setOrderId(orderId));
             orderFulfillmentDTOList = fulfillmentRepository.saveAllAndFlush(orderFulfillmentDTOList);
         }else{
@@ -189,11 +195,11 @@ public class OrderServiceImpl implements OrderService {
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
             orderTrackingDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<OrderTrackingDTO>>() {})
-            .getBody()
-            .toDataList(BANMAERP_FIELD_TRACKINGS))
-            .map(o -> (OrderTrackingDTO) o)
-            .collect(Collectors.toList());
+                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<OrderTrackingDTO>>() {})
+                            .getBody()
+                            .toDataList(BANMAERP_FIELD_TRACKINGS))
+                    .map(o -> (OrderTrackingDTO) o)
+                    .collect(Collectors.toList());
             orderTrackingDTOList.forEach(orderFulfillmentDTO -> orderFulfillmentDTO.setOrderId(orderId));
             orderTrackingDTOList = trackingRepository.saveAllAndFlush(orderTrackingDTOList);
         }else{
@@ -229,5 +235,77 @@ public class OrderServiceImpl implements OrderService {
         OrderDTO existedOrder = orderRepository.findOrderDTOByMaster(orderDTO.getMaster());
         orderDTO.setOrderUUID(existedOrder.getOrderUUID());
         return orderRepository.saveAndFlush(orderDTO);
+    }
+    private Specification<OrderDTO> createSpecification(String ids, String storeId, String platform, String status, String payStatus, String holdStatus, String refundStatus, String inventoryStatus, String countryCode, Integer pageNumber, Integer pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+        return (root, criteriaQuery, criteriaBuilder) -> {
+            List<Predicate> predicateList = new ArrayList<>();
+
+            if (ids != null && ids != "") {
+                CriteriaBuilder.In<String> in = criteriaBuilder.in(root.get("master").get("ID"));
+                if (ids.contains(",")) {
+                    String[] id = ids.split(",");
+                    for (int i = 0; i < id.length; i++) {
+                        in.value(id[i]);
+                    }
+                } else {
+                    in.value(ids);
+                }
+                predicateList.add(in);
+            }
+
+
+            if (storeId != null && storeId != "") {
+                predicateList.add(criteriaBuilder
+                        .equal(root.get("master").get("storeID"),
+                                storeId ));
+            }
+
+            if (platform != null && platform != "") {
+                predicateList.add(criteriaBuilder
+                        .equal(root.get("master").get("platform"),
+                                platform));
+            }
+
+            if (status != null && status != "") {
+                predicateList.add(criteriaBuilder
+                        .equal(root.get("master").get("status"),
+                                status));
+            }
+
+            if (payStatus != null && payStatus != "") {
+                predicateList.add(criteriaBuilder
+                        .equal(root.get("master").get("payStatus"),
+                                payStatus));
+            }
+            if (holdStatus != null && holdStatus != "") {
+                predicateList.add(criteriaBuilder
+                        .equal(root.get("master").get("holdStatus"),
+                                holdStatus));
+            }
+            if (refundStatus != null && refundStatus != "") {
+                predicateList.add(criteriaBuilder
+                        .equal(root.get("master").get("refundStatus"),
+                                refundStatus));
+            }
+            if (inventoryStatus != null && inventoryStatus != "") {
+                predicateList.add(criteriaBuilder
+                        .equal(root.get("master").get("inventoryStatus"),
+                                inventoryStatus));
+            }
+            if (countryCode != null && countryCode != "") {
+                predicateList.add(criteriaBuilder
+                        .equal(root.get("master").get("countryCode"),
+                                countryCode));
+            }
+
+            // 开始时间
+            if (searchTimeStart != null && searchTimeEnd != null) {
+                predicateList.add(criteriaBuilder
+                        .between(root.<DateTime>get("master").get(searchTimeField), searchTimeStart, searchTimeEnd));
+            }
+
+
+            return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
+        };
     }
 }

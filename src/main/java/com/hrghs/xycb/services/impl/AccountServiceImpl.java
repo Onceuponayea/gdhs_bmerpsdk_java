@@ -24,10 +24,15 @@ import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Predicate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -90,8 +95,9 @@ public class AccountServiceImpl implements AccountService {
                     .map(o -> (AccountDTO)o)
                     .collect(Collectors.toList());
         }else{
-            //todo 多条件查询
-            accountDTOList = accountRepository.findAll(PageRequest.of(pageNumber,pageSize)).toList();
+            //todo 多条件查询校验
+            Specification<AccountDTO> specification = createSpecification(ids, email, realName, phone, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
+            accountDTOList = accountRepository.findAll(specification,PageRequest.of(pageNumber,pageSize)).getContent();
         }
 
         return accountDTOList;
@@ -163,9 +169,9 @@ public class AccountServiceImpl implements AccountService {
         httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         HttpEntity requestBody = new HttpEntity(accountJson,httpHeaders);
         accountDTO =
-        httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.POST, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<AccountDTO>>() {})
-                .getBody().getData();
+                httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                        .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.POST, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<AccountDTO>>() {})
+                        .getBody().getData();
         accountDTO.setUserType(BanmaerpAccountEnums.UserType.MasterAccount);
         accountDTO.setState(BanmaerpAccountEnums.UserState.Normal);
         return accountRepository.saveAndFlush(accountDTO);
@@ -229,5 +235,63 @@ public class AccountServiceImpl implements AccountService {
     public TokenResponseDTO getSubAccountAccessToken(BanmaerpProperties banmaerpProperties) {
         return null;
     }
+    /**
+     * 查询用户列表
+     *
+     * @param ids             用户 ID，用逗号分隔
+     * @param email           用户邮箱
+     * @param realName        用户名称
+     * @param phone           电话
+     * @param pageNumber      页码（必填）
+     * @param pageSize        页大小
+     * @param searchTimeStart 查询的开始时间
+     * @param searchTimeEnd   查询的结束时间
+     * @param searchTimeField 查询的时间字段名
+     * @param sortField       排序字段名
+     * @param sortBy          排序方式
+     * @return
+     */
+    private Specification<AccountDTO> createSpecification(String ids, String email, String realName, String phone, Integer pageNumber, Integer pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+        return (root, criteriaQuery, criteriaBuilder) -> {
+            List<Predicate> predicateList = new ArrayList<>();
 
+            if (ids != null && ids != "") {
+                CriteriaBuilder.In<Long> in = criteriaBuilder.in(root.get("ID"));
+                if (ids.contains(",")) {
+                    String[] id = ids.split(",");
+                    for (int i = 0; i < id.length; i++) {
+                        in.value(Long.parseLong(id[i]));
+                    }
+                } else {
+                    in.value(Long.parseLong(ids));
+                }
+                predicateList.add(in);
+            }
+
+            if (email != null && email != "") {
+                predicateList.add(criteriaBuilder
+                        .like(root.get("email"),
+                                "%" + email + "%"));
+            }
+            if (realName != null && realName != "") {
+                predicateList.add(criteriaBuilder
+                        .like(root.get("realName"),
+                                "%" + realName + "%"));
+            }
+            if (phone != null && phone != "") {
+                predicateList.add(criteriaBuilder
+                        .like(root.get("phone"),
+                                "%" + phone + "%"));
+            }
+
+            // 开始时间
+            if (searchTimeStart != null && searchTimeEnd != null) {
+                predicateList.add(criteriaBuilder
+                        .between(root.<DateTime>get(searchTimeField), searchTimeStart, searchTimeEnd));
+            }
+
+
+            return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
+        };
+    }
 }

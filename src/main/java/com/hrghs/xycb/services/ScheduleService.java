@@ -39,7 +39,6 @@ public class ScheduleService {
     public void pullDataFromBanmaerp() throws InterruptedException {
         System.out.println("pullDataFromBanmaerp.................1111");
         bmerpTasks();
-        System.out.println("定期请求service...");
     }
     private String[] bmerpDefaultTaskState(){
         return new String[]{"Products_0_100_timeStamp","Orders_0_100_timeStamp","Stores_0_100_timeStamp"
@@ -61,23 +60,23 @@ public class ScheduleService {
                     String[] keys = taskState.split(UNDERSCORE);
                     Integer pageNum = Integer.parseInt(keys[1]);
                     Integer pageSize = Integer.parseInt(keys[2]);
-//                    switch (keys[0]){
-//                        case BANMAERP_FIELD_PRODUCTS:
-//                            productService.getAndSaveProductList(pageNum,pageSize,banmaerpProperties);
-//                            break;
-//                        case BANMAERP_FIELD_ORDERS:
-//                            orderService.getAndSaveOrderList(pageNum,pageSize,banmaerpProperties);
-//                            break;
-//                        case BANMAERP_FIELD_STORES:
-//                            storeService.getAndSaveStoretList(pageNum,pageSize,banmaerpProperties);
-//                            break;
-//                        case BANMAERP_FIELD_CATEGORYS:
-//                            categoryService.getAndSaveCategoryList(pageNum,pageSize,banmaerpProperties);
-//                            break;
-//                        case BANMAERP_FIELD_ACCOUNTS:
-//                            accountService.getAndSaveAccountList(pageNum,pageSize,banmaerpProperties);
-//                            break;
-//                    }
+                    switch (keys[0]){
+                        case BANMAERP_FIELD_PRODUCTS:
+                            productService.getAndSaveProductList(pageNum,pageSize,banmaerpProperties);
+                            break;
+                        case BANMAERP_FIELD_ORDERS:
+                            orderService.getAndSaveOrderList(pageNum,pageSize,banmaerpProperties);
+                            break;
+                        case BANMAERP_FIELD_STORES:
+                            storeService.getAndSaveStoretList(pageNum,pageSize,banmaerpProperties);
+                            break;
+                        case BANMAERP_FIELD_CATEGORYS:
+                            categoryService.getAndSaveCategoryList(pageNum,pageSize,banmaerpProperties);
+                            break;
+                        case BANMAERP_FIELD_ACCOUNTS:
+                            accountService.getAndSaveAccountList(pageNum,pageSize,banmaerpProperties);
+                            break;
+                    }
                     //把新的页码和页数增加1并保存到新的set中,然后回写到redis中
                     pageNum++;
                     String newTaskState =keys[0].concat(UNDERSCORE).concat(pageNum.toString())

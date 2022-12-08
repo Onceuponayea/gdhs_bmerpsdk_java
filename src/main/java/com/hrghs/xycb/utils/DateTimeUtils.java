@@ -82,7 +82,6 @@ public class DateTimeUtils {
        for (DateTimeFormatter dateTimeFormatter : defaultDateTimeFormatters){
            try {
                dateTimeFormatter.parseDateTime(dateTimeSrc);
-               System.out.println("right dateTimeFormatter for "+ dateTimeSrc );
                return dateTimeFormatter;
            }catch (IllegalArgumentException e){
                //todo  slf4j log info

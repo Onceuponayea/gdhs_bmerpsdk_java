@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -26,7 +27,11 @@ import org.springframework.http.MediaType;
 import org.springframework.lang.Nullable;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Predicate;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -63,21 +68,21 @@ public class StoreServiceImpl implements StoreService {
     @Override
     @CheckBanmaerpProperties
     public Mono<BanmaErpResponseDTO<List<StoreDTO>>> getStoretListMono(@Nullable String ids, @Nullable String name, @Nullable BanmaerpPlatformEnums.Platform platform, Integer pageNumber, @Nullable Integer pageSize,
-                                                                 @Nullable DateTime searchTimeStart, @Nullable DateTime searchTimeEnd, @Nullable String searchTimeField,
-                                                                 @Nullable String sortField, @Nullable String sortBy,Boolean remote, BanmaerpProperties banmaerpProperties) {
+                                                                       @Nullable DateTime searchTimeStart, @Nullable DateTime searchTimeEnd, @Nullable String searchTimeField,
+                                                                       @Nullable String sortField, @Nullable String sortBy,Boolean remote, BanmaerpProperties banmaerpProperties) {
         String apiUrl = String.format(BanmaerpURL.banmaerp_storelist_GET,ids,name,platform==null?"":platform.toString(),pageNumber,pageSize,
                 searchTimeStart, searchTimeEnd,searchTimeField,sortField,sortBy);
         BanmaerpSigningVO banmaerpSigningVO = new BanmaerpSigningVO();
         Mono<WebClient> webClientMono = (banmaerpProperties==null)? httpClients.webClientWithBanmaMasterToken(): httpClients.webClientWithBanmaMasterToken(banmaerpProperties);
         //Mono<List<StoreDTO>> responseDTOMono =
         webClientMono
-            .flatMap(webClient -> webClient.method(HttpMethod.GET).uri(apiUrl)
-           .header(BANMA_HEADER_SIGN,encryptionUtils.banmaerpSigning(banmaerpSigningVO))
-           .accept(MediaType.APPLICATION_JSON).accept(APPLICATION_JSON_UTF8).acceptCharset(Charset.defaultCharset())
-           .retrieve().bodyToMono(new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
-           .map(responseDTO -> responseDTO.toDataList(BANMAERP_FIELD_STORES))
-                         //   .map(objects -> )
-            );
+                .flatMap(webClient -> webClient.method(HttpMethod.GET).uri(apiUrl)
+                                .header(BANMA_HEADER_SIGN,encryptionUtils.banmaerpSigning(banmaerpSigningVO))
+                                .accept(MediaType.APPLICATION_JSON).accept(APPLICATION_JSON_UTF8).acceptCharset(Charset.defaultCharset())
+                                .retrieve().bodyToMono(new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+                                .map(responseDTO -> responseDTO.toDataList(BANMAERP_FIELD_STORES))
+                        //   .map(objects -> )
+                );
         //return responseDTOMono;
         return Mono.empty();
     }
@@ -85,7 +90,7 @@ public class StoreServiceImpl implements StoreService {
     @Override
     @CheckBanmaerpProperties
     public List<StoreDTO> getStoretList(String ids, String name, BanmaerpPlatformEnums.Platform platform, Integer pageNumber, Integer pageSize, DateTime searchTimeStart,
-        DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy, Boolean remote,BanmaerpProperties banmaerpProperties) {
+                                        DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy, Boolean remote,BanmaerpProperties banmaerpProperties) {
         List<StoreDTO> storeDTOList;
         if (remote){
             String apiUrl = String.format(BanmaerpURL.banmaerp_storelist_GET,ids,name,platform==null?"":platform.toString(),pageNumber,pageSize,
@@ -96,15 +101,16 @@ public class StoreServiceImpl implements StoreService {
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null,httpHeaders);
             storeDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
-                    .getBody()
-                    .toDataList(BANMAERP_FIELD_STORES))
-            .map(o -> (StoreDTO)o)
-            .collect(Collectors.toList());
+                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+                            .getBody()
+                            .toDataList(BANMAERP_FIELD_STORES))
+                    .map(o -> (StoreDTO)o)
+                    .collect(Collectors.toList());
             storeRepository.saveAll(storeDTOList);
         }else {
             //todo 多条件查询
-            storeDTOList = storeRepository.findAll(PageRequest.of(pageNumber,pageSize)).toList();
+            Specification<StoreDTO> specification = createSpecification(ids, name, platform, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
+            storeDTOList = storeRepository.findAll(specification,PageRequest.of(pageNumber,pageSize)).toList();
         }
         return storeDTOList;
     }
@@ -122,7 +128,7 @@ public class StoreServiceImpl implements StoreService {
     @Override
     public List<StoreDTO> getAndSaveStoretList(Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties) {
         List<StoreDTO> storeDTOList =
-        getStoretList(null, null, null, pageNumber, pageSize, null, null, null, null, null,true, banmaerpProperties);
+                getStoretList(null, null, null, pageNumber, pageSize, null, null, null, null, null,true, banmaerpProperties);
         return storeRepository.saveAllAndFlush(storeDTOList);
     }
 
@@ -145,7 +151,7 @@ public class StoreServiceImpl implements StoreService {
                     .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<StoreDTO>>() {})
                     .getBody().getData();
         }else{
-           return storeRepository.findById(storeId).get();
+            return storeRepository.findById(storeId).get();
         }
 
     }
@@ -158,5 +164,42 @@ public class StoreServiceImpl implements StoreService {
     @Override
     public StoreDTO saveStore(StoreDTO storeDTO) {
         return storeRepository.saveAndFlush(storeDTO);
+    }
+    private Specification<StoreDTO> createSpecification(String ids, String name, BanmaerpPlatformEnums.Platform platform, Integer pageNumber, Integer pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+        return (root, criteriaQuery, criteriaBuilder) -> {
+            List<Predicate> predicateList = new ArrayList<>();
+
+            if (ids != null && ids != "") {
+                CriteriaBuilder.In<String> in = criteriaBuilder.in(root.get("ID"));
+                if (ids.contains(",")) {
+                    String[] id = ids.split(",");
+                    for (int i = 0; i < id.length; i++) {
+                        in.value(id[i]);
+                    }
+                } else {
+                    in.value(ids);
+                }
+                predicateList.add(in);
+            }
+
+            if (name != null && name != "") {
+                predicateList.add(criteriaBuilder
+                        .like(root.get("name"),
+                                "%" + name + "%"));
+            }
+            if (platform != null ) {
+                predicateList.add(criteriaBuilder
+                        .equal(root.get("platform"),
+                                platform));
+            }
+
+            // 开始时间
+            if (searchTimeStart != null && searchTimeEnd != null) {
+                predicateList.add(criteriaBuilder
+                        .between(root.<DateTime>get(searchTimeField), searchTimeStart, searchTimeEnd));
+            }
+
+            return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
+        };
     }
 }

@@ -1,6 +1,6 @@
 infras:
-#  ip: 192.168.18.151
-  ip: rds.xmsuodi.com
+  ip: 192.168.18.151
+#  ip: rds.xmsuodi.com
 spring:
   profiles:
     active: dev
@@ -61,6 +61,13 @@ spring:
         implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
       ddl-auto: update
     generate-ddl: true
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.jms.JmsAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.metrics.orm.jpa.HibernateMetricsAutoConfiguration
 
 
 
@@ -107,4 +114,4 @@ msg:
 
 logging:
   level:
-    root: debug
+    root: error

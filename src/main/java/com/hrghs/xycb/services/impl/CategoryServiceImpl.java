@@ -18,9 +18,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Predicate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -69,11 +74,12 @@ public class CategoryServiceImpl implements CategoryService {
                             .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
                             .getBody()
                             .toDataList(BANMAERP_FIELD_CATEGORYS))
-            .map(o -> (CategoryDTO) o)
-            .collect(Collectors.toList());
+                    .map(o -> (CategoryDTO) o)
+                    .collect(Collectors.toList());
         }else {
-            //todo 多条件查询
-            categoryDTOList = categoryRepository.findAll(PageRequest.of(pageNumber,pageSize)).toList();
+            //todo 多条件查询校验
+            Specification<CategoryDTO> specification = createSpecification(ids, name, parentId, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
+            categoryDTOList = categoryRepository.findAll(specification,PageRequest.of(pageNumber,pageSize)).toList();
         }
         return categoryDTOList;
     }
@@ -91,7 +97,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public List<CategoryDTO> getAndSaveCategoryList(Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties) {
         List<CategoryDTO> categoryDTOList =
-        getCategoryList(null, null, null, pageNumber, pageSize, null, null, null, null, null,true, banmaerpProperties);
+                getCategoryList(null, null, null, pageNumber, pageSize, null, null, null, null, null,true, banmaerpProperties);
         return categoryRepository.saveAllAndFlush(categoryDTOList);
     }
 
@@ -128,5 +134,43 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public CategoryDTO saveCategory(CategoryDTO categoryDTO) {
         return categoryRepository.saveAndFlush(categoryDTO);
+    }
+    private Specification<CategoryDTO> createSpecification(String ids, String name, String parentId, Integer pageNumber, Integer pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+        return (root, criteriaQuery, criteriaBuilder) -> {
+            List<Predicate> predicateList = new ArrayList<>();
+
+            if (ids != null && ids != "") {
+                CriteriaBuilder.In<String> in = criteriaBuilder.in(root.get("ID"));
+                if (ids.contains(",")) {
+                    String[] id = ids.split(",");
+                    for (int i = 0; i < id.length; i++) {
+                        in.value(id[i]);
+                    }
+                } else {
+                    in.value(ids);
+                }
+                predicateList.add(in);
+            }
+
+            if (name != null && name != "") {
+                predicateList.add(criteriaBuilder
+                        .like(root.get("name"),
+                                "%" + name + "%"));
+            }
+            if (parentId != null && parentId != "") {
+                predicateList.add(criteriaBuilder
+                        .equal(root.get("parentId"),
+                                parentId));
+            }
+
+            // 开始时间
+            if (searchTimeStart != null && searchTimeEnd != null) {
+                predicateList.add(criteriaBuilder
+                        .between(root.<DateTime>get(searchTimeField), searchTimeStart, searchTimeEnd));
+            }
+
+
+            return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
+        };
     }
 }

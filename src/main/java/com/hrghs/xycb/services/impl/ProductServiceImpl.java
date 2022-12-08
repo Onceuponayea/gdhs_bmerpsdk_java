@@ -20,12 +20,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Predicate;
 import java.util.*;
 import java.util.stream.Collectors;
 import static com.hrghs.xycb.domains.Constants.*;
@@ -84,6 +88,11 @@ public class ProductServiceImpl implements ProductService {
             , String supplier, String costPriceStart, String costPriceEnd, Integer pageNumber, Integer pageSize
             , DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy
             ,Boolean remote, BanmaerpProperties banmaerpProperties) {
+        if (remote){
+
+        }else{
+            Specification<ProductDTO> specification = createSpecification(spuIds, source, spu, categoryId, title, supplier, costPriceStart, costPriceEnd, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
+        }
         String apiUrl = String.format(BanmaerpURL.banmaerp_productlist_GET, pageNumber, pageSize,
                 searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
@@ -92,11 +101,11 @@ public class ProductServiceImpl implements ProductService {
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
         HttpEntity requestBody = new HttpEntity(null, httpHeaders);
         List<ProductDTO> productDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-        .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
-        .getBody()
-        .toDataList(BANMAERP_FIELD_PRODUCTS))
-        .map(o -> (ProductDTO) o)
-        .collect(Collectors.toList());
+                        .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+                        .getBody()
+                        .toDataList(BANMAERP_FIELD_PRODUCTS))
+                .map(o -> (ProductDTO) o)
+                .collect(Collectors.toList());
         return productDTOList;
     }
 
@@ -119,13 +128,10 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @CheckBanmaerpProperties
     public List<ProductDTO> getAndSaveProductList(Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties) {
-        //todo getAndSaveProductList
-        System.out.println("getAndSaveProductList.............in");
         List<ProductDTO> productDTOS =
-        getProductList(null,null,null,null,null,null,null,null
-                ,pageNumber,pageSize,null,null,null,null,
-                null,true,banmaerpProperties);
-        //save pageNumber,pageSize to Redis
+                getProductList(null,null,null,null,null,null,null,null
+                        ,pageNumber,pageSize,null,null,null,null,
+                        null,true,banmaerpProperties);
         String redisKey =BANMAERP_FIELD_PREFIX.concat(COLON).concat(BANMAERP_FIELD_TASK).concat(COLON)
                 .concat(banmaerpProperties.getX_BANMA_MASTER_APP_ID());
         String value = BANMAERP_FIELD_PRODUCTS.concat(UNDERSCORE).concat(pageNumber.toString())
@@ -206,7 +212,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private BanmaErpResponseDTO<ProductDTO> sendProductRequest(String apiUrl, HttpMethod method, ProductDTO productDto,
-                                                         BanmaerpProperties banmaerpProperties) {
+                                                               BanmaerpProperties banmaerpProperties) {
         String requestBodyJson = null;
         try {
             requestBodyJson = objectMapper.writeValueAsString(productDto);
@@ -222,9 +228,9 @@ public class ProductServiceImpl implements ProductService {
         httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         HttpEntity requestBody = new HttpEntity(requestBodyJson, httpHeaders);
         return
-        httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), method, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<ProductDTO>>() {})
-                .getBody();
+                httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                        .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), method, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<ProductDTO>>() {})
+                        .getBody();
     }
 
     /**
@@ -258,14 +264,15 @@ public class ProductServiceImpl implements ProductService {
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
             productSkusDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
-            .getBody()
-            .toDataList(BANMAERP_FIELD_SKUS))
-            .map(o -> (ProductSkusDTO) o)
-            .collect(Collectors.toList());
+                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+                            .getBody()
+                            .toDataList(BANMAERP_FIELD_SKUS))
+                    .map(o -> (ProductSkusDTO) o)
+                    .collect(Collectors.toList());
         }else {
             //todo 需要增加多条件查询
-            productSkusDTOList=skusRepository.findAll(PageRequest.of(pageNumber,pageSize)).toList();
+            Specification<ProductSkusDTO> specification = createSpecification(skuIds, code, spuId, costPriceStart, costPriceEnd, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
+            productSkusDTOList=skusRepository.findAll(specification,PageRequest.of(pageNumber,pageSize)).toList();
         }
 
         return productSkusDTOList;
@@ -289,9 +296,9 @@ public class ProductServiceImpl implements ProductService {
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
             productSkusDTO =
-            httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<ProductSkusDTO>>() {})
-                .getBody().getData();
+                    httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<ProductSkusDTO>>() {})
+                            .getBody().getData();
         }else{
             productSkusDTO = skusRepository.findById(skuid).get();
         }
@@ -314,7 +321,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @CheckBanmaerpProperties
     public List<ProductTagsDTO> getProductTagsList(String name, Integer pageNumber, Integer pageSize, DateTime searchTimeStart, DateTime searchTimeEnd,
-        String searchTimeField, String sortField, String sortBy,Boolean remote, BanmaerpProperties banmaerpProperties) {
+                                                   String searchTimeField, String sortField, String sortBy,Boolean remote, BanmaerpProperties banmaerpProperties) {
         List<ProductTagsDTO> productTagsDTOList = null;
         if (remote) {
             String apiUrl = String.format(BanmaerpURL.Banmaerp_taglist_GET, name);
@@ -324,13 +331,14 @@ public class ProductServiceImpl implements ProductService {
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
             productTagsDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
-                    .getBody()
-                    .toDataList(BANMAERP_FIELD_TAGS))
+                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+                            .getBody()
+                            .toDataList(BANMAERP_FIELD_TAGS))
                     .map(o -> (ProductTagsDTO) o)
                     .collect(Collectors.toList());
         }else{
-            productTagsDTOList = productTagsRepository.findAll(PageRequest.of(pageNumber,pageSize)).toList();
+            Specification<ProductTagsDTO> specification = createSpecification(name, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
+            productTagsDTOList = productTagsRepository.findAll(specification,PageRequest.of(pageNumber,pageSize)).toList();
         }
         return productTagsDTOList;
     }
@@ -351,8 +359,8 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @CheckBanmaerpProperties
     public List<ProductSuppliersInfoDTO> getProductSuppliersList(String name, Integer pageNumber, Integer pageSize, DateTime searchTimeStart,
-        DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy,Boolean remote,
-        BanmaerpProperties banmaerpProperties) {
+                                                                 DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy,Boolean remote,
+                                                                 BanmaerpProperties banmaerpProperties) {
         List<ProductSuppliersInfoDTO> productSuppliersInfoDTOList = null;
         if (remote){
             String apiUrl = String.format(BanmaerpURL.Banmaerp_supplierlist_GET, name);
@@ -362,13 +370,14 @@ public class ProductServiceImpl implements ProductService {
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
             productSuppliersInfoDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
-                .getBody()
-                .toDataList(BANMAERP_FIELD_SUPPLIERS))
-                .map(o -> (ProductSuppliersInfoDTO) o)
-                .collect(Collectors.toList());
+                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+                            .getBody()
+                            .toDataList(BANMAERP_FIELD_SUPPLIERS))
+                    .map(o -> (ProductSuppliersInfoDTO) o)
+                    .collect(Collectors.toList());
         }else{
-            productSuppliersInfoDTOList =  suppliersRepository.findAll(PageRequest.of(pageNumber,pageSize)).toList();
+            Specification<ProductSuppliersInfoDTO> specification = createSpecificationSup(name, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
+            productSuppliersInfoDTOList =  suppliersRepository.findAll(specification,PageRequest.of(pageNumber,pageSize)).toList();
         }
 
         return productSuppliersInfoDTOList;
@@ -401,7 +410,6 @@ public class ProductServiceImpl implements ProductService {
         return saveOrUpdateProducts;
     }
 
-    @Transactional
     @Override
     @CheckBanmaerpProperties
     public ProductDTO save(ProductDTO productDTO,BanmaerpProperties banmaerpProperties) {
@@ -411,5 +419,153 @@ public class ProductServiceImpl implements ProductService {
         //productRepository.saveAndFlush(result);
         return result;
     }
+    /**
+     * 查询产品列表
+     *
+     * @param spuIds          spuID，用逗号分隔
+     * @param source          店铺ID
+     * @param spu             spu code
+     * @param categoryId      erp类目ID
+     * @param title           标题
+     * @param supplier        供应商名称
+     * @param costPriceStart  成本价起始
+     * @param costPriceEnd    成本价结束
+     * @param pageNumber      页码（必填）
+     * @param pageSize        页大小
+     * @param searchTimeStart 查询的开始时间
+     * @param searchTimeEnd   查询的结束时间
+     * @param searchTimeField 查询的时间字段名，具体值参见:SearchTimeField
+     * @param sortField       排序字段名，具体值参见:SortField
+     * @param sortBy          排序方式，具体值参见:SortBy
+     * @return
+     */
+    private Specification<ProductDTO> createSpecification(String spuIds, String source, String spu, String categoryId, String title, String supplier, String costPriceStart, String costPriceEnd, Integer pageNumber, Integer pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+        return (root, criteriaQuery, criteriaBuilder) -> {
+            List<Predicate> predicateList = new ArrayList<>();
 
+            if (spuIds != null && spuIds != "") {
+                CriteriaBuilder.In<Long> in = criteriaBuilder.in(root.get("SPU").get("SPUID"));
+                if (spuIds.contains(",")) {
+                    String[] ids = spuIds.split(",");
+                    for (int i = 0; i < ids.length; i++) {
+                        in.value(Long.parseLong(ids[i]));
+                    }
+                } else {
+                    in.value(Long.parseLong(spuIds));
+                }
+                predicateList.add(in);
+            }
+
+            // SPU code
+            if (spu != null && spu != "") {
+                predicateList.add(criteriaBuilder
+                        .equal(root.get("SPU").get("code"),
+                                spu));
+            }
+            // 类目id
+            if (categoryId != null && categoryId != "") {
+                predicateList.add(criteriaBuilder
+                        .equal(root.get("SPU").get("leiMuID"),
+                                categoryId));
+            }
+            // 标题
+            if (title != null && title != "") {
+                predicateList.add(criteriaBuilder
+                        .like(root.get("SPU").get("title"),
+                                "%" + title + "%"));
+            }
+            // 供应商名称
+            if (supplier != null && supplier != "") {
+                predicateList.add(criteriaBuilder
+                        .like(root.get("suppliers").get("info").get("name"),
+                                "%" + supplier + "%"));
+            }
+            // 成本价起始值
+            if (costPriceStart != null && costPriceStart != "") {
+                predicateList.add(criteriaBuilder
+                        .ge(root.get("SKUs").get("costPrice").as(Double.class),
+                                Double.parseDouble(costPriceStart)));
+            }
+            // 成本价结束值
+            if (costPriceEnd != null && costPriceEnd != "") {
+                predicateList.add(criteriaBuilder
+                        .le(root.get("SKUs").get("costPrice").as(Double.class),
+                                Double.parseDouble(costPriceEnd)));
+            }
+
+            // 开始时间
+            if (searchTimeStart != null && searchTimeEnd != null) {
+                predicateList.add(criteriaBuilder
+                        .between(root.<DateTime>get("SPU").get(searchTimeField), searchTimeStart, searchTimeEnd));
+            }
+
+
+            return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
+        };
+    }
+
+    private Specification<ProductSkusDTO> createSpecification(String skuIds, String code, String spuId, String costPriceStart, String costPriceEnd, Integer pageNumber, Integer pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+        return (root, criteriaQuery, criteriaBuilder) -> {
+            List<Predicate> predicateList = new ArrayList<>();
+
+            if (skuIds != null && skuIds != "") {
+                CriteriaBuilder.In<Long> in = criteriaBuilder.in(root.get("ID"));
+                if (skuIds.contains(",")) {
+                    String[] id = skuIds.split(",");
+                    for (int i = 0; i < id.length; i++) {
+                        in.value(Long.parseLong(id[i]));
+                    }
+                } else {
+                    in.value(Long.parseLong(skuIds));
+                }
+                predicateList.add(in);
+            }
+
+            if (code != null && code != "") {
+                predicateList.add(criteriaBuilder
+                        .equal(root.get("code"),
+                                code));
+            }
+            // 成本价起始值
+            if (costPriceStart != null && costPriceStart != "") {
+                predicateList.add(criteriaBuilder
+                        .ge(root.get("costPrice").as(Double.class),
+                                Double.parseDouble(costPriceStart)));
+            }
+            // 成本价结束值
+            if (costPriceEnd != null && costPriceEnd != "") {
+                predicateList.add(criteriaBuilder
+                        .le(root.get("costPrice").as(Double.class),
+                                Double.parseDouble(costPriceEnd)));
+            }
+
+            return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
+        };
+    }
+
+    private Specification<ProductTagsDTO> createSpecification(String name, Integer pageNumber, Integer pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+        return (root, criteriaQuery, criteriaBuilder) -> {
+            List<Predicate> predicateList = new ArrayList<>();
+
+            if (name != null && name != "") {
+                predicateList.add(criteriaBuilder
+                        .like(root.get("name"),
+                                "%" + name + "%"));
+            }
+            return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
+        };
+    }
+
+    private Specification<ProductSuppliersInfoDTO> createSpecificationSup(String name, Integer pageNumber, Integer pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+        return (root, criteriaQuery, criteriaBuilder) -> {
+            List<Predicate> predicateList = new ArrayList<>();
+
+            if (name != null && name != "") {
+                predicateList.add(criteriaBuilder
+                        .like(root.get("name"),
+                                "%" + name + "%"));
+            }
+            return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
+        };
+    }
 }

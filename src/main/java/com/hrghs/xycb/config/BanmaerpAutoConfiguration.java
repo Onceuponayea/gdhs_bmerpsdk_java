@@ -15,7 +15,16 @@ import com.hrghs.xycb.utils.converters.JodaDateTimeDeserialiser;
 import com.hrghs.xycb.utils.converters.JodaDateTimeSerialiser;
 import net.javacrumbs.shedlock.spring.annotation.EnableSchedulerLock;
 import org.joda.time.DateTime;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
+import org.springframework.beans.factory.BeanFactoryUtils;
+import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -35,22 +44,31 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import javax.sql.DataSource;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 
-@Configuration
-@EnableAutoConfiguration(exclude = {HibernateJpaAutoConfiguration.class, JmsAutoConfiguration.class, RedisReactiveAutoConfiguration.class})
+/**
+ * make other bean primary
+ * https://stackoverflow.com/questions/65708656/how-do-you-make-a-spring-bean-primary-only-if-another-primary-bean-does-not-exis
+ *
+ */
+
+//@EnableAutoConfiguration(exclude = {HibernateJpaAutoConfiguration.class, JmsAutoConfiguration.class, RedisReactiveAutoConfiguration.class})
 @ComponentScan(basePackages = {"com.hrghs.xycb"})
 @EnableConfigurationProperties(value = {BanmaerpProperties.class,BanmaerpDruidXADataSource.class})
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableScheduling
 @EnableAsync
 @EnableSchedulerLock(defaultLockAtLeastFor = "PT30S",defaultLockAtMostFor = "PT300S")
+@AutoConfigureAfter(BanmaerpDbAutoConfiguration.class)
 @ConditionalOnProperty(value = "enabled",prefix = "erp.banmaerp", havingValue = "true", matchIfMissing = false)
-@AutoConfigureAfter({DataSourceAutoConfiguration.class})
-public class BanmaerpAutoConfiguration {
+public class BanmaerpAutoConfiguration implements BeanDefinitionRegistryPostProcessor, BeanFactoryAware {
     //@Bean(name = "objectMapper")
     public ObjectMapper objectMapper(){
         ObjectMapper objectMapper = new ObjectMapper()
@@ -177,5 +195,59 @@ public class BanmaerpAutoConfiguration {
         return new SsoServiceImpl();
     }
 
+    private BeanFactory beanFactory;
 
+    @Override
+    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+        this.beanFactory = beanFactory;
+    }
+
+    /**
+     * to programmatically set bean from other projects as primary, like datasource
+     * @param beanDefinitionRegistry
+     * @throws BeansException
+     */
+    @Override
+    public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry beanDefinitionRegistry) throws BeansException {
+        selectPrimaryDataSource(beanDefinitionRegistry);
+        selectPrimaryTransactionManager(beanDefinitionRegistry);
+    }
+
+    @Override
+    public void postProcessBeanFactory(ConfigurableListableBeanFactory configurableListableBeanFactory) throws BeansException {
+        //unused
+    }
+    private void selectPrimaryDataSource(BeanDefinitionRegistry beanDefinitionRegistry){
+        String[] beansOfType = BeanFactoryUtils.beanNamesForTypeIncludingAncestors((ListableBeanFactory) beanFactory, DataSource.class);
+        Set<String> dsNamesInProject = new LinkedHashSet<>();
+        dsNamesInProject.add("dataSourceHikariBanmaerp");
+        dsNamesInProject.add("dataSourceAtomikosBanmaerp");
+        dsNamesInProject.add("spring.datasource.banmaerp.druid-com.hrghs.xycb.config.BanmaerpDruidXADataSource");
+        for (String beanName : beansOfType){
+            BeanDefinition beanDefinition = beanDefinitionRegistry.getBeanDefinition(beanName);
+            if (beanDefinition.isPrimary()){
+                //found an existing primary bean of same type
+                return ;
+            }
+            if (!dsNamesInProject.contains(beanName)){//or beanName equal dataSource
+                beanDefinition.setPrimary(true);
+            }
+        }
+    }
+    private void selectPrimaryTransactionManager(BeanDefinitionRegistry beanDefinitionRegistry){
+        String[] beanDef = BeanFactoryUtils.beanNamesForTypeIncludingAncestors((ListableBeanFactory) beanFactory,org.springframework.transaction.TransactionManager.class);
+        Set<String> txNamesInProject = new LinkedHashSet<>();
+        txNamesInProject.add("banmaerpXATransactionManager");
+        for (String beanName : beanDef){
+            BeanDefinition beanDefinition = beanDefinitionRegistry.getBeanDefinition(beanName);
+            if (beanDefinition.isPrimary()){
+                //found an existing primary bean of same type
+                return ;
+            }
+                //or beanName equal transactionManager
+            if (!txNamesInProject.contains(beanName)){
+                beanDefinition.setPrimary(true);
+            }
+        }
+    }
 }
