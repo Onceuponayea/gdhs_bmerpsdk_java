@@ -1,11 +1,11 @@
 package com.hrghs.xycb.services.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
 import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.StoreDTO;
 import com.hrghs.xycb.repositories.StoreRepository;
+import com.hrghs.xycb.utils.BanmaParamsUtils;
 import com.hrghs.xycb.utils.BanmaTokenUtils;
 import com.hrghs.xycb.utils.HttpClientsUtils;
 import com.hrghs.xycb.domains.BanmaerpSigningVO;
@@ -13,7 +13,7 @@ import com.hrghs.xycb.domains.BanmaerpURL;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.domains.enums.BanmaerpPlatformEnums;
 import com.hrghs.xycb.services.StoreService;
-import com.hrghs.xycb.utils.EncryptionUtils;
+import com.hrghs.xycb.utils.BanmaEncryptionUtils;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -46,7 +46,7 @@ public class StoreServiceImpl implements StoreService {
     @Lazy
     private BanmaTokenUtils banmaTokenUtils;
     @Autowired
-    private EncryptionUtils encryptionUtils;
+    private BanmaEncryptionUtils encryptionUtils;
     @Autowired
     private StoreRepository storeRepository;
 
@@ -92,6 +92,8 @@ public class StoreServiceImpl implements StoreService {
     public List<StoreDTO> getStoretList(String ids, String name, BanmaerpPlatformEnums.Platform platform, Integer pageNumber, Integer pageSize, DateTime searchTimeStart,
                                         DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy, Boolean remote,BanmaerpProperties banmaerpProperties) {
         List<StoreDTO> storeDTOList;
+        pageSize = BanmaParamsUtils.checkPageSize(pageSize);
+        pageNumber = BanmaParamsUtils.checkPageNum(pageNumber);
         if (remote){
             String apiUrl = String.format(BanmaerpURL.banmaerp_storelist_GET,ids,name,platform==null?"":platform.toString(),pageNumber,pageSize,
                     searchTimeStart, searchTimeEnd,searchTimeField,sortField,sortBy);
@@ -101,14 +103,13 @@ public class StoreServiceImpl implements StoreService {
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null,httpHeaders);
             storeDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
-                            .getBody()
-                            .toDataList(BANMAERP_FIELD_STORES))
-                    .map(o -> (StoreDTO)o)
-                    .collect(Collectors.toList());
+                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+                    .getBody()
+                    .toDataList(BANMAERP_FIELD_STORES))
+            .map(o -> (StoreDTO)o)
+            .collect(Collectors.toList());
             storeRepository.saveAll(storeDTOList);
         }else {
-            //todo 多条件查询
             Specification<StoreDTO> specification = createSpecification(ids, name, platform, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
             storeDTOList = storeRepository.findAll(specification,PageRequest.of(pageNumber,pageSize)).toList();
         }
@@ -153,7 +154,6 @@ public class StoreServiceImpl implements StoreService {
         }else{
             return storeRepository.findById(storeId).get();
         }
-
     }
 
     @Override

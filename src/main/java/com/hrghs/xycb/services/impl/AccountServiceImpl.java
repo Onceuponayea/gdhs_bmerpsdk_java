@@ -16,10 +16,7 @@ import com.hrghs.xycb.domains.enums.BanmaerpAccountEnums;
 import com.hrghs.xycb.repositories.AccountRepository;
 import com.hrghs.xycb.repositories.BanmaerpPropertiesRepository;
 import com.hrghs.xycb.services.AccountService;
-import com.hrghs.xycb.utils.BanmaTokenUtils;
-import com.hrghs.xycb.utils.DateTimeConverter;
-import com.hrghs.xycb.utils.EncryptionUtils;
-import com.hrghs.xycb.utils.HttpClientsUtils;
+import com.hrghs.xycb.utils.*;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
@@ -29,7 +26,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Predicate;
 import java.util.ArrayList;
@@ -46,7 +42,7 @@ public class AccountServiceImpl implements AccountService {
     @Autowired
     private BanmaTokenUtils banmaTokenUtils;
     @Autowired
-    private EncryptionUtils encryptionUtils;
+    private BanmaEncryptionUtils encryptionUtils;
     @Autowired
     private AccountRepository accountRepository;
 
@@ -80,6 +76,8 @@ public class AccountServiceImpl implements AccountService {
             , DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy,Boolean remote
             , BanmaerpProperties banmaerpProperties) {
         List<AccountDTO> accountDTOList;
+        pageSize = BanmaParamsUtils.checkPageSize(pageSize);
+        pageNumber = BanmaParamsUtils.checkPageNum(pageNumber);
         if (remote){
             String apiUrl = String.format(BanmaerpURL.banmaerp_accountlist_GET,ids,email,realName,phone,pageNumber,pageSize,
                     searchTimeStart, searchTimeEnd,searchTimeField,sortField,sortBy);
@@ -89,17 +87,15 @@ public class AccountServiceImpl implements AccountService {
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null,httpHeaders);
             accountDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
-                            .getBody()
-                            .toDataList(BANMAERP_FIELD_ACCOUNTS))
-                    .map(o -> (AccountDTO)o)
-                    .collect(Collectors.toList());
+                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+                    .getBody()
+                    .toDataList(BANMAERP_FIELD_ACCOUNTS))
+            .map(o -> (AccountDTO)o)
+            .collect(Collectors.toList());
         }else{
-            //todo 多条件查询校验
             Specification<AccountDTO> specification = createSpecification(ids, email, realName, phone, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
             accountDTOList = accountRepository.findAll(specification,PageRequest.of(pageNumber,pageSize)).getContent();
         }
-
         return accountDTOList;
     }
 

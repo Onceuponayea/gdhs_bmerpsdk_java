@@ -24,8 +24,6 @@ import static javax.xml.crypto.dsig.DigestMethod.SHA256;
 @ConstructorBinding
 @Data
 @ConfigurationProperties(prefix = "erp.banmaerp",ignoreInvalidFields=true)
-@EnableJpaRepositories(entityManagerFactoryRef="banmaerpEntityManagerFactory",transactionManagerRef="banmaerpXATransactionManager",
-        bootstrapMode= BootstrapMode.DEFAULT,basePackages = "com.hrghs.xycb.repositories")
 public class BanmaerpProperties {
     /**
      * @@apiNote Immutable property for banmaERP api mandatory Headers

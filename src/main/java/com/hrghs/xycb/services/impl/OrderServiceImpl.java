@@ -12,8 +12,9 @@ import com.hrghs.xycb.repositories.OrderMasterRepository;
 import com.hrghs.xycb.repositories.OrderRepository;
 import com.hrghs.xycb.repositories.OrderTrackingRepository;
 import com.hrghs.xycb.services.OrderService;
+import com.hrghs.xycb.utils.BanmaParamsUtils;
 import com.hrghs.xycb.utils.BanmaTokenUtils;
-import com.hrghs.xycb.utils.EncryptionUtils;
+import com.hrghs.xycb.utils.BanmaEncryptionUtils;
 import com.hrghs.xycb.utils.HttpClientsUtils;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +41,7 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private BanmaTokenUtils banmaTokenUtils;
     @Autowired
-    private EncryptionUtils encryptionUtils;
+    private BanmaEncryptionUtils encryptionUtils;
     @Autowired
     private OrderTrackingRepository trackingRepository;
     @Autowired
@@ -78,6 +79,8 @@ public class OrderServiceImpl implements OrderService {
                                        String searchTimeField, String sortField, String sortBy,Boolean remote,
                                        BanmaerpProperties banmaerpProperties) {
         List<OrderDTO> orderDTOList;
+        pageSize = BanmaParamsUtils.checkPageSize(pageSize);
+        pageNumber = BanmaParamsUtils.checkPageNum(pageNumber);
         if (remote){
             String apiUrl = String.format(BanmaerpURL.banmaerp_order_GET, pageNumber, pageSize,searchTimeStart,searchTimeEnd,searchTimeField);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
@@ -92,7 +95,6 @@ public class OrderServiceImpl implements OrderService {
                     .map(o -> (OrderDTO) o)
                     .collect(Collectors.toList());
         }else{
-            //todo 多条件查询
             Specification<OrderDTO> specification = createSpecification(ids, storeId, platform,status,payStatus,holdStatus,refundStatus,inventoryStatus,countryCode, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
             orderDTOList = orderRepository.findAll(specification,PageRequest.of(pageNumber,pageSize)).toList();
         }
@@ -163,11 +165,11 @@ public class OrderServiceImpl implements OrderService {
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
             orderFulfillmentDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<OrderFulfillmentDTO>>() {})
-                            .getBody()
-                            .toDataList(BANMAERP_FIELD_FULFILLMENTS))
-                    .map(o -> (OrderFulfillmentDTO) o)
-                    .collect(Collectors.toList());
+                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<OrderFulfillmentDTO>>() {})
+                    .getBody()
+                    .toDataList(BANMAERP_FIELD_FULFILLMENTS))
+            .map(o -> (OrderFulfillmentDTO) o)
+            .collect(Collectors.toList());
             orderFulfillmentDTOList.forEach(orderFulfillmentDTO -> orderFulfillmentDTO.setOrderId(orderId));
             orderFulfillmentDTOList = fulfillmentRepository.saveAllAndFlush(orderFulfillmentDTOList);
         }else{
@@ -195,11 +197,11 @@ public class OrderServiceImpl implements OrderService {
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
             orderTrackingDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<OrderTrackingDTO>>() {})
-                            .getBody()
-                            .toDataList(BANMAERP_FIELD_TRACKINGS))
-                    .map(o -> (OrderTrackingDTO) o)
-                    .collect(Collectors.toList());
+                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<OrderTrackingDTO>>() {})
+                    .getBody()
+                    .toDataList(BANMAERP_FIELD_TRACKINGS))
+            .map(o -> (OrderTrackingDTO) o)
+            .collect(Collectors.toList());
             orderTrackingDTOList.forEach(orderFulfillmentDTO -> orderFulfillmentDTO.setOrderId(orderId));
             orderTrackingDTOList = trackingRepository.saveAllAndFlush(orderTrackingDTOList);
         }else{

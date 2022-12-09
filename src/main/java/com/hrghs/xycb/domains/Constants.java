@@ -41,7 +41,10 @@ public class Constants {
     public static final String JPA_PROS_HIBERNATE_FORMAT_SQL = "hibernate.format_sql";
     public static final String JPA_PROS_TRANSACTION_TYPE = "javax.persistence.transactionType";
 
-
+//    spring.jpa.hibernate.naming.physical-strategy=org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+//    spring.jpa.hibernate.naming.implicit-strategy=org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+//    spring.jpa.hibernate.ddl-auto=update
+//    spring.jpa.generate-ddl=true
     public static final String Data ="Data";
     public static final String BANMAERP_FIELD_STORES = "Stores";
     public static final String BANMAERP_FIELD_ACCOUNTS = "Accounts";

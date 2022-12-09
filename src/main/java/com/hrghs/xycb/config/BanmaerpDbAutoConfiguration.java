@@ -23,6 +23,7 @@ import org.springframework.boot.jta.atomikos.AtomikosDataSourceBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.*;
 import org.springframework.core.env.Environment;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
@@ -33,6 +34,7 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.data.repository.config.BootstrapMode;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -52,6 +54,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import static com.hrghs.xycb.domains.Constants.*;
 
 @AutoConfigureAfter({DataSourceAutoConfiguration.class})
+@EnableJpaRepositories(entityManagerFactoryRef="banmaerpEntityManagerFactory",transactionManagerRef="banmaerpXATransactionManager",
+        bootstrapMode= BootstrapMode.DEFAULT,basePackages = "com.hrghs.xycb.repositories")
 @EntityScan(basePackages = {"com.hrghs.xycb.domains"})
 @EnableTransactionManagement
 public class BanmaerpDbAutoConfiguration {
@@ -67,8 +71,8 @@ public class BanmaerpDbAutoConfiguration {
     private boolean h2ServerEnabled;
     //初始化
     @Bean
-    @ConditionalOnMissingBean
-    public ReactiveRedisConnectionFactory redisConnectionFactory(@Value("${spring.redis.host:127.0.0.1}") String host,
+    @ConditionalOnMissingBean(type = "reactiveRedisConnectionFactory")
+    public ReactiveRedisConnectionFactory reactiveRedisConnectionFactory(@Value("${spring.redis.host:127.0.0.1}") String host,
                                                                  @Value("${spring.redis.port:3306}")int port,
                                                                  @Value("${spring.redis.password:}")String password,
                                                                  @Value("${spring.redis.database:1}")int db,
@@ -88,13 +92,13 @@ public class BanmaerpDbAutoConfiguration {
     }
     @Bean
     @ConditionalOnMissingBean
-    public ReactiveRedisOperations<String,String> stringReactiveRedisOperations(@Qualifier("redisConnectionFactory")ReactiveRedisConnectionFactory redisConnectionFactory){
+    public ReactiveRedisOperations<String,String> stringReactiveRedisOperations(@Qualifier("reactiveRedisConnectionFactory")ReactiveRedisConnectionFactory redisConnectionFactory){
         return new ReactiveStringRedisTemplate(redisConnectionFactory);
     }
     @Bean(name = "tokenRespReactiveRedisOperations")
     @Lazy
     @DependsOn(value = {"jacksonObjectMapper","jodaModule"})
-    public ReactiveRedisOperations<String, TokenResponseDTO> tokenRespReactiveRedisOperations(@Qualifier("redisConnectionFactory")ReactiveRedisConnectionFactory redisConnectionFactory
+    public ReactiveRedisOperations<String, TokenResponseDTO> tokenRespReactiveRedisOperations(@Qualifier("reactiveRedisConnectionFactory")ReactiveRedisConnectionFactory redisConnectionFactory
             , @Qualifier(value = "jacksonObjectMapper") ObjectMapper objectMapper, @Qualifier(value = "jodaModule") JodaModule jodaModule){
         RedisSerializationContext.RedisSerializationContextBuilder<String,TokenResponseDTO> builder=
                 RedisSerializationContext.newSerializationContext(new StringRedisSerializer());
@@ -104,7 +108,7 @@ public class BanmaerpDbAutoConfiguration {
         return new ReactiveRedisTemplate<>(redisConnectionFactory,builder.value(jsonRedisSerializer).build());
     }
     @Bean
-    public LockProvider lockProvider(@Qualifier("redisConnectionFactory") ReactiveRedisConnectionFactory connectionFactory){
+    public LockProvider lockProvider(@Qualifier("reactiveRedisConnectionFactory") ReactiveRedisConnectionFactory connectionFactory){
         return new ReactiveRedisLockProvider.Builder(connectionFactory).build();
     }
 

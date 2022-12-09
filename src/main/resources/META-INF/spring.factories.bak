@@ -1,4 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.hrghs.xycb.config.BanmaerpAutoConfiguration,\
-com.hrghs.xycb.config.BanmaerpDbAutoConfiguration
-

@@ -38,13 +38,13 @@ public class ProductDTO implements Serializable {
     @GeneratedValue(generator = "UUID")
     private UUID productUUId;
 
-    @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY, orphanRemoval = true, optional = true)
+    @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER, orphanRemoval = true, optional = true)
     @JoinColumn(name = "product_spuid", referencedColumnName = "spu_id")
     @JsonManagedReference
     @JsonProperty(value = "SPU")
     private ProductSpuDTO SPU;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true, optional = true)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true, optional = true)
     @JoinColumn(name = "product_DescriptionId", referencedColumnName = "pd_id")
     @JsonManagedReference
     @JsonProperty(value = "Descriptions")

@@ -12,7 +12,7 @@ import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_APPID;
 import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_APPSECRET;
 import static jodd.util.StringPool.*;
 
-public class EncryptionUtils {
+public class BanmaEncryptionUtils {
     /**
      * @@apiNote banmaErp support multiple signing method:
      * SHA1

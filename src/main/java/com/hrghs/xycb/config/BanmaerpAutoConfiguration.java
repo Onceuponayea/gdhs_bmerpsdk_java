@@ -8,7 +8,7 @@ import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.services.*;
 import com.hrghs.xycb.services.impl.*;
 import com.hrghs.xycb.utils.BanmaTokenUtils;
-import com.hrghs.xycb.utils.EncryptionUtils;
+import com.hrghs.xycb.utils.BanmaEncryptionUtils;
 import com.hrghs.xycb.utils.HttpClientsUtils;
 import com.hrghs.xycb.utils.WebHookUtils;
 import com.hrghs.xycb.utils.converters.JodaDateTimeDeserialiser;
@@ -26,16 +26,13 @@ import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.jms.JmsAutoConfiguration;
-import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.*;
+import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.http.client.BufferingClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -53,11 +50,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 
-/**
- * make other bean primary
- * https://stackoverflow.com/questions/65708656/how-do-you-make-a-spring-bean-primary-only-if-another-primary-bean-does-not-exis
- *
- */
 
 //@EnableAutoConfiguration(exclude = {HibernateJpaAutoConfiguration.class, JmsAutoConfiguration.class, RedisReactiveAutoConfiguration.class})
 @ComponentScan(basePackages = {"com.hrghs.xycb"})
@@ -69,7 +61,7 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKN
 @AutoConfigureAfter(BanmaerpDbAutoConfiguration.class)
 @ConditionalOnProperty(value = "enabled",prefix = "erp.banmaerp", havingValue = "true", matchIfMissing = false)
 public class BanmaerpAutoConfiguration implements BeanDefinitionRegistryPostProcessor, BeanFactoryAware {
-    //@Bean(name = "objectMapper")
+    @Bean(name = "objectMapper")
     public ObjectMapper objectMapper(){
         ObjectMapper objectMapper = new ObjectMapper()
                 .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS,false)
@@ -144,8 +136,8 @@ public class BanmaerpAutoConfiguration implements BeanDefinitionRegistryPostProc
     }
 
     @Bean
-    public EncryptionUtils encryptionUtils(){
-        return new EncryptionUtils();
+    public BanmaEncryptionUtils encryptionUtils(){
+        return new BanmaEncryptionUtils();
     }
     @Bean
     @DependsOn(value = {"restTemplate"})
@@ -154,43 +146,43 @@ public class BanmaerpAutoConfiguration implements BeanDefinitionRegistryPostProc
     }
     @Bean
     @Lazy
-    @Transactional(transactionManager = "banmaerpXATransactionManager")
+    //@Transactional(transactionManager = "banmaerpXATransactionManager")
     public AccountService accountService(){
         return new AccountServiceImpl();
     }
     @Bean
     @Lazy
-    @Transactional(transactionManager = "banmaerpXATransactionManager")
+    //@Transactional(transactionManager = "banmaerpXATransactionManager")
     public CategoryService categoryService(){
         return new CategoryServiceImpl();
     }
     @Bean
     @Lazy
-    @Transactional(transactionManager = "banmaerpXATransactionManager")
+    //@Transactional(transactionManager = "banmaerpXATransactionManager")
     public OrderService orderService(){
         return new OrderServiceImpl();
     }
     @Bean
     @Lazy
-    @Transactional(transactionManager = "banmaerpXATransactionManager")
+    //@Transactional(transactionManager = "banmaerpXATransactionManager")
     public ProductService productService(){
         return new ProductServiceImpl();
     }
     @Bean
     @Lazy
-    @Transactional(transactionManager = "banmaerpXATransactionManager")
+    //@Transactional(transactionManager = "banmaerpXATransactionManager")
     public StoreService storeService(){
         return new StoreServiceImpl();
     }
     @Bean
     @Lazy
-    @Transactional(transactionManager = "banmaerpXATransactionManager")
+    //@Transactional(transactionManager = "banmaerpXATransactionManager")
     public StorageService storageService(){
         return new StorageServiceImpl();
     }
     @Bean
     @Lazy
-    @Transactional(transactionManager = "banmaerpXATransactionManager")
+    //@Transactional(transactionManager = "banmaerpXATransactionManager")
     public SsoService ssoService(){
         return new SsoServiceImpl();
     }
@@ -211,6 +203,8 @@ public class BanmaerpAutoConfiguration implements BeanDefinitionRegistryPostProc
     public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry beanDefinitionRegistry) throws BeansException {
         selectPrimaryDataSource(beanDefinitionRegistry);
         selectPrimaryTransactionManager(beanDefinitionRegistry);
+        selectPrimaryRedisConnectionFactory(beanDefinitionRegistry);
+        addOtherDSIntoTxManagement(beanDefinitionRegistry);
     }
 
     @Override
@@ -231,6 +225,7 @@ public class BanmaerpAutoConfiguration implements BeanDefinitionRegistryPostProc
             }
             if (!dsNamesInProject.contains(beanName)){//or beanName equal dataSource
                 beanDefinition.setPrimary(true);
+                //if spring.datasource.host spring.datasource.port不存在则直接从beanDefinition获取
             }
         }
     }
@@ -249,5 +244,20 @@ public class BanmaerpAutoConfiguration implements BeanDefinitionRegistryPostProc
                 beanDefinition.setPrimary(true);
             }
         }
+    }
+    private void selectPrimaryRedisConnectionFactory(BeanDefinitionRegistry beanDefinitionRegistry){
+        String[] beanDef = BeanFactoryUtils.beanNamesForTypeIncludingAncestors((ListableBeanFactory) beanFactory, ReactiveRedisConnectionFactory.class);
+        Set<String> redisConFacInProject = new LinkedHashSet<>();
+        redisConFacInProject.add("reactiveRedisConnectionFactory");
+        for (String beanName : beanDef){
+            BeanDefinition beanDefinition = beanDefinitionRegistry.getBeanDefinition(beanName);
+            if (beanDefinition.isPrimary())return;
+            if (!redisConFacInProject.contains(beanName)){
+                beanDefinition.setPrimary(true);
+            }
+        }
+    }
+    private void addOtherDSIntoTxManagement(BeanDefinitionRegistry beanDefinitionRegistry){
+
     }
 }

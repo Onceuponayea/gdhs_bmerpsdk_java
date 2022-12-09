@@ -1,7 +1,6 @@
 package com.hrghs.xycb.services.impl;
 
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
@@ -39,7 +38,7 @@ public class SsoServiceImpl implements SsoService {
     @Autowired
     private BanmaTokenUtils banmaTokenUtils;
     @Autowired
-    private EncryptionUtils encryptionUtils;
+    private BanmaEncryptionUtils encryptionUtils;
 
     @Autowired
     private ObjectMapper objectMapper;

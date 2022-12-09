@@ -4,6 +4,9 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.Arrays;
@@ -12,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 public class DateTimeUtils {
+    private static final Logger logger = LoggerFactory.getLogger(DateTimeUtils.class);
     private static final Map<String, String> DATE_FORMAT_REGEXPS = new HashMap<String, String>() {{
         put("^\\d{8}$", "yyyyMMdd");
         put("^\\d{1,2}-\\d{1,2}-\\d{4}$", "dd-MM-yyyy"); //Aug 24, 1990
@@ -84,8 +88,7 @@ public class DateTimeUtils {
                dateTimeFormatter.parseDateTime(dateTimeSrc);
                return dateTimeFormatter;
            }catch (IllegalArgumentException e){
-               //todo  slf4j log info
-               System.out.println("wrong dateTimeFormatter, keep looping\t" +  dateTimeSrc);
+               logger.warn("wrong dateTimeFormatter, keep looping\t {}",dateTimeSrc);
            }
        }
        return DateTimeFormat.forPattern(determineDateFormat(dateTimeSrc));

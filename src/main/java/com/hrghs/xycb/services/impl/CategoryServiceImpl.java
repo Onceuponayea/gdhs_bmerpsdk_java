@@ -9,7 +9,7 @@ import com.hrghs.xycb.domains.BanmaerpURL;
 import com.hrghs.xycb.domains.banmaerpDTO.CategoryDTO;
 import com.hrghs.xycb.repositories.CategoryRepository;
 import com.hrghs.xycb.utils.BanmaTokenUtils;
-import com.hrghs.xycb.utils.EncryptionUtils;
+import com.hrghs.xycb.utils.BanmaEncryptionUtils;
 import com.hrghs.xycb.utils.HttpClientsUtils;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.services.CategoryService;
@@ -37,12 +37,9 @@ public class CategoryServiceImpl implements CategoryService {
     @Autowired
     private BanmaTokenUtils banmaTokenUtils;
     @Autowired
-    private EncryptionUtils encryptionUtils;
+    private BanmaEncryptionUtils encryptionUtils;
     @Autowired
     CategoryRepository categoryRepository;
-    @Autowired
-    @Lazy
-    private ObjectMapper objectMapper;
 
     /**
      * 查询类目列表

@@ -34,7 +34,7 @@ public class BanmaTokenUtils {
 
     private WebClient.Builder webClientBuilder = WebClient.builder();
     @Autowired
-    private EncryptionUtils encryptionUtils;
+    private BanmaEncryptionUtils encryptionUtils;
     @Autowired
     private RestTemplate restTemplate;
     @Autowired

@@ -11,8 +11,9 @@ import com.hrghs.xycb.domains.banmaerpDTO.*;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.repositories.*;
 import com.hrghs.xycb.services.ProductService;
+import com.hrghs.xycb.utils.BanmaParamsUtils;
 import com.hrghs.xycb.utils.BanmaTokenUtils;
-import com.hrghs.xycb.utils.EncryptionUtils;
+import com.hrghs.xycb.utils.BanmaEncryptionUtils;
 import com.hrghs.xycb.utils.HttpClientsUtils;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDateTime;
@@ -26,7 +27,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Predicate;
@@ -44,7 +44,7 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private BanmaTokenUtils banmaTokenUtils;
     @Autowired
-    private EncryptionUtils encryptionUtils;
+    private BanmaEncryptionUtils encryptionUtils;
     @Autowired
     @Lazy
     private ObjectMapper objectMapper;
@@ -88,24 +88,27 @@ public class ProductServiceImpl implements ProductService {
             , String supplier, String costPriceStart, String costPriceEnd, Integer pageNumber, Integer pageSize
             , DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy
             ,Boolean remote, BanmaerpProperties banmaerpProperties) {
+        List<ProductDTO> productDTOList;
+        pageSize = BanmaParamsUtils.checkPageSize(pageSize);
+        pageNumber = BanmaParamsUtils.checkPageNum(pageNumber);
         if (remote){
-
+            String apiUrl = String.format(BanmaerpURL.banmaerp_productlist_GET, pageNumber, pageSize,
+                    searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
+            apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+            HttpHeaders httpHeaders = new HttpHeaders();
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
+            HttpEntity requestBody = new HttpEntity(null, httpHeaders);
+            productDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+                    .getBody()
+                    .toDataList(BANMAERP_FIELD_PRODUCTS))
+            .map(o -> (ProductDTO) o)
+            .collect(Collectors.toList());
         }else{
             Specification<ProductDTO> specification = createSpecification(spuIds, source, spu, categoryId, title, supplier, costPriceStart, costPriceEnd, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
+            productDTOList = productRepository.findAll(specification,PageRequest.of(pageNumber,pageSize)).toList();
         }
-        String apiUrl = String.format(BanmaerpURL.banmaerp_productlist_GET, pageNumber, pageSize,
-                searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
-        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
-        HttpHeaders httpHeaders = new HttpHeaders();
-        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
-        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
-        HttpEntity requestBody = new HttpEntity(null, httpHeaders);
-        List<ProductDTO> productDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                        .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
-                        .getBody()
-                        .toDataList(BANMAERP_FIELD_PRODUCTS))
-                .map(o -> (ProductDTO) o)
-                .collect(Collectors.toList());
         return productDTOList;
     }
 
@@ -128,6 +131,8 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @CheckBanmaerpProperties
     public List<ProductDTO> getAndSaveProductList(Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties) {
+        pageSize = BanmaParamsUtils.checkPageSize(pageSize);
+        pageNumber = BanmaParamsUtils.checkPageNum(pageNumber);
         List<ProductDTO> productDTOS =
                 getProductList(null,null,null,null,null,null,null,null
                         ,pageNumber,pageSize,null,null,null,null,
@@ -256,6 +261,8 @@ public class ProductServiceImpl implements ProductService {
             , Integer pageNumber, Integer pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField
             , String sortField, String sortBy,Boolean remote, BanmaerpProperties banmaerpProperties) {
         List<ProductSkusDTO> productSkusDTOList;
+        pageSize = BanmaParamsUtils.checkPageSize(pageSize);
+        pageNumber = BanmaParamsUtils.checkPageNum(pageNumber);
         if (remote){
             String apiUrl = String.format(BanmaerpURL.Banmaerp_product_skulist_GET, skuIds, spuId);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
@@ -264,13 +271,12 @@ public class ProductServiceImpl implements ProductService {
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
             productSkusDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
-                            .getBody()
-                            .toDataList(BANMAERP_FIELD_SKUS))
-                    .map(o -> (ProductSkusDTO) o)
-                    .collect(Collectors.toList());
+                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+                    .getBody()
+                    .toDataList(BANMAERP_FIELD_SKUS))
+            .map(o -> (ProductSkusDTO) o)
+            .collect(Collectors.toList());
         }else {
-            //todo 需要增加多条件查询
             Specification<ProductSkusDTO> specification = createSpecification(skuIds, code, spuId, costPriceStart, costPriceEnd, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
             productSkusDTOList=skusRepository.findAll(specification,PageRequest.of(pageNumber,pageSize)).toList();
         }
@@ -362,6 +368,8 @@ public class ProductServiceImpl implements ProductService {
                                                                  DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy,Boolean remote,
                                                                  BanmaerpProperties banmaerpProperties) {
         List<ProductSuppliersInfoDTO> productSuppliersInfoDTOList = null;
+        pageSize = BanmaParamsUtils.checkPageSize(pageSize);
+        pageNumber = BanmaParamsUtils.checkPageNum(pageNumber);
         if (remote){
             String apiUrl = String.format(BanmaerpURL.Banmaerp_supplierlist_GET, name);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
@@ -379,7 +387,6 @@ public class ProductServiceImpl implements ProductService {
             Specification<ProductSuppliersInfoDTO> specification = createSpecificationSup(name, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
             productSuppliersInfoDTOList =  suppliersRepository.findAll(specification,PageRequest.of(pageNumber,pageSize)).toList();
         }
-
         return productSuppliersInfoDTOList;
     }
 
