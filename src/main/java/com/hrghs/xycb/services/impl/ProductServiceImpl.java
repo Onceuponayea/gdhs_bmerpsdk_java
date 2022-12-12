@@ -573,7 +573,7 @@ public class ProductServiceImpl implements ProductService {
             List<Predicate> predicateList = new ArrayList<>();
 
             if (skuIds != null && skuIds != "") {
-                CriteriaBuilder.In<Long> in = criteriaBuilder.in(root.get("ID"));
+                CriteriaBuilder.In<Long> in = criteriaBuilder.in(root.get("SKUID"));
                 if (skuIds.contains(",")) {
                     String[] id = skuIds.split(",");
                     for (int i = 0; i < id.length; i++) {
