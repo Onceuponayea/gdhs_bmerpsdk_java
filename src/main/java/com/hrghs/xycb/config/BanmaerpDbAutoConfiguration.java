@@ -35,6 +35,7 @@ import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.data.repository.config.BootstrapMode;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -92,6 +93,11 @@ public class BanmaerpDbAutoConfiguration {
     }
     @Bean
     @ConditionalOnMissingBean
+    public JdbcTemplate jdbcTemplate(DataSource dataSource){
+        return new JdbcTemplate(dataSource);
+    }
+    @Bean
+    @ConditionalOnMissingBean(value = {ReactiveRedisOperations.class,ReactiveStringRedisTemplate.class})
     public ReactiveRedisOperations<String,String> stringReactiveRedisOperations(@Qualifier("reactiveRedisConnectionFactory")ReactiveRedisConnectionFactory redisConnectionFactory){
         return new ReactiveStringRedisTemplate(redisConnectionFactory);
     }

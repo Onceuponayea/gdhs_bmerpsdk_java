@@ -2,6 +2,7 @@ package com.hrghs.xycb.domains.banmaerpDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.utils.converters.JpaUUIDConverter;
 import lombok.Data;
 import org.hibernate.annotations.GenericGenerator;

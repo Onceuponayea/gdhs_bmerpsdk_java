@@ -3,6 +3,7 @@ package com.hrghs.xycb.domains.banmaerpDTO;
 import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.utils.converters.JpaUUIDConverter;
 import com.hrghs.xycb.utils.converters.ProductDeserialiser;
 import com.hrghs.xycb.utils.converters.ProductSerialiser;
@@ -91,5 +92,10 @@ public class ProductDTO implements Serializable {
     @JsonProperty(value = "PackMaterials")
     @JoinColumn(name = "product_id")
     private List<ProductPackMaterialsDTO> packMaterials;
+
+    @JsonIgnore
+    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @JoinColumn(name = "banma_master_app_id")
+    private BanmaerpProperties banmaerpProperties;
 
 }

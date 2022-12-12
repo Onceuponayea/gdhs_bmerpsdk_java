@@ -4,7 +4,7 @@
   <groupId>com.startup-union.net</groupId>
   <artifactId>spring-boot-starter-banmaerp</artifactId>
   <packaging>jar</packaging>
-  <version>1.0</version>
+  <version>1.0-SNAPSHOTS</version>
   <name>spring-boot-starter-banmaerp</name>
   <url>http://maven.apache.org</url>
   <properties>
@@ -123,12 +123,12 @@
       <groupId>cn.hutool</groupId>
       <artifactId>hutool-crypto</artifactId>
       <version>5.8.10</version>
-      <exclusions>
-        <exclusion>
-          <groupId>cn.hutool</groupId>
-          <artifactId>hutool-core</artifactId>
-        </exclusion>
-      </exclusions>
+<!--      <exclusions>-->
+<!--        <exclusion>-->
+<!--          <groupId>cn.hutool</groupId>-->
+<!--          <artifactId>hutool-core</artifactId>-->
+<!--        </exclusion>-->
+<!--      </exclusions>-->
     </dependency>
   </dependencies>
 

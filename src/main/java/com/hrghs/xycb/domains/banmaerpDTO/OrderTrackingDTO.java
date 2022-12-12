@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.utils.converters.JodaDateTimeConverter;
 import com.hrghs.xycb.utils.converters.JpaUUIDConverter;
 import lombok.AllArgsConstructor;
@@ -57,4 +58,9 @@ public class OrderTrackingDTO {
     @JoinColumn(name = "track_id")
     @JsonProperty(value = "TrackInfo")
     private List<OrderTrackingTrackInfoDTO> trackInfo;
+
+    @JsonIgnore
+    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @JoinColumn(name = "banma_master_app_id")
+    private BanmaerpProperties banmaerpProperties;
 }

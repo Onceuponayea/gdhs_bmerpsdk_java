@@ -27,7 +27,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Predicate;
 import java.util.*;
@@ -35,7 +34,6 @@ import java.util.stream.Collectors;
 import static com.hrghs.xycb.domains.Constants.*;
 import static jodd.util.StringPool.COLON;
 import static jodd.util.StringPool.UNDERSCORE;
-
 
 public class ProductServiceImpl implements ProductService {
 
@@ -54,6 +52,8 @@ public class ProductServiceImpl implements ProductService {
     private ProductSpuRepository productSpuRepository;
     @Autowired
     private ProductSuppliersRepository suppliersRepository;
+    @Autowired
+    private ProductSupplierInfoRepository supplierInfoRepository;
     @Autowired
     private ProductTagsRepository productTagsRepository;
     @Autowired
@@ -105,6 +105,7 @@ public class ProductServiceImpl implements ProductService {
                     .toDataList(BANMAERP_FIELD_PRODUCTS))
             .map(o -> (ProductDTO) o)
             .collect(Collectors.toList());
+            productDTOList.forEach(productDTO -> productDTO.setBanmaerpProperties(banmaerpProperties));
         }else{
             Specification<ProductDTO> specification = createSpecification(spuIds, source, spu, categoryId, title, supplier, costPriceStart, costPriceEnd, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
             productDTOList = productRepository.findAll(specification,PageRequest.of(pageNumber,pageSize)).toList();
@@ -146,7 +147,7 @@ public class ProductServiceImpl implements ProductService {
                 .collect(Collectors.toList());
         bmerp_tasks_newstate.add(value);
         redisTemplate.opsForSet().add(redisKey,bmerp_tasks_newstate.toArray(new String[0]));
-        saveALL(productDTOS,banmaerpProperties);
+        saveProducts(productDTOS,banmaerpProperties);
         return productDTOS;
     }
 
@@ -167,9 +168,11 @@ public class ProductServiceImpl implements ProductService {
             BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
-            return httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+            ProductDTO productDTO= httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
                     .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<ProductDTO>>() {})
                     .getBody().getData();
+            productDTO.setBanmaerpProperties(banmaerpProperties);
+            return productDTO;
         }else {
             return productSpuRepository.findById(spuId).get().getProductDTO();
         }
@@ -193,7 +196,7 @@ public class ProductServiceImpl implements ProductService {
         String apiUrl = BanmaerpURL.banmaerp_product_POST;
         BanmaErpResponseDTO<ProductDTO> erpResponseDTO = sendProductRequest(apiUrl, HttpMethod.POST, productDto, banmaerpProperties);
         if (erpResponseDTO.getSuccess()){
-            save(erpResponseDTO.getData(),banmaerpProperties);
+            saveProduct(erpResponseDTO.getData(),banmaerpProperties);
         }
         return erpResponseDTO;
     }
@@ -211,7 +214,7 @@ public class ProductServiceImpl implements ProductService {
         String apiUrl = String.format(BanmaerpURL.banmaerp_product_PUT, productDto.getSPU().getSPUID());
         BanmaErpResponseDTO<ProductDTO> erpResponseDTO = sendProductRequest(apiUrl, HttpMethod.PUT, productDto, banmaerpProperties);
         if (erpResponseDTO.getSuccess()){
-            save(erpResponseDTO.getData(),banmaerpProperties);
+            saveProduct(erpResponseDTO.getData(),banmaerpProperties);
         }
         return erpResponseDTO;
     }
@@ -276,11 +279,11 @@ public class ProductServiceImpl implements ProductService {
                     .toDataList(BANMAERP_FIELD_SKUS))
             .map(o -> (ProductSkusDTO) o)
             .collect(Collectors.toList());
+            productSkusDTOList.forEach(productSkusDto -> productSkusDto.setBanmaerpProperties(banmaerpProperties));
         }else {
             Specification<ProductSkusDTO> specification = createSpecification(skuIds, code, spuId, costPriceStart, costPriceEnd, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
             productSkusDTOList=skusRepository.findAll(specification,PageRequest.of(pageNumber,pageSize)).toList();
         }
-
         return productSkusDTOList;
     }
 
@@ -302,9 +305,10 @@ public class ProductServiceImpl implements ProductService {
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
             productSkusDTO =
-                    httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<ProductSkusDTO>>() {})
-                            .getBody().getData();
+            httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<ProductSkusDTO>>() {})
+                    .getBody().getData();
+            productSkusDTO.setBanmaerpProperties(banmaerpProperties);
         }else{
             productSkusDTO = skusRepository.findById(skuid).get();
         }
@@ -350,6 +354,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     /**
+     * todo 需要根据产品ID来查看供应商，这样才能把供应商和产品绑定起来
      * 查询供应商列表
      *
      * @param name            供应商名称
@@ -364,10 +369,10 @@ public class ProductServiceImpl implements ProductService {
      */
     @Override
     @CheckBanmaerpProperties
-    public List<ProductSuppliersInfoDTO> getProductSuppliersList(String name, Integer pageNumber, Integer pageSize, DateTime searchTimeStart,
+    public List<ProductSuppliersDTO> getProductSuppliersList(String name, Integer pageNumber, Integer pageSize, DateTime searchTimeStart,
                                                                  DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy,Boolean remote,
                                                                  BanmaerpProperties banmaerpProperties) {
-        List<ProductSuppliersInfoDTO> productSuppliersInfoDTOList = null;
+        List<ProductSuppliersDTO> productSuppliersDTOList = null;
         pageSize = BanmaParamsUtils.checkPageSize(pageSize);
         pageNumber = BanmaParamsUtils.checkPageNum(pageNumber);
         if (remote){
@@ -377,22 +382,25 @@ public class ProductServiceImpl implements ProductService {
             BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
-            productSuppliersInfoDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+            productSuppliersDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
                             .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
                             .getBody()
                             .toDataList(BANMAERP_FIELD_SUPPLIERS))
                     .map(o -> (ProductSuppliersInfoDTO) o)
+                    .map(supplierInfo -> supplierInfo.toProductSuppliersDTO(null,banmaerpProperties))
                     .collect(Collectors.toList());
         }else{
-            Specification<ProductSuppliersInfoDTO> specification = createSpecificationSup(name, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
-            productSuppliersInfoDTOList =  suppliersRepository.findAll(specification,PageRequest.of(pageNumber,pageSize)).toList();
+            Specification<ProductSuppliersInfoDTO> specification = createSpecification4SupInfo(name, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
+            productSuppliersDTOList =  supplierInfoRepository.findAll(specification,PageRequest.of(pageNumber,pageSize))
+                    .map(supplierInfo -> supplierInfo.getProductSuppliersDTO())
+                    .toList();
         }
-        return productSuppliersInfoDTOList;
+        return productSuppliersDTOList;
     }
 
     @Override
     @CheckBanmaerpProperties
-    public List<ProductDTO> saveALL(List<ProductDTO> products,BanmaerpProperties banmaerpProperties) {
+    public List<ProductDTO> saveProducts(List<ProductDTO> products,BanmaerpProperties banmaerpProperties) {
         List<ProductDTO> saveOrUpdateProducts = products ;
         List<Long> spuIds = products.parallelStream().map(productDTO -> productDTO.getSPU().getSPUID())
                 .distinct().collect(Collectors.toList());
@@ -412,6 +420,7 @@ public class ProductServiceImpl implements ProductService {
             if (productDTO.getDescriptions()!=null){
                 productDTO.getDescriptions().setProductDTO(productDTO);
             }
+            productDTO.setBanmaerpProperties(banmaerpProperties);
         });
         saveOrUpdateProducts = productRepository.saveAllAndFlush(saveOrUpdateProducts);
         return saveOrUpdateProducts;
@@ -419,13 +428,49 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @CheckBanmaerpProperties
-    public ProductDTO save(ProductDTO productDTO,BanmaerpProperties banmaerpProperties) {
+    public ProductDTO saveProduct(ProductDTO productDTO,BanmaerpProperties banmaerpProperties) {
         Optional<ProductSpuDTO> optionalProductSpuDTO = productSpuRepository.findById(productDTO.getSPU().getSPUID());
         optionalProductSpuDTO.ifPresent(productSpuDTO -> productDTO.setProductUUId(productSpuDTO.getProductDTO().getProductUUId()));
+        productDTO.setBanmaerpProperties(banmaerpProperties);
         ProductDTO result =  productRepository.saveAndFlush(productDTO);
-        //productRepository.saveAndFlush(result);
         return result;
     }
+
+    @Override
+    public List<ProductSuppliersDTO> saveSuppliers(List<ProductSuppliersDTO> suppliersDTOS, BanmaerpProperties banmaerpProperties) {
+        //todo find existing, one to one
+        suppliersDTOS.forEach(suppliersDTO -> suppliersDTO.setBanmaerpProperties(banmaerpProperties));
+        return suppliersRepository.saveAllAndFlush(suppliersDTOS);
+    }
+
+    @Override
+    public ProductSuppliersDTO saveSupplier(ProductSuppliersDTO suppliersDTO, BanmaerpProperties banmaerpProperties) {
+        suppliersDTO.setBanmaerpProperties(banmaerpProperties);
+        return suppliersRepository.saveAndFlush(suppliersDTO);
+    }
+
+    @Override
+    public List<ProductSkusDTO> saveSkus(List<ProductSkusDTO> productSkusDTOS, BanmaerpProperties banmaerpProperties) {
+        productSkusDTOS.forEach(productSkusDto -> productSkusDto.setBanmaerpProperties(banmaerpProperties));
+        return skusRepository.saveAllAndFlush(productSkusDTOS);
+    }
+
+    @Override
+    public ProductSkusDTO saveSku(ProductSkusDTO skusDTO, BanmaerpProperties banmaerpProperties) {
+        skusDTO.setBanmaerpProperties(banmaerpProperties);
+        return skusRepository.saveAndFlush(skusDTO);
+    }
+
+    @Override
+    public List<ProductTagsDTO> saveProductTags(List<ProductTagsDTO> productTagsDTOS, BanmaerpProperties banmaerpProperties) {
+        return productTagsRepository.saveAllAndFlush(productTagsDTOS);
+    }
+
+    @Override
+    public ProductTagsDTO saveProductTag(ProductTagsDTO productTagsDTO, BanmaerpProperties banmaerpProperties) {
+        return productTagsRepository.saveAndFlush(productTagsDTO);
+    }
+
     /**
      * 查询产品列表
      *
@@ -563,7 +608,7 @@ public class ProductServiceImpl implements ProductService {
         };
     }
 
-    private Specification<ProductSuppliersInfoDTO> createSpecificationSup(String name, Integer pageNumber, Integer pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+    private Specification<ProductSuppliersInfoDTO> createSpecification4SupInfo(String name, Integer pageNumber, Integer pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
         return (root, criteriaQuery, criteriaBuilder) -> {
             List<Predicate> predicateList = new ArrayList<>();
 

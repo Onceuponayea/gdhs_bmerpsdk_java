@@ -1,6 +1,7 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
 import com.fasterxml.jackson.annotation.*;
+import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.utils.converters.JodaDateTimeConverter;
 import com.hrghs.xycb.utils.converters.JpaUUIDConverter;
 import lombok.Data;
@@ -54,4 +55,9 @@ public class OrderRefundsDTO {
     @Convert(converter = JodaDateTimeConverter.class)
     @JsonProperty(value = "RefundTime")
     private DateTime refundTime;
+
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "banma_master_app_id")
+    private BanmaerpProperties banmaerpProperties;
 }

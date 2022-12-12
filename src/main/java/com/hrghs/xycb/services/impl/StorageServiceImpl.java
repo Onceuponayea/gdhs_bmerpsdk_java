@@ -95,11 +95,13 @@ public class StorageServiceImpl implements StorageService {
     }
 
     @Override
+    @CheckBanmaerpProperties
     public List<StorageDTO> getStoragetList(Integer pageNumber, Boolean remote, BanmaerpProperties banmaerpProperties) {
         return getStoragetList(null, null, null, null, pageNumber, null, null, null, null, null, null, remote,banmaerpProperties);
     }
 
     @Override
+    @CheckBanmaerpProperties
     public List<StorageDTO> getStoragetList(Integer pageNumber, Integer pageSize, Boolean remote, BanmaerpProperties banmaerpProperties) {
         return getStoragetList(null, null, null, null, pageNumber, pageSize, null, null, null, null, null, remote,banmaerpProperties);
     }
@@ -137,6 +139,7 @@ public class StorageServiceImpl implements StorageService {
      * @return
      */
     @Override
+    @CheckBanmaerpProperties
     public BanmaErpResponseDTO<StorageDTO> uploadTheFileToStream(String name, String file,
                                                                  BanmaerpProperties banmaerpProperties) {
         if (isFileNameValid(name)) {
@@ -152,7 +155,9 @@ public class StorageServiceImpl implements StorageService {
             httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
                     .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.POST, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<StorageDTO>>() {})
                     .getBody();
-            storageRepository.saveAndFlush(responseDTO.getData());
+            StorageDTO storageDTO = responseDTO.getData();
+            storageDTO.setBanmaerpProperties(banmaerpProperties);
+            storageRepository.saveAndFlush(storageDTO);
             return responseDTO;
         } else {
             throw new IllegalArgumentException(name + "  is not a valid image file type!");
@@ -182,7 +187,9 @@ public class StorageServiceImpl implements StorageService {
             httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
                     .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.POST, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<StorageDTO>>() {})
                     .getBody();
-            storageRepository.saveAndFlush(responseDTO.getData());
+            StorageDTO storageDTO = responseDTO.getData();
+            storageDTO.setBanmaerpProperties(banmaerpProperties);
+            storageRepository.saveAndFlush(storageDTO);
             return responseDTO;
         } else {
             throw new IllegalArgumentException(name + "  is not a valid image file type!");
@@ -197,6 +204,7 @@ public class StorageServiceImpl implements StorageService {
      * @return
      */
     @Override
+    @CheckBanmaerpProperties
     public BanmaErpResponseDTO<StorageDTO> uploadTheFileToForm(String file,BanmaerpProperties banmaerpProperties) {
 
         String apiUrl = String.format(BanmaerpURL.banmaerp_storage_form_POST);
@@ -211,17 +219,23 @@ public class StorageServiceImpl implements StorageService {
         httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
                 .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.POST, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<StorageDTO>>() {})
                 .getBody();
-        storageRepository.saveAndFlush(responseDTO.getData());
+        StorageDTO storageDTO = responseDTO.getData();
+        storageDTO.setBanmaerpProperties(banmaerpProperties);
+        storageRepository.saveAndFlush(storageDTO);
         return responseDTO;
     }
 
     @Override
-    public List<StorageDTO> saveAll(List<StorageDTO> storageDTOList) {
+    @CheckBanmaerpProperties
+    public List<StorageDTO> saveAll(List<StorageDTO> storageDTOList, BanmaerpProperties banmaerpProperties) {
+        storageDTOList.forEach(storageDTO -> storageDTO.setBanmaerpProperties(banmaerpProperties));
         return storageRepository.saveAllAndFlush(storageDTOList);
     }
 
     @Override
-    public StorageDTO save(StorageDTO storageDTO) {
+    @CheckBanmaerpProperties
+    public StorageDTO save(StorageDTO storageDTO, BanmaerpProperties banmaerpProperties) {
+        storageDTO.setBanmaerpProperties(banmaerpProperties);
         return storageRepository.saveAndFlush(storageDTO);
     }
 

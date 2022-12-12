@@ -1,6 +1,7 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
 import com.fasterxml.jackson.annotation.*;
+import com.hrghs.xycb.domains.BanmaerpProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -47,4 +48,16 @@ public class ProductSuppliersInfoDTO {
     @JoinColumn(name = "supplier_id", referencedColumnName = "id")
     @JsonBackReference
     private ProductSuppliersDTO productSuppliersDTO;
+
+    public ProductSuppliersDTO toProductSuppliersDTO(ProductDTO productDTO, BanmaerpProperties banmaerpProperties){
+        ProductSuppliersDTO productSuppliersDTO = new ProductSuppliersDTO();
+        productSuppliersDTO.setInfo(this);
+        productSuppliersDTO.setID(this.ID);
+        productSuppliersDTO.setRemark(this.remark);
+        if (productDTO!=null){
+            productSuppliersDTO.setProductDTO(productDTO);
+        }
+        productSuppliersDTO.setBanmaerpProperties(banmaerpProperties);
+        return productSuppliersDTO;
+    }
 }

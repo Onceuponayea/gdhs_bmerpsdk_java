@@ -1,6 +1,7 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
 import com.fasterxml.jackson.annotation.*;
+import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.utils.converters.JpaUUIDConverter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -57,4 +58,8 @@ public class OrderDTO {
     @JsonProperty(value = "Refunds")
     private List<OrderRefundsDTO> refunds;
 
+    @JsonIgnore
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "banma_master_app_id")
+    private BanmaerpProperties banmaerpProperties;
 }

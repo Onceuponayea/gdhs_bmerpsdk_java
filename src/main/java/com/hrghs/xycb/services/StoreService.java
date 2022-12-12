@@ -62,7 +62,7 @@ public interface StoreService {
      */
     StoreDTO getStoreById(String storeId, Boolean remote,BanmaerpProperties banmaerpProperties);
 
-    List<StoreDTO> saveStoreList(List<StoreDTO> storeDTOList);
+    List<StoreDTO> saveStoreList(List<StoreDTO> storeDTOList, BanmaerpProperties banmaerpProperties);
 
-    StoreDTO saveStore(StoreDTO storeDTO);
+    StoreDTO saveStore(StoreDTO storeDTO, BanmaerpProperties banmaerpProperties);
 }

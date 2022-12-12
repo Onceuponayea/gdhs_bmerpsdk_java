@@ -78,7 +78,7 @@ public class AccountDTO {
      * todo 暂时不清楚斑马erp的Account是关联主账号还是app，如果一个主账号创建多个app，用app1接口创建的子账号能够被app2使用吗
      */
     @JsonIgnore
-    @JoinColumn(name = "bmerp_account")
+    @JoinColumn(name = "banma_master_app_id")
     @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
     BanmaerpProperties banmaerpProperties;
 

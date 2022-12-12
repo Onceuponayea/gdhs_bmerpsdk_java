@@ -75,7 +75,7 @@ public interface OrderService {
      */
     List<OrderTrackingDTO> getTrackings(String orderId,Boolean remote, BanmaerpProperties banmaerpProperties);
 
-    List<OrderDTO> saveAll(Iterable<OrderDTO> orderDTOS);
+    List<OrderDTO> saveAll(Iterable<OrderDTO> orderDTOS, BanmaerpProperties banmaerpProperties);
 
-    OrderDTO save(OrderDTO orderDTO);
+    OrderDTO save(OrderDTO orderDTO, BanmaerpProperties banmaerpProperties);
 }

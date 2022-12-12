@@ -94,6 +94,7 @@ public class OrderServiceImpl implements OrderService {
                             .toDataList(BANMAERP_FIELD_ORDERS))
                     .map(o -> (OrderDTO) o)
                     .collect(Collectors.toList());
+            orderDTOList.forEach(orderDTO -> orderDTO.setBanmaerpProperties(banmaerpProperties));
         }else{
             Specification<OrderDTO> specification = createSpecification(ids, storeId, platform,status,payStatus,holdStatus,refundStatus,inventoryStatus,countryCode, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
             orderDTOList = orderRepository.findAll(specification,PageRequest.of(pageNumber,pageSize)).toList();
@@ -102,22 +103,26 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @CheckBanmaerpProperties
     public List<OrderDTO> getOrderList(Integer pageNumber,Boolean remote, BanmaerpProperties banmaerpProperties) {
         return getOrderList(null, null, null, null, null, null, null, null, null, pageNumber, null, null, null, null, null, null, remote,banmaerpProperties);
     }
 
     @Override
+    @CheckBanmaerpProperties
     public List<OrderDTO> getOrderList(Integer pageNumber, Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties) {
         return getOrderList(null, null, null, null, null, null, null, null, null, pageNumber, pageSize, null, null, null, null, null, remote,banmaerpProperties);
     }
 
     @Override
+    @CheckBanmaerpProperties
     public List<OrderDTO> getAndSaveOrderList(Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties) {
         List<OrderDTO> orderDTOList =
                 getOrderList(null, null, null, null, null, null, null, null, null, pageNumber, pageSize, null, null, null, null, null, true,banmaerpProperties);
         orderDTOList = orderRepository.saveAll(orderDTOList);
         orderDTOList.forEach(orderDTO -> {
             orderDTO.getMaster().setOrderDTO(orderDTO);
+            orderDTO.setBanmaerpProperties(banmaerpProperties);
         });
         return orderRepository.saveAllAndFlush(orderDTOList);
     }
@@ -170,7 +175,10 @@ public class OrderServiceImpl implements OrderService {
                     .toDataList(BANMAERP_FIELD_FULFILLMENTS))
             .map(o -> (OrderFulfillmentDTO) o)
             .collect(Collectors.toList());
-            orderFulfillmentDTOList.forEach(orderFulfillmentDTO -> orderFulfillmentDTO.setOrderId(orderId));
+            orderFulfillmentDTOList.forEach(orderFulfillmentDTO -> {
+                orderFulfillmentDTO.setOrderId(orderId);
+                orderFulfillmentDTO.setBanmaerpProperties(banmaerpProperties);
+            });
             orderFulfillmentDTOList = fulfillmentRepository.saveAllAndFlush(orderFulfillmentDTOList);
         }else{
             orderFulfillmentDTOList = fulfillmentRepository.findOrderFulfillmentDTOSByOrderId(orderId);
@@ -202,7 +210,10 @@ public class OrderServiceImpl implements OrderService {
                     .toDataList(BANMAERP_FIELD_TRACKINGS))
             .map(o -> (OrderTrackingDTO) o)
             .collect(Collectors.toList());
-            orderTrackingDTOList.forEach(orderFulfillmentDTO -> orderFulfillmentDTO.setOrderId(orderId));
+            orderTrackingDTOList.forEach(orderFulfillmentDTO -> {
+                orderFulfillmentDTO.setOrderId(orderId);
+                orderFulfillmentDTO.setBanmaerpProperties(banmaerpProperties);
+            });
             orderTrackingDTOList = trackingRepository.saveAllAndFlush(orderTrackingDTOList);
         }else{
             orderTrackingDTOList = trackingRepository.findOrderTrackingDTOSByOrderId(orderId);
@@ -211,7 +222,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<OrderDTO> saveAll(Iterable<OrderDTO> orderDTOS) {
+    @CheckBanmaerpProperties
+    public List<OrderDTO> saveAll(Iterable<OrderDTO> orderDTOS, BanmaerpProperties banmaerpProperties) {
         List<OrderDTO> saveOrUpdateOrders = StreamSupport.stream(orderDTOS.spliterator(),true).collect(Collectors.toList());
         List<String> orderMasterId = saveOrUpdateOrders.parallelStream()
                 .map(orderDTO -> orderDTO.getMaster().getID())
@@ -220,6 +232,9 @@ public class OrderServiceImpl implements OrderService {
         List<OrderMasterDTO> existingOrderMasters = orderMasterRepository.findByMasterIds(orderMasterId)
                 .parallelStream()
                 .collect(Collectors.toList());;
+        /**
+         * prevent duplicate key for orderMasterId
+          */
         for (int i=0; i < saveOrUpdateOrders.size(); i++ ){
             OrderDTO orderDTO = saveOrUpdateOrders.get(i);
             for (OrderMasterDTO existedOrderMaster :existingOrderMasters) {
@@ -227,15 +242,20 @@ public class OrderServiceImpl implements OrderService {
                     orderDTO.setOrderUUID(existedOrderMaster.getOrderDTO().getOrderUUID());
                 }
             }
+            orderDTO.setBanmaerpProperties(banmaerpProperties);
             saveOrUpdateOrders.set(i,orderDTO);
         }
-        return orderRepository.saveAllAndFlush(orderDTOS);
+        return orderRepository.saveAllAndFlush(saveOrUpdateOrders);
     }
 
     @Override
-    public OrderDTO save(OrderDTO orderDTO) {
+    @CheckBanmaerpProperties
+    public OrderDTO save(OrderDTO orderDTO, BanmaerpProperties banmaerpProperties) {
         OrderDTO existedOrder = orderRepository.findOrderDTOByMaster(orderDTO.getMaster());
-        orderDTO.setOrderUUID(existedOrder.getOrderUUID());
+        if (existedOrder!=null){
+            orderDTO.setOrderUUID(existedOrder.getOrderUUID());
+        }
+        orderDTO.setBanmaerpProperties(banmaerpProperties);
         return orderRepository.saveAndFlush(orderDTO);
     }
     private Specification<OrderDTO> createSpecification(String ids, String storeId, String platform, String status, String payStatus, String holdStatus, String refundStatus, String inventoryStatus, String countryCode, Integer pageNumber, Integer pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {

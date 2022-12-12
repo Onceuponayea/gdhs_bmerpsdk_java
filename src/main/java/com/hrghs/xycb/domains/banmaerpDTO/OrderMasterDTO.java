@@ -1,6 +1,7 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
 import com.fasterxml.jackson.annotation.*;
+import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.enums.BanmaerpPlatformEnums;
 import com.hrghs.xycb.utils.converters.JodaDateTimeConverter;
 import com.hrghs.xycb.utils.converters.JpaListStringConverter;
@@ -273,5 +274,10 @@ public class OrderMasterDTO {
     @Column(name = "used_point")
     @JsonProperty(value = "UsedPoint")
     private Integer usedPoint;
+
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "banma_master_app_id")
+    private BanmaerpProperties banmaerpProperties;
 
 }

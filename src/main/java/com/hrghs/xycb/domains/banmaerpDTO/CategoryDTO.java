@@ -1,8 +1,10 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.utils.converters.JodaDateTimeConverter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -54,4 +56,8 @@ public class CategoryDTO {
     @Column(name = "update_time")
     private DateTime updateTime;
 
+    @JsonIgnore
+    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @JoinColumn(name = "banma_master_app_id")
+    private BanmaerpProperties banmaerpProperties;
 }

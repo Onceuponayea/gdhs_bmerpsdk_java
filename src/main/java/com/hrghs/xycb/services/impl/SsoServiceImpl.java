@@ -17,15 +17,19 @@ import com.hrghs.xycb.services.SsoService;
 import com.hrghs.xycb.utils.*;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.redis.core.ReactiveRedisOperations;
+import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+
+import java.time.Duration;
 
 import static com.hrghs.xycb.domains.Constants.*;
 import static jodd.util.StringPool.COLON;
@@ -41,16 +45,13 @@ public class SsoServiceImpl implements SsoService {
     private BanmaEncryptionUtils encryptionUtils;
 
     @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
     private WebHookUtils webHookUtils;
     private Gson gson = new GsonBuilder().disableHtmlEscaping()
             .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)
             .registerTypeAdapter(DateTime.class,new DateTimeConverter())
             .setDateFormat("yyyy-MM-dd HH:mm:ss")
             .create();;
-    @Autowired
+    @Qualifier(value = "stringReactiveRedisOperations")
     private ReactiveRedisOperations<String,String> redisOperations;
     @Autowired
     private BanmaerpPropertiesRepository  banmaerpPropertiesRepository;
@@ -81,14 +82,17 @@ public class SsoServiceImpl implements SsoService {
     }
 
     @Override
+    @CheckBanmaerpProperties
     public GetSsoPassportResponse ssoPassport(String account, BanmaerpProperties banmaerpProperties) {
         return
-                redisOperations.opsForValue().get(ssoRedisKey(banmaerpProperties)).switchIfEmpty(Mono.just(httpClients.getLocalIp()))
-                        .map(clientIp -> ssoPassport(account,clientIp,null,null,banmaerpProperties))
-                        .block();
+        redisOperations.opsForValue().get(ssoRedisKey(banmaerpProperties)).switchIfEmpty(Mono.just(httpClients.getLocalIp()))
+                .map(clientIp -> ssoPassport(account,clientIp,null,null,banmaerpProperties))
+                .block();
+//                .block(Duration.ofSeconds(5));
     }
 
     @Override
+    @CheckBanmaerpProperties
     public GetSsoPassportResponse ssoPassport(String account, String clientIp, BanmaerpProperties banmaerpProperties) {
         return ssoPassport(account,clientIp,null,null,banmaerpProperties);
     }

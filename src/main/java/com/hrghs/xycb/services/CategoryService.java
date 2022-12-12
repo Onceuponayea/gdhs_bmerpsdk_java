@@ -45,7 +45,7 @@ public interface CategoryService {
      */
     CategoryDTO getCategoryById(String id, Boolean remote, BanmaerpProperties banmaerpProperties);
 
-    List<CategoryDTO> saveCategoryList(List<CategoryDTO> categoryDTOList);
+    List<CategoryDTO> saveCategoryList(List<CategoryDTO> categoryDTOList, BanmaerpProperties banmaerpProperties);
 
-    CategoryDTO saveCategory(CategoryDTO categoryDTO);
+    CategoryDTO saveCategory(CategoryDTO categoryDTO, BanmaerpProperties banmaerpProperties);
 }

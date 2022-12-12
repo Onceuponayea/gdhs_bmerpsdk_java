@@ -1,6 +1,7 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
 import com.fasterxml.jackson.annotation.*;
+import com.hrghs.xycb.domains.BanmaerpProperties;
 import lombok.Data;
 import org.springframework.stereotype.Component;
 import javax.persistence.*;
@@ -28,4 +29,9 @@ public class ProductSuppliersDTO {
     @JsonProperty(value = "Info")
     @JsonManagedReference
     private ProductSuppliersInfoDTO info;
+
+    @JsonIgnore
+    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @JoinColumn(name = "banma_master_app_id")
+    private BanmaerpProperties banmaerpProperties;
 }

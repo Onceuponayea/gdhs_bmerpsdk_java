@@ -1,6 +1,7 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
 import com.fasterxml.jackson.annotation.*;
+import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.utils.converters.JodaDateTimeConverter;
 import lombok.Data;
 import org.joda.time.DateTime;
@@ -73,4 +74,9 @@ public class ProductSpuDTO {
     @Column(name = "update_time")
     @JsonProperty(value = "UpdateTime")
     private DateTime updateTime;
+
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "banma_master_app_id")
+    private BanmaerpProperties banmaerpProperties;
 }

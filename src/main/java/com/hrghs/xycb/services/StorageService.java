@@ -74,7 +74,7 @@ public interface StorageService {
      */
     BanmaErpResponseDTO<StorageDTO> uploadTheFileToForm(String file, BanmaerpProperties banmaerpProperties);
 
-    List<StorageDTO> saveAll(List<StorageDTO> storageDTOList);
+    List<StorageDTO> saveAll(List<StorageDTO> storageDTOList, BanmaerpProperties banmaerpProperties);
 
-    StorageDTO save(StorageDTO storageDTO);
+    StorageDTO save(StorageDTO storageDTO, BanmaerpProperties banmaerpProperties);
 }

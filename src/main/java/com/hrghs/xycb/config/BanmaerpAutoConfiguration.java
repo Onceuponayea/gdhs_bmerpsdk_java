@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.hrghs.xycb.domains.BanmaerpProperties;
+import com.hrghs.xycb.domains.banmaerpDTO.StoreDTO;
 import com.hrghs.xycb.services.*;
 import com.hrghs.xycb.services.impl.*;
 import com.hrghs.xycb.utils.BanmaTokenUtils;
@@ -15,11 +16,14 @@ import com.hrghs.xycb.utils.converters.JodaDateTimeDeserialiser;
 import com.hrghs.xycb.utils.converters.JodaDateTimeSerialiser;
 import net.javacrumbs.shedlock.spring.annotation.EnableSchedulerLock;
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.ListableBeanFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -29,21 +33,20 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.*;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.http.client.BufferingClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
-
 import javax.sql.DataSource;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -56,11 +59,12 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKN
 @EnableConfigurationProperties(value = {BanmaerpProperties.class,BanmaerpDruidXADataSource.class})
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableScheduling
-@EnableAsync
 @EnableSchedulerLock(defaultLockAtLeastFor = "PT30S",defaultLockAtMostFor = "PT300S")
 @AutoConfigureAfter(BanmaerpDbAutoConfiguration.class)
 @ConditionalOnProperty(value = "enabled",prefix = "erp.banmaerp", havingValue = "true", matchIfMissing = false)
 public class BanmaerpAutoConfiguration implements BeanDefinitionRegistryPostProcessor, BeanFactoryAware {
+    private static final Logger logger = LoggerFactory.getLogger(BanmaerpAutoConfiguration.class);
+
     @Bean(name = "objectMapper")
     public ObjectMapper objectMapper(){
         ObjectMapper objectMapper = new ObjectMapper()
@@ -145,44 +149,37 @@ public class BanmaerpAutoConfiguration implements BeanDefinitionRegistryPostProc
         return new BanmaTokenUtils();
     }
     @Bean
-    @Lazy
-    //@Transactional(transactionManager = "banmaerpXATransactionManager")
+//    @Lazy
     public AccountService accountService(){
         return new AccountServiceImpl();
     }
     @Bean
-    @Lazy
-    //@Transactional(transactionManager = "banmaerpXATransactionManager")
+//    @Lazy
     public CategoryService categoryService(){
         return new CategoryServiceImpl();
     }
     @Bean
-    @Lazy
-    //@Transactional(transactionManager = "banmaerpXATransactionManager")
+//    @Lazy
     public OrderService orderService(){
         return new OrderServiceImpl();
     }
     @Bean
-    @Lazy
-    //@Transactional(transactionManager = "banmaerpXATransactionManager")
+//    @Lazy
     public ProductService productService(){
         return new ProductServiceImpl();
     }
     @Bean
-    @Lazy
-    //@Transactional(transactionManager = "banmaerpXATransactionManager")
+//    @Lazy
     public StoreService storeService(){
         return new StoreServiceImpl();
     }
     @Bean
-    @Lazy
-    //@Transactional(transactionManager = "banmaerpXATransactionManager")
+//    @Lazy
     public StorageService storageService(){
         return new StorageServiceImpl();
     }
     @Bean
-    @Lazy
-    //@Transactional(transactionManager = "banmaerpXATransactionManager")
+//    @Lazy
     public SsoService ssoService(){
         return new SsoServiceImpl();
     }
@@ -258,6 +255,11 @@ public class BanmaerpAutoConfiguration implements BeanDefinitionRegistryPostProc
         }
     }
     private void addOtherDSIntoTxManagement(BeanDefinitionRegistry beanDefinitionRegistry){
+        //TODO add parent project's datasource into atomikos Transaction Management
+    }
+    @EventListener(ApplicationReadyEvent.class)
+    public void init(){
+        logger.info("Banmaerp module integrating successfully!");
 
     }
 }

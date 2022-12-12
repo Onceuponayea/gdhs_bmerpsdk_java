@@ -100,16 +100,19 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @CheckBanmaerpProperties
     public List<AccountDTO> getAccountList(Integer pageNumber,Boolean remote, BanmaerpProperties banmaerpProperties) {
         return getAccountList(null,null,null,null,pageNumber,null,null,null,null,null,null,remote,banmaerpProperties);
     }
 
     @Override
+    @CheckBanmaerpProperties
     public List<AccountDTO> getAccountList(Integer pageNumber, Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties) {
         return getAccountList(null,null,null,null,pageNumber,pageSize,null,null,null,null,null,remote,banmaerpProperties);
     }
 
     @Override
+    @CheckBanmaerpProperties
     public List<AccountDTO> getAndSaveAccountList(Integer pageNumber,Integer pageSize,BanmaerpProperties banmaerpProperties) {
         List<AccountDTO> accountDTOS =getAccountList(null,null,null,null,pageNumber,null,null,null,null,null,null,true,banmaerpProperties);
         banmaerpProperties.setBanmaErpAccounts(accountDTOS);
@@ -228,6 +231,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @CheckBanmaerpProperties
     public TokenResponseDTO getSubAccountAccessToken(BanmaerpProperties banmaerpProperties) {
         return null;
     }

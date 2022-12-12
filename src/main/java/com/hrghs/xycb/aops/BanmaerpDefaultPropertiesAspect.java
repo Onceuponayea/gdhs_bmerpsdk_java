@@ -1,10 +1,15 @@
 package com.hrghs.xycb.aops;
 
 import com.hrghs.xycb.domains.BanmaerpProperties;
+import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -14,10 +19,12 @@ import java.util.Map;
 @Aspect
 @Component
 public class BanmaerpDefaultPropertiesAspect {
+    private static final Logger logger = LoggerFactory.getLogger(BanmaerpDefaultPropertiesAspect.class);
     @Autowired
     ApplicationContext applicationContext;
-    @Around("execution(* com.hrghs.xycb..*.*(..)) && @annotation(com.hrghs.xycb.annotations.CheckBanmaerpProperties)")
+    @Around("@annotation(com.hrghs.xycb.annotations.CheckBanmaerpProperties)")
     public Object checkBanmaerpProperties(ProceedingJoinPoint joinPoint) throws Throwable {
+        logger.info("Banmaerp App Properties Not specified, switching to platform appInfo");
         MethodSignature methodSignature= (MethodSignature) joinPoint.getSignature();
         Object[] args = joinPoint.getArgs();
         Object[] newArgs = new Object[args.length];
@@ -50,5 +57,4 @@ public class BanmaerpDefaultPropertiesAspect {
         //原路走
         return joinPoint.proceed(args);
     }
-
 }

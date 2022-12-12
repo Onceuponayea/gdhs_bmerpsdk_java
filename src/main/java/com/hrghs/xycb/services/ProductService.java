@@ -1,10 +1,7 @@
 package com.hrghs.xycb.services;
 
 import com.hrghs.xycb.domains.BanmaerpProperties;
-import com.hrghs.xycb.domains.banmaerpDTO.ProductDTO;
-import com.hrghs.xycb.domains.banmaerpDTO.ProductSkusDTO;
-import com.hrghs.xycb.domains.banmaerpDTO.ProductSuppliersInfoDTO;
-import com.hrghs.xycb.domains.banmaerpDTO.ProductTagsDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.*;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import org.joda.time.DateTime;
 
@@ -172,7 +169,7 @@ public interface ProductService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    List<ProductSuppliersInfoDTO>  getProductSuppliersList(
+    List<ProductSuppliersDTO>  getProductSuppliersList(
             String name,
             Integer pageNumber,
             Integer pageSize,
@@ -185,9 +182,19 @@ public interface ProductService {
             BanmaerpProperties banmaerpProperties
     );
 
-    List<ProductDTO> saveALL(List<ProductDTO> products,BanmaerpProperties banmaerpProperties);
+    List<ProductDTO> saveProducts(List<ProductDTO> products,BanmaerpProperties banmaerpProperties);
 
-    ProductDTO save(ProductDTO productDTO,BanmaerpProperties banmaerpProperties);
+    ProductDTO saveProduct(ProductDTO productDTO,BanmaerpProperties banmaerpProperties);
 
+    List<ProductSuppliersDTO> saveSuppliers(List<ProductSuppliersDTO> suppliersDTOS,BanmaerpProperties banmaerpProperties);
 
+    ProductSuppliersDTO saveSupplier(ProductSuppliersDTO suppliersDTO,BanmaerpProperties banmaerpProperties);
+
+    List<ProductSkusDTO> saveSkus(List<ProductSkusDTO> productSkusDTOS,BanmaerpProperties banmaerpProperties);
+
+    ProductSkusDTO saveSku(ProductSkusDTO skusDTO,BanmaerpProperties banmaerpProperties);
+
+    List<ProductTagsDTO> saveProductTags(List<ProductTagsDTO> productTagsDTOS,BanmaerpProperties banmaerpProperties);
+
+    ProductTagsDTO saveProductTag(ProductTagsDTO productTagsDTO,BanmaerpProperties banmaerpProperties);
 }

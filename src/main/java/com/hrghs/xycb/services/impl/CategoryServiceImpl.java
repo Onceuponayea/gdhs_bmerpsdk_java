@@ -74,7 +74,6 @@ public class CategoryServiceImpl implements CategoryService {
                     .map(o -> (CategoryDTO) o)
                     .collect(Collectors.toList());
         }else {
-            //todo 多条件查询校验
             Specification<CategoryDTO> specification = createSpecification(ids, name, parentId, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
             categoryDTOList = categoryRepository.findAll(specification,PageRequest.of(pageNumber,pageSize)).toList();
         }
@@ -82,19 +81,23 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @CheckBanmaerpProperties
     public List<CategoryDTO> getCategoryList(Integer pageNumber, Boolean remote, BanmaerpProperties banmaerpProperties) {
         return getCategoryList(null, null, null, pageNumber, null, null, null, null, null, null,remote, banmaerpProperties);
     }
 
     @Override
+    @CheckBanmaerpProperties
     public List<CategoryDTO> getCategoryList(Integer pageNumber, Integer pageSize, Boolean remote, BanmaerpProperties banmaerpProperties) {
         return getCategoryList(null, null, null, pageNumber, pageSize, null, null, null, null, null,remote, banmaerpProperties);
     }
 
     @Override
+    @CheckBanmaerpProperties
     public List<CategoryDTO> getAndSaveCategoryList(Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties) {
         List<CategoryDTO> categoryDTOList =
                 getCategoryList(null, null, null, pageNumber, pageSize, null, null, null, null, null,true, banmaerpProperties);
+        categoryDTOList.forEach(categoryDTO -> categoryDTO.setBanmaerpProperties(banmaerpProperties));
         return categoryRepository.saveAllAndFlush(categoryDTOList);
     }
 
@@ -120,16 +123,19 @@ public class CategoryServiceImpl implements CategoryService {
         }else {
             return categoryRepository.findById(idv).get();
         }
-
     }
 
     @Override
-    public List<CategoryDTO> saveCategoryList(List<CategoryDTO> categoryDTOList) {
+    @CheckBanmaerpProperties
+    public List<CategoryDTO> saveCategoryList(List<CategoryDTO> categoryDTOList, BanmaerpProperties banmaerpProperties) {
+        categoryDTOList.forEach(categoryDTO -> categoryDTO.setBanmaerpProperties(banmaerpProperties));
         return categoryRepository.saveAllAndFlush(categoryDTOList);
     }
 
     @Override
-    public CategoryDTO saveCategory(CategoryDTO categoryDTO) {
+    @CheckBanmaerpProperties
+    public CategoryDTO saveCategory(CategoryDTO categoryDTO, BanmaerpProperties banmaerpProperties) {
+        categoryDTO.setBanmaerpProperties(banmaerpProperties);
         return categoryRepository.saveAndFlush(categoryDTO);
     }
     private Specification<CategoryDTO> createSpecification(String ids, String name, String parentId, Integer pageNumber, Integer pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {

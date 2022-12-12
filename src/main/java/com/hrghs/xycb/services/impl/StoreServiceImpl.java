@@ -108,7 +108,8 @@ public class StoreServiceImpl implements StoreService {
                     .toDataList(BANMAERP_FIELD_STORES))
             .map(o -> (StoreDTO)o)
             .collect(Collectors.toList());
-            storeRepository.saveAll(storeDTOList);
+            storeDTOList.forEach(storeDTO -> storeDTO.setBanmaerpProperties(banmaerpProperties));
+            storeRepository.saveAllAndFlush(storeDTOList);
         }else {
             Specification<StoreDTO> specification = createSpecification(ids, name, platform, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
             storeDTOList = storeRepository.findAll(specification,PageRequest.of(pageNumber,pageSize)).toList();
@@ -117,19 +118,23 @@ public class StoreServiceImpl implements StoreService {
     }
 
     @Override
+    @CheckBanmaerpProperties
     public List<StoreDTO> getStoretList(Integer pageNumber,Boolean remote, BanmaerpProperties banmaerpProperties) {
         return getStoretList(null, null, null, pageNumber, null, null, null, null, null, null,remote, banmaerpProperties);
     }
 
     @Override
+    @CheckBanmaerpProperties
     public List<StoreDTO> getStoretList(Integer pageNumber, Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties) {
         return getStoretList(null, null, null, pageNumber, pageSize, null, null, null, null, null,remote, banmaerpProperties);
     }
 
     @Override
+    @CheckBanmaerpProperties
     public List<StoreDTO> getAndSaveStoretList(Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties) {
         List<StoreDTO> storeDTOList =
                 getStoretList(null, null, null, pageNumber, pageSize, null, null, null, null, null,true, banmaerpProperties);
+        storeDTOList.forEach(storeDTO -> storeDTO.setBanmaerpProperties(banmaerpProperties));
         return storeRepository.saveAllAndFlush(storeDTOList);
     }
 
@@ -157,14 +162,19 @@ public class StoreServiceImpl implements StoreService {
     }
 
     @Override
-    public List<StoreDTO> saveStoreList(List<StoreDTO> storeDTOList) {
+    @CheckBanmaerpProperties
+    public List<StoreDTO> saveStoreList(List<StoreDTO> storeDTOList, BanmaerpProperties banmaerpProperties) {
+        storeDTOList.forEach(storeDTO -> storeDTO.setBanmaerpProperties(banmaerpProperties));
         return storeRepository.saveAllAndFlush(storeDTOList);
     }
 
     @Override
-    public StoreDTO saveStore(StoreDTO storeDTO) {
+    @CheckBanmaerpProperties
+    public StoreDTO saveStore(StoreDTO storeDTO, BanmaerpProperties banmaerpProperties) {
+        storeDTO.setBanmaerpProperties(banmaerpProperties);
         return storeRepository.saveAndFlush(storeDTO);
     }
+
     private Specification<StoreDTO> createSpecification(String ids, String name, BanmaerpPlatformEnums.Platform platform, Integer pageNumber, Integer pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
         return (root, criteriaQuery, criteriaBuilder) -> {
             List<Predicate> predicateList = new ArrayList<>();

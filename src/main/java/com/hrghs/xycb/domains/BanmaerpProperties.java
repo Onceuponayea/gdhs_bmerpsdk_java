@@ -65,7 +65,7 @@ public class BanmaerpProperties {
      */
     @JsonIgnore
     @OneToMany(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
-    @JoinColumn(name = "bmerp_account")
+    @JoinColumn(name = "banma_master_app_id")
     private List<AccountDTO> banmaErpAccounts;
 
     public String getX_BANMA_MASTER_SIGN_ALGORITHM() {
