@@ -68,6 +68,7 @@ public class Constants {
     public static final String BANMAERP_FIELD_APPSECRET = "app_secret";
     public static final String BANMAERP_MESSAGE_UNKNOWNERROR = "Unknown Error!";
     public static final String BANMAERP_MESSAGE_REGISTER_ERROR = "账号注册失败!";
+    public static final String BANMAERP_MESSAGE_CONFIGURATION_ERROR = "erp.banmaerp.BanmaerpProperties not config properly!";
 
     public static final Set<String> IpAquireUrls = Stream.of("http://checkip.amazonaws.com/"
             ,"https://ipv4.icanhazip.com/","http://myexternalip.com/raw","http://ipecho.net/plain")

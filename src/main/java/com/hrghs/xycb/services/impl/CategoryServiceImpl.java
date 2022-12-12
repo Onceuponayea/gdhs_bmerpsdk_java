@@ -65,7 +65,7 @@ public class CategoryServiceImpl implements CategoryService {
             String apiUrl = String.format(BanmaerpURL.banmaerp_categorylist_GET, ids, name, parentId, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField,sortField,sortBy);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
-            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
             categoryDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
@@ -99,7 +99,9 @@ public class CategoryServiceImpl implements CategoryService {
         List<CategoryDTO> categoryDTOList =
                 getCategoryList(null, null, null, pageNumber, pageSize, null, null, null, null, null,true, banmaerpProperties);
         categoryDTOList.forEach(categoryDTO -> categoryDTO.setBanmaerpProperties(banmaerpProperties));
-        return categoryRepository.saveAllAndFlush(categoryDTOList);
+        List<CategoryDTO> categoryDTOS = categoryRepository.saveAll(categoryDTOList);
+        categoryRepository.flush();
+        return categoryDTOS;
     }
 
     /**
@@ -115,7 +117,7 @@ public class CategoryServiceImpl implements CategoryService {
             String apiUrl = String.format(BanmaerpURL.banmaerp_category_GET,idv);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
-            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null,httpHeaders);
             return  httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
@@ -130,7 +132,9 @@ public class CategoryServiceImpl implements CategoryService {
     @CheckBanmaerpProperties
     public List<CategoryDTO> saveCategoryList(List<CategoryDTO> categoryDTOList, BanmaerpProperties banmaerpProperties) {
         categoryDTOList.forEach(categoryDTO -> categoryDTO.setBanmaerpProperties(banmaerpProperties));
-        return categoryRepository.saveAllAndFlush(categoryDTOList);
+        List<CategoryDTO> categoryDTOS = categoryRepository.saveAll(categoryDTOList);
+        categoryRepository.flush();
+        return categoryDTOS;
     }
 
     @Override

@@ -97,7 +97,7 @@ public class ProductServiceImpl implements ProductService {
                     searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
-            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
             productDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
@@ -166,7 +166,7 @@ public class ProductServiceImpl implements ProductService {
             String apiUrl = String.format(BanmaerpURL.banmaerp_product_GET, spuId);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
-            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
             ProductDTO productDTO= httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
@@ -232,7 +232,7 @@ public class ProductServiceImpl implements ProductService {
         }
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
         HttpHeaders httpHeaders = new HttpHeaders();
-        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,method,apiUrl);
+        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,method,apiUrl,requestBodyJson);
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
         httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         HttpEntity requestBody = new HttpEntity(requestBodyJson, httpHeaders);
@@ -271,7 +271,7 @@ public class ProductServiceImpl implements ProductService {
             String apiUrl = String.format(BanmaerpURL.Banmaerp_product_skulist_GET, skuIds,code, spuId,costPriceStart,costPriceEnd,pageNumber,pageSize,searchTimeStart,searchTimeEnd,searchTimeField,sortField,sortBy);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
-            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
             productSkusDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
@@ -302,7 +302,7 @@ public class ProductServiceImpl implements ProductService {
             String apiUrl = String.format(BanmaerpURL.Banmaerp_product_sku_GET, skuid);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
-            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
             productSkusDTO =
@@ -338,7 +338,7 @@ public class ProductServiceImpl implements ProductService {
             String apiUrl = String.format(BanmaerpURL.Banmaerp_taglist_GET, name,pageNumber,pageSize,searchTimeStart,searchTimeEnd,searchTimeField,sortField,sortBy);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
-            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
             productTagsDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
@@ -380,7 +380,7 @@ public class ProductServiceImpl implements ProductService {
             String apiUrl = String.format(BanmaerpURL.Banmaerp_supplierlist_GET, name,pageNumber,pageSize,searchTimeStart,searchTimeEnd,searchTimeField,sortField,sortBy);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
-            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
             productSuppliersDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
@@ -423,7 +423,8 @@ public class ProductServiceImpl implements ProductService {
             }
             productDTO.setBanmaerpProperties(banmaerpProperties);
         });
-        saveOrUpdateProducts = productRepository.saveAllAndFlush(saveOrUpdateProducts);
+        saveOrUpdateProducts = productRepository.saveAll(saveOrUpdateProducts);
+        productRepository.flush();
         return saveOrUpdateProducts;
     }
 
@@ -441,7 +442,9 @@ public class ProductServiceImpl implements ProductService {
     public List<ProductSuppliersDTO> saveSuppliers(List<ProductSuppliersDTO> suppliersDTOS, BanmaerpProperties banmaerpProperties) {
         //todo find existing, one to one
         suppliersDTOS.forEach(suppliersDTO -> suppliersDTO.setBanmaerpProperties(banmaerpProperties));
-        return suppliersRepository.saveAllAndFlush(suppliersDTOS);
+        List<ProductSuppliersDTO> productSuppliersDTOS =  suppliersRepository.saveAll(suppliersDTOS);
+        suppliersRepository.flush();
+        return productSuppliersDTOS;
     }
 
     @Override
@@ -453,7 +456,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<ProductSkusDTO> saveSkus(List<ProductSkusDTO> productSkusDTOS, BanmaerpProperties banmaerpProperties) {
         productSkusDTOS.forEach(productSkusDto -> productSkusDto.setBanmaerpProperties(banmaerpProperties));
-        return skusRepository.saveAllAndFlush(productSkusDTOS);
+        List<ProductSkusDTO> skusDTOS = skusRepository.saveAll(productSkusDTOS);
+        skusRepository.flush();
+        return skusDTOS;
     }
 
     @Override
@@ -464,7 +469,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<ProductTagsDTO> saveProductTags(List<ProductTagsDTO> productTagsDTOS, BanmaerpProperties banmaerpProperties) {
-        return productTagsRepository.saveAllAndFlush(productTagsDTOS);
+        List<ProductTagsDTO> tagsDTOS =  productTagsRepository.saveAll(productTagsDTOS);
+        productTagsRepository.flush();
+        return tagsDTOS;
     }
 
     @Override

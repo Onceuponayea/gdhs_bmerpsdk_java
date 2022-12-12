@@ -46,7 +46,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.client.RestTemplate;
 import javax.sql.DataSource;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -149,39 +148,41 @@ public class BanmaerpAutoConfiguration implements BeanDefinitionRegistryPostProc
         return new BanmaTokenUtils();
     }
     @Bean
-//    @Lazy
     public AccountService accountService(){
         return new AccountServiceImpl();
     }
     @Bean
-//    @Lazy
     public CategoryService categoryService(){
         return new CategoryServiceImpl();
     }
     @Bean
-//    @Lazy
     public OrderService orderService(){
         return new OrderServiceImpl();
     }
     @Bean
-//    @Lazy
     public ProductService productService(){
         return new ProductServiceImpl();
     }
     @Bean
-//    @Lazy
     public StoreService storeService(){
         return new StoreServiceImpl();
     }
     @Bean
-//    @Lazy
     public StorageService storageService(){
         return new StorageServiceImpl();
     }
     @Bean
-//    @Lazy
     public SsoService ssoService(){
         return new SsoServiceImpl();
+    }
+    @Bean
+    @Lazy
+    public BanmaerpPropertiesService banmaerpPropertiesService(){
+        return new BanmaerpPropertiesServiceImpl();
+    }
+    @Bean
+    public EventService eventService(){
+            return new EventService();
     }
 
     private BeanFactory beanFactory;
@@ -256,10 +257,5 @@ public class BanmaerpAutoConfiguration implements BeanDefinitionRegistryPostProc
     }
     private void addOtherDSIntoTxManagement(BeanDefinitionRegistry beanDefinitionRegistry){
         //TODO add parent project's datasource into atomikos Transaction Management
-    }
-    @EventListener(ApplicationReadyEvent.class)
-    public void init(){
-        logger.info("Banmaerp module integrating successfully!");
-
     }
 }

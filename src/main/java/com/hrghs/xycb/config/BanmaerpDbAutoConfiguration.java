@@ -143,6 +143,7 @@ public class BanmaerpDbAutoConfiguration {
     @Lazy
     public AtomikosDataSourceBean atomikosDataSourceBean(BanmaerpDruidXADataSource banmaerpDruidXADataSource) throws SQLException {
         AtomikosDataSourceBean dataSourceBean = new AtomikosDataSourceBean();
+        banmaerpDruidXADataSource.setValidationQuery(DB_JDBC_TEST_QUERY);
         dataSourceBean.setMaxPoolSize(banmaerpDruidXADataSource.getMaxActive());
         dataSourceBean.setMinPoolSize(banmaerpDruidXADataSource.getMinIdle());
         /**

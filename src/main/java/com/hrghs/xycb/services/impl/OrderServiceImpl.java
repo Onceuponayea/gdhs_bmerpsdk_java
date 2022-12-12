@@ -86,7 +86,7 @@ public class OrderServiceImpl implements OrderService {
             String apiUrl = String.format(BanmaerpURL.banmaerp_order_GET, ids,storeId,platform,status,payStatus,holdStatus,refundStatus,inventoryStatus,countryCode,pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField,sortField,sortBy);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
-            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
             orderDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
@@ -125,7 +125,9 @@ public class OrderServiceImpl implements OrderService {
             orderDTO.getMaster().setOrderDTO(orderDTO);
             orderDTO.setBanmaerpProperties(banmaerpProperties);
         });
-        return orderRepository.saveAllAndFlush(orderDTOList);
+        List<OrderDTO> orderDTOS =  orderRepository.saveAll(orderDTOList);
+        orderRepository.flush();
+        return orderDTOS;
     }
 
     /**
@@ -141,7 +143,7 @@ public class OrderServiceImpl implements OrderService {
             String apiUrl = String.format(BanmaerpURL.banmaerp_orderdetail_GET,id);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
-            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null,httpHeaders);
             return httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
@@ -167,7 +169,7 @@ public class OrderServiceImpl implements OrderService {
             String apiUrl = String.format(BanmaerpURL.banmaerp_orderFulfillments_GET, orderId);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
-            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
             orderFulfillmentDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
@@ -180,7 +182,8 @@ public class OrderServiceImpl implements OrderService {
                 orderFulfillmentDTO.setOrderId(orderId);
                 orderFulfillmentDTO.setBanmaerpProperties(banmaerpProperties);
             });
-            orderFulfillmentDTOList = fulfillmentRepository.saveAllAndFlush(orderFulfillmentDTOList);
+            orderFulfillmentDTOList = fulfillmentRepository.saveAll(orderFulfillmentDTOList);
+            fulfillmentRepository.flush();
         }else{
             orderFulfillmentDTOList = fulfillmentRepository.findOrderFulfillmentDTOSByOrderId(orderId);
         }
@@ -202,7 +205,7 @@ public class OrderServiceImpl implements OrderService {
             String apiUrl = String.format(BanmaerpURL.banmaerp_orderTrackings_GET, orderId);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
-            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
             orderTrackingDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
@@ -215,7 +218,8 @@ public class OrderServiceImpl implements OrderService {
                 orderFulfillmentDTO.setOrderId(orderId);
                 orderFulfillmentDTO.setBanmaerpProperties(banmaerpProperties);
             });
-            orderTrackingDTOList = trackingRepository.saveAllAndFlush(orderTrackingDTOList);
+            orderTrackingDTOList = trackingRepository.saveAll(orderTrackingDTOList);
+            trackingRepository.flush();
         }else{
             orderTrackingDTOList = trackingRepository.findOrderTrackingDTOSByOrderId(orderId);
         }
@@ -246,7 +250,9 @@ public class OrderServiceImpl implements OrderService {
             orderDTO.setBanmaerpProperties(banmaerpProperties);
             saveOrUpdateOrders.set(i,orderDTO);
         }
-        return orderRepository.saveAllAndFlush(saveOrUpdateOrders);
+        List<OrderDTO> orderDTOList =  orderRepository.saveAll(saveOrUpdateOrders);
+        orderRepository.flush();
+        return orderDTOList;
     }
 
     @Override

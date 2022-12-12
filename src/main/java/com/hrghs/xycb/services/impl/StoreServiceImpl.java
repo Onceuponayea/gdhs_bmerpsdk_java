@@ -100,7 +100,7 @@ public class StoreServiceImpl implements StoreService {
                     searchTimeStart, searchTimeEnd,searchTimeField,sortField,sortBy);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
-            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null,httpHeaders);
             storeDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
@@ -110,7 +110,8 @@ public class StoreServiceImpl implements StoreService {
                     .map(o -> (StoreDTO)o)
                     .collect(Collectors.toList());
             storeDTOList.forEach(storeDTO -> storeDTO.setBanmaerpProperties(banmaerpProperties));
-            storeRepository.saveAllAndFlush(storeDTOList);
+            storeRepository.saveAll(storeDTOList);
+            storeRepository.flush();
         }else {
             Specification<StoreDTO> specification = createSpecification(ids, name, platform, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
             storeDTOList = storeRepository.findAll(specification,PageRequest.of(pageNumber,pageSize)).toList();
@@ -136,7 +137,9 @@ public class StoreServiceImpl implements StoreService {
         List<StoreDTO> storeDTOList =
                 getStoretList(null, null, null, pageNumber, pageSize, null, null, null, null, null,true, banmaerpProperties);
         storeDTOList.forEach(storeDTO -> storeDTO.setBanmaerpProperties(banmaerpProperties));
-        return storeRepository.saveAllAndFlush(storeDTOList);
+        List<StoreDTO> storeDTOS = storeRepository.saveAll(storeDTOList);
+        storeRepository.flush();
+        return storeDTOS;
     }
 
     /**
@@ -151,7 +154,7 @@ public class StoreServiceImpl implements StoreService {
             String apiUrl = String.format(BanmaerpURL.banmaerp_store_GET,storeId);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
-            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties, HttpMethod.GET,apiUrl);
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties, HttpMethod.GET,apiUrl,null);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null,httpHeaders);
             return httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
@@ -166,7 +169,9 @@ public class StoreServiceImpl implements StoreService {
     @CheckBanmaerpProperties
     public List<StoreDTO> saveStoreList(List<StoreDTO> storeDTOList, BanmaerpProperties banmaerpProperties) {
         storeDTOList.forEach(storeDTO -> storeDTO.setBanmaerpProperties(banmaerpProperties));
-        return storeRepository.saveAllAndFlush(storeDTOList);
+        List<StoreDTO> storeDTOS = storeRepository.saveAll(storeDTOList);
+        storeRepository.flush();
+        return storeDTOS;
     }
 
     @Override

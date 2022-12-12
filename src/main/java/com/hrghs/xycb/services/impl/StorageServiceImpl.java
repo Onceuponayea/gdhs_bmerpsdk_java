@@ -79,7 +79,7 @@ public class StorageServiceImpl implements StorageService {
                     searchTimeStart, searchTimeEnd, searchTimeField,sortField,sortBy);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
-            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
             storageDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
@@ -120,7 +120,7 @@ public class StorageServiceImpl implements StorageService {
             String apiUrl = String.format(BanmaerpURL.banmaerp_storage_GET, id);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
-            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
             return httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
@@ -149,7 +149,7 @@ public class StorageServiceImpl implements StorageService {
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders.setContentType(MediaType.APPLICATION_OCTET_STREAM);
             httpHeaders.setAccept(Arrays.asList(MediaType.APPLICATION_OCTET_STREAM));
-            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.POST,apiUrl);
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.POST,apiUrl,file);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(file, httpHeaders);
             BanmaErpResponseDTO<StorageDTO> responseDTO =
@@ -181,7 +181,7 @@ public class StorageServiceImpl implements StorageService {
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders.setContentType(MediaType.TEXT_PLAIN);
             httpHeaders.setAccept(Arrays.asList(MediaType.TEXT_PLAIN));
-            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.POST,apiUrl);
+            BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.POST,apiUrl,file);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(file, httpHeaders);
             BanmaErpResponseDTO<StorageDTO> responseDTO =
@@ -213,7 +213,7 @@ public class StorageServiceImpl implements StorageService {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
         httpHeaders.setAccept(Arrays.asList(MediaType.MULTIPART_FORM_DATA));
-        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.POST,apiUrl);
+        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.POST,apiUrl,file);
         httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
         HttpEntity requestBody = new HttpEntity(file, httpHeaders);
         BanmaErpResponseDTO<StorageDTO> responseDTO =
@@ -230,7 +230,9 @@ public class StorageServiceImpl implements StorageService {
     @CheckBanmaerpProperties
     public List<StorageDTO> saveAll(List<StorageDTO> storageDTOList, BanmaerpProperties banmaerpProperties) {
         storageDTOList.forEach(storageDTO -> storageDTO.setBanmaerpProperties(banmaerpProperties));
-        return storageRepository.saveAllAndFlush(storageDTOList);
+        List<StorageDTO> storageDTOS = storageRepository.saveAll(storageDTOList);
+        storageRepository.flush();
+        return storageDTOS;
     }
 
     @Override
