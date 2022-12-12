@@ -70,7 +70,7 @@ public class SsoServiceImpl implements SsoService {
     @Override
     @CheckBanmaerpProperties
     public GetSsoPassportResponse ssoPassport(String account, String clientIp, Integer userId, Integer mode, BanmaerpProperties banmaerpProperties) {
-        String apiUrl = String.format(BanmaerpURL.banmaerp_sso_GET,account,clientIp,mode);
+        String apiUrl = String.format(BanmaerpURL.banmaerp_sso_GET,account,clientIp,userId,mode);
         apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
         HttpHeaders httpHeaders = new HttpHeaders();
         BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);

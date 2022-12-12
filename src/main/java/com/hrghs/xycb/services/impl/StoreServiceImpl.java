@@ -29,6 +29,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -103,11 +104,11 @@ public class StoreServiceImpl implements StoreService {
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null,httpHeaders);
             storeDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
-                    .getBody()
-                    .toDataList(BANMAERP_FIELD_STORES))
-            .map(o -> (StoreDTO)o)
-            .collect(Collectors.toList());
+                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+                            .getBody()
+                            .toDataList(BANMAERP_FIELD_STORES))
+                    .map(o -> (StoreDTO)o)
+                    .collect(Collectors.toList());
             storeDTOList.forEach(storeDTO -> storeDTO.setBanmaerpProperties(banmaerpProperties));
             storeRepository.saveAllAndFlush(storeDTOList);
         }else {
@@ -197,7 +198,7 @@ public class StoreServiceImpl implements StoreService {
                         .like(root.get("name"),
                                 "%" + name + "%"));
             }
-            if (platform != null ) {
+            if (platform != null) {
                 predicateList.add(criteriaBuilder
                         .equal(root.get("platform"),
                                 platform));
@@ -209,7 +210,20 @@ public class StoreServiceImpl implements StoreService {
                         .between(root.<DateTime>get(searchTimeField), searchTimeStart, searchTimeEnd));
             }
 
-            return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
+            Predicate and = criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
+            Order order = criteriaBuilder.desc(root.get("createTime"));
+            if (sortBy != null && sortBy != "") {
+                if (sortBy.equals("ASC")) {
+                    order = criteriaBuilder.asc(root.get("createTime"));
+                }
+            }
+            if (sortField != null && sortField != "") {
+                order = criteriaBuilder.desc(root.get(sortField));
+                if (sortBy.equals("ASC")) {
+                    order = criteriaBuilder.asc(root.get(sortField));
+                }
+            }
+            return criteriaQuery.where(and).orderBy(order).getRestriction();
         };
     }
 }

@@ -27,6 +27,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -87,11 +88,11 @@ public class AccountServiceImpl implements AccountService {
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null,httpHeaders);
             accountDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
-                    .getBody()
-                    .toDataList(BANMAERP_FIELD_ACCOUNTS))
-            .map(o -> (AccountDTO)o)
-            .collect(Collectors.toList());
+                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+                            .getBody()
+                            .toDataList(BANMAERP_FIELD_ACCOUNTS))
+                    .map(o -> (AccountDTO)o)
+                    .collect(Collectors.toList());
         }else{
             Specification<AccountDTO> specification = createSpecification(ids, email, realName, phone, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
             accountDTOList = accountRepository.findAll(specification,PageRequest.of(pageNumber,pageSize)).getContent();
@@ -289,9 +290,21 @@ public class AccountServiceImpl implements AccountService {
                 predicateList.add(criteriaBuilder
                         .between(root.<DateTime>get(searchTimeField), searchTimeStart, searchTimeEnd));
             }
-
-
-            return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
+            Predicate and = criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
+            Order order = criteriaBuilder.desc(root.get("createTime"));
+            if (sortBy != null && sortBy != ""){
+                if (sortBy.equals("ASC")) {
+                    order = criteriaBuilder.asc(root.get("createTime"));
+                }
+            }
+            if (sortField !=null && sortField != ""){
+                order = criteriaBuilder.desc(root.get(sortField));
+                if (sortBy.equals("ASC")){
+                    order = criteriaBuilder.asc(root.get(sortField));
+                }
+            }
+            return criteriaQuery.where(and).orderBy(order).getRestriction();
+            //return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
         };
     }
 }

@@ -24,6 +24,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,7 +62,7 @@ public class CategoryServiceImpl implements CategoryService {
             ,DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy, Boolean remote, BanmaerpProperties banmaerpProperties) {
         List<CategoryDTO> categoryDTOList;
         if (remote){
-            String apiUrl = String.format(BanmaerpURL.banmaerp_categorylist_GET, pageNumber, pageSize,searchTimeStart,searchTimeEnd,searchTimeField);
+            String apiUrl = String.format(BanmaerpURL.banmaerp_categorylist_GET, ids, name, parentId, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField,sortField,sortBy);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
             BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
@@ -172,8 +173,20 @@ public class CategoryServiceImpl implements CategoryService {
                         .between(root.<DateTime>get(searchTimeField), searchTimeStart, searchTimeEnd));
             }
 
-
-            return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
+            Predicate and = criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
+            Order order = criteriaBuilder.desc(root.get("createTime"));
+            if (sortBy != null && sortBy != "") {
+                if (sortBy.equals("ASC")) {
+                    order = criteriaBuilder.asc(root.get("createTime"));
+                }
+            }
+            if (sortField != null && sortField != "") {
+                order = criteriaBuilder.desc(root.get(sortField));
+                if (sortBy.equals("ASC")) {
+                    order = criteriaBuilder.asc(root.get(sortField));
+                }
+            }
+            return criteriaQuery.where(and).orderBy(order).getRestriction();
         };
     }
 }

@@ -26,6 +26,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -82,7 +83,7 @@ public class OrderServiceImpl implements OrderService {
         pageSize = BanmaParamsUtils.checkPageSize(pageSize);
         pageNumber = BanmaParamsUtils.checkPageNum(pageNumber);
         if (remote){
-            String apiUrl = String.format(BanmaerpURL.banmaerp_order_GET, pageNumber, pageSize,searchTimeStart,searchTimeEnd,searchTimeField);
+            String apiUrl = String.format(BanmaerpURL.banmaerp_order_GET, ids,storeId,platform,status,payStatus,holdStatus,refundStatus,inventoryStatus,countryCode,pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField,sortField,sortBy);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
             BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl);
@@ -170,11 +171,11 @@ public class OrderServiceImpl implements OrderService {
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
             orderFulfillmentDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<OrderFulfillmentDTO>>() {})
-                    .getBody()
-                    .toDataList(BANMAERP_FIELD_FULFILLMENTS))
-            .map(o -> (OrderFulfillmentDTO) o)
-            .collect(Collectors.toList());
+                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<OrderFulfillmentDTO>>() {})
+                            .getBody()
+                            .toDataList(BANMAERP_FIELD_FULFILLMENTS))
+                    .map(o -> (OrderFulfillmentDTO) o)
+                    .collect(Collectors.toList());
             orderFulfillmentDTOList.forEach(orderFulfillmentDTO -> {
                 orderFulfillmentDTO.setOrderId(orderId);
                 orderFulfillmentDTO.setBanmaerpProperties(banmaerpProperties);
@@ -205,11 +206,11 @@ public class OrderServiceImpl implements OrderService {
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
             orderTrackingDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<OrderTrackingDTO>>() {})
-                    .getBody()
-                    .toDataList(BANMAERP_FIELD_TRACKINGS))
-            .map(o -> (OrderTrackingDTO) o)
-            .collect(Collectors.toList());
+                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<OrderTrackingDTO>>() {})
+                            .getBody()
+                            .toDataList(BANMAERP_FIELD_TRACKINGS))
+                    .map(o -> (OrderTrackingDTO) o)
+                    .collect(Collectors.toList());
             orderTrackingDTOList.forEach(orderFulfillmentDTO -> {
                 orderFulfillmentDTO.setOrderId(orderId);
                 orderFulfillmentDTO.setBanmaerpProperties(banmaerpProperties);
@@ -234,7 +235,7 @@ public class OrderServiceImpl implements OrderService {
                 .collect(Collectors.toList());;
         /**
          * prevent duplicate key for orderMasterId
-          */
+         */
         for (int i=0; i < saveOrUpdateOrders.size(); i++ ){
             OrderDTO orderDTO = saveOrUpdateOrders.get(i);
             for (OrderMasterDTO existedOrderMaster :existingOrderMasters) {
@@ -327,7 +328,20 @@ public class OrderServiceImpl implements OrderService {
             }
 
 
-            return criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
+            Predicate and = criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
+            Order order = criteriaBuilder.desc(root.get("master").get("createTime"));
+            if (sortBy != null && sortBy != "") {
+                if (sortBy.equals("ASC")) {
+                    order = criteriaBuilder.asc(root.get("master").get("createTime"));
+                }
+            }
+            if (sortField != null && sortField != "") {
+                order = criteriaBuilder.desc(root.get("master").get(sortField));
+                if (sortBy.equals("ASC")) {
+                    order = criteriaBuilder.asc(root.get("master").get(sortField));
+                }
+            }
+            return criteriaQuery.where(and).orderBy(order).getRestriction();
         };
     }
 }
