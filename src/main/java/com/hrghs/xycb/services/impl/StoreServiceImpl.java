@@ -18,6 +18,7 @@ import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpEntity;
@@ -90,9 +91,9 @@ public class StoreServiceImpl implements StoreService {
 
     @Override
     @CheckBanmaerpProperties
-    public List<StoreDTO> getStoretList(String ids, String name, BanmaerpPlatformEnums.Platform platform, Integer pageNumber, Integer pageSize, DateTime searchTimeStart,
-                                        DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy, Boolean remote,BanmaerpProperties banmaerpProperties) {
-        List<StoreDTO> storeDTOList;
+    public Page<StoreDTO> getStoretList(String ids, String name, BanmaerpPlatformEnums.Platform platform, Integer pageNumber, Integer pageSize, DateTime searchTimeStart,
+                                        DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy, Boolean remote, BanmaerpProperties banmaerpProperties) {
+        Page<StoreDTO> storeDTOList;
         pageSize = BanmaParamsUtils.checkPageSize(pageSize);
         pageNumber = BanmaParamsUtils.checkPageNum(pageNumber);
         if (remote){
@@ -103,31 +104,36 @@ public class StoreServiceImpl implements StoreService {
             BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null,httpHeaders);
-            storeDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+//            storeDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+//                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+//                            .getBody()
+//                            .toDataList(BANMAERP_FIELD_STORES))
+//                    .map(o -> (StoreDTO)o)
+//                    .collect(Collectors.toList());
+            storeDTOList = (Page<StoreDTO>)
+                    httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
                             .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
                             .getBody()
-                            .toDataList(BANMAERP_FIELD_STORES))
-                    .map(o -> (StoreDTO)o)
-                    .collect(Collectors.toList());
+                            .toDataList(StoreDTO.class,banmaerpProperties);
             storeDTOList.forEach(storeDTO -> storeDTO.setBanmaerpProperties(banmaerpProperties));
             storeRepository.saveAll(storeDTOList);
             storeRepository.flush();
         }else {
             Specification<StoreDTO> specification = createSpecification(ids, name, platform, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
-            storeDTOList = storeRepository.findAll(specification,PageRequest.of(pageNumber,pageSize)).toList();
+            storeDTOList = storeRepository.findAll(specification,PageRequest.of(pageNumber,pageSize));
         }
         return storeDTOList;
     }
 
     @Override
     @CheckBanmaerpProperties
-    public List<StoreDTO> getStoretList(Integer pageNumber,Boolean remote, BanmaerpProperties banmaerpProperties) {
+    public Page<StoreDTO> getStoretList(Integer pageNumber,Boolean remote, BanmaerpProperties banmaerpProperties) {
         return getStoretList(null, null, null, pageNumber, null, null, null, null, null, null,remote, banmaerpProperties);
     }
 
     @Override
     @CheckBanmaerpProperties
-    public List<StoreDTO> getStoretList(Integer pageNumber, Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties) {
+    public Page<StoreDTO> getStoretList(Integer pageNumber, Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties) {
         return getStoretList(null, null, null, pageNumber, pageSize, null, null, null, null, null,remote, banmaerpProperties);
     }
 
@@ -135,7 +141,8 @@ public class StoreServiceImpl implements StoreService {
     @CheckBanmaerpProperties
     public List<StoreDTO> getAndSaveStoretList(Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties) {
         List<StoreDTO> storeDTOList =
-                getStoretList(null, null, null, pageNumber, pageSize, null, null, null, null, null,true, banmaerpProperties);
+                getStoretList(null, null, null, pageNumber, pageSize, null, null,
+                        null, null, null,true, banmaerpProperties).getContent();
         storeDTOList.forEach(storeDTO -> storeDTO.setBanmaerpProperties(banmaerpProperties));
         List<StoreDTO> storeDTOS = storeRepository.saveAll(storeDTOList);
         storeRepository.flush();

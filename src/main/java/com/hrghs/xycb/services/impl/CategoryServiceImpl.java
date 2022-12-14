@@ -17,6 +17,7 @@ import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpEntity;
@@ -58,9 +59,9 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     @CheckBanmaerpProperties
-    public List<CategoryDTO> getCategoryList(String ids, String name, String parentId, Integer pageNumber, Integer pageSize, DateTime searchTimeStart
-            ,DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy, Boolean remote, BanmaerpProperties banmaerpProperties) {
-        List<CategoryDTO> categoryDTOList;
+    public Page<CategoryDTO> getCategoryList(String ids, String name, String parentId, Integer pageNumber, Integer pageSize, DateTime searchTimeStart
+            , DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy, Boolean remote, BanmaerpProperties banmaerpProperties) {
+        Page<CategoryDTO> categoryDTOList;
         if (remote){
             String apiUrl = String.format(BanmaerpURL.banmaerp_categorylist_GET, ids, name, parentId, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField,sortField,sortBy);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
@@ -68,36 +69,41 @@ public class CategoryServiceImpl implements CategoryService {
             BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
-            categoryDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+//            categoryDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+//                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+//                            .getBody()
+//                            .toDataList(BANMAERP_FIELD_CATEGORYS))
+//                    .map(o -> (CategoryDTO) o)
+//                    .collect(Collectors.toList());
+            categoryDTOList = (Page<CategoryDTO>)
+                    httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
                             .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
                             .getBody()
-                            .toDataList(BANMAERP_FIELD_CATEGORYS))
-                    .map(o -> (CategoryDTO) o)
-                    .collect(Collectors.toList());
+                            .toDataList(CategoryDTO.class,banmaerpProperties);
         }else {
             Specification<CategoryDTO> specification = createSpecification(ids, name, parentId, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
-            categoryDTOList = categoryRepository.findAll(specification,PageRequest.of(pageNumber,pageSize)).toList();
+            categoryDTOList = categoryRepository.findAll(specification,PageRequest.of(pageNumber,pageSize));
         }
         return categoryDTOList;
     }
 
     @Override
     @CheckBanmaerpProperties
-    public List<CategoryDTO> getCategoryList(Integer pageNumber, Boolean remote, BanmaerpProperties banmaerpProperties) {
+    public Page<CategoryDTO> getCategoryList(Integer pageNumber, Boolean remote, BanmaerpProperties banmaerpProperties) {
         return getCategoryList(null, null, null, pageNumber, null, null, null, null, null, null,remote, banmaerpProperties);
     }
 
     @Override
     @CheckBanmaerpProperties
-    public List<CategoryDTO> getCategoryList(Integer pageNumber, Integer pageSize, Boolean remote, BanmaerpProperties banmaerpProperties) {
+    public Page<CategoryDTO> getCategoryList(Integer pageNumber, Integer pageSize, Boolean remote, BanmaerpProperties banmaerpProperties) {
         return getCategoryList(null, null, null, pageNumber, pageSize, null, null, null, null, null,remote, banmaerpProperties);
     }
 
     @Override
     @CheckBanmaerpProperties
     public List<CategoryDTO> getAndSaveCategoryList(Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties) {
-        List<CategoryDTO> categoryDTOList =
-                getCategoryList(null, null, null, pageNumber, pageSize, null, null, null, null, null,true, banmaerpProperties);
+        List<CategoryDTO> categoryDTOList = getCategoryList(null, null, null, pageNumber, pageSize, null,
+                        null, null, null, null,true, banmaerpProperties).getContent();
         categoryDTOList.forEach(categoryDTO -> categoryDTO.setBanmaerpProperties(banmaerpProperties));
         List<CategoryDTO> categoryDTOS = categoryRepository.saveAll(categoryDTOList);
         categoryRepository.flush();

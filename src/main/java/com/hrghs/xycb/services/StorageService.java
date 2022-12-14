@@ -4,6 +4,7 @@ import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.StorageDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import org.joda.time.DateTime;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -26,15 +27,15 @@ public interface StorageService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    List<StorageDTO> getStoragetList(
+    Page<StorageDTO> getStoragetList(
             String ids, String name, String fileType, String fileCategoryId, Integer pageNumber, Integer pageSize,
             DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy,
             Boolean remote,BanmaerpProperties banmaerpProperties
     );
 
-    List<StorageDTO> getStoragetList(Integer pageNumber,Boolean remote, BanmaerpProperties banmaerpProperties);
+    Page<StorageDTO> getStoragetList(Integer pageNumber,Boolean remote, BanmaerpProperties banmaerpProperties);
 
-    List<StorageDTO> getStoragetList(Integer pageNumber,Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties);
+    Page<StorageDTO> getStoragetList(Integer pageNumber,Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties);
 
     /**
      * 查询单个文件

@@ -5,6 +5,7 @@ import com.hrghs.xycb.domains.banmaerpDTO.StoreDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.domains.enums.BanmaerpPlatformEnums;
 import org.joda.time.DateTime;
+import org.springframework.data.domain.Page;
 import org.springframework.lang.Nullable;
 import reactor.core.publisher.Mono;
 
@@ -43,14 +44,14 @@ public interface StoreService {
             BanmaerpProperties banmaerpProperties
     );
 
-    List<StoreDTO> getStoretList(@Nullable String ids, @Nullable String name,
+    Page<StoreDTO> getStoretList(@Nullable String ids, @Nullable String name,
                                  @Nullable BanmaerpPlatformEnums.Platform platform, Integer pageNumber, @Nullable Integer pageSize, @Nullable DateTime searchTimeStart,
                                  @Nullable DateTime searchTimeEnd, @Nullable String searchTimeField, @Nullable String sortField, @Nullable String sortBy,
-                                 Boolean remote,BanmaerpProperties banmaerpProperties);
+                                 Boolean remote, BanmaerpProperties banmaerpProperties);
 
-    List<StoreDTO> getStoretList(Integer pageNumber,Boolean remote, BanmaerpProperties banmaerpProperties);
+    Page<StoreDTO> getStoretList(Integer pageNumber,Boolean remote, BanmaerpProperties banmaerpProperties);
 
-    List<StoreDTO> getStoretList(Integer pageNumber, Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties);
+    Page<StoreDTO> getStoretList(Integer pageNumber, Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties);
 
     List<StoreDTO> getAndSaveStoretList(Integer pageNumber, Integer pageSize,BanmaerpProperties banmaerpProperties);
     /**

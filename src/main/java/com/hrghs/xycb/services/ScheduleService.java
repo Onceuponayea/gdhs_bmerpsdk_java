@@ -44,8 +44,9 @@ public class ScheduleService {
         bmerpTasks();
     }
     private String[] bmerpDefaultTaskState(){
-        return new String[]{"Products_0_100_timeStamp","Orders_0_100_timeStamp","Stores_0_100_timeStamp"
-                ,"Categorys_0_100_timeStamp","Accounts_0_100_timeStamp"};
+        return new String[]{"Products_0_"+PAGE_SIZE_DEFAULT+"_timeStamp","Orders_0_"+PAGE_SIZE_DEFAULT+"_timeStamp",
+                "Stores_0_"+PAGE_SIZE_DEFAULT+"_timeStamp","Categorys_0_"+PAGE_SIZE_DEFAULT+"_timeStamp",
+                "Accounts_0_"+PAGE_SIZE_DEFAULT+"_timeStamp"};
     }
 
     private Flux<String> defaultValue(){

@@ -6,6 +6,7 @@ import com.hrghs.xycb.domains.banmaerpDTO.DataAccessDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.TokenResponseDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import org.joda.time.DateTime;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -28,7 +29,7 @@ public interface AccountService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    List<AccountDTO> getAccountList(
+    Page<AccountDTO> getAccountList(
             String ids, String email, String realName, String phone,
             Integer pageNumber, Integer pageSize, DateTime searchTimeStart,
             DateTime searchTimeEnd, String searchTimeField, String sortField,
@@ -36,11 +37,13 @@ public interface AccountService {
             BanmaerpProperties banmaerpProperties
     );
 
-    List<AccountDTO> getAccountList(Integer pageNumber,Boolean remote, BanmaerpProperties banmaerpProperties);
+    Page<AccountDTO> getAccountList(Integer pageNumber,Boolean remote, BanmaerpProperties banmaerpProperties);
 
-    List<AccountDTO> getAccountList(Integer pageNumber,Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties);
+    Page<AccountDTO> getAccountList(Integer pageNumber,Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties);
 
     List<AccountDTO> getAndSaveAccountList(Integer pageNumber,Integer pageSize, BanmaerpProperties banmaerpProperties);
+
+
     /**
      * 查询单个用户
      *

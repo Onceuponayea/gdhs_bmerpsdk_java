@@ -4,6 +4,7 @@ import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.*;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import org.joda.time.DateTime;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -29,7 +30,7 @@ public interface ProductService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    List<ProductDTO> getProductList(
+    Page<ProductDTO> getProductList(
             String spuIds,
             String source,
             String spu,
@@ -49,9 +50,9 @@ public interface ProductService {
             BanmaerpProperties banmaerpProperties
     );
 
-    List<ProductDTO> getProductList(Integer pageNumber,Boolean remote,BanmaerpProperties banmaerpProperties);
+    Page<ProductDTO> getProductList(Integer pageNumber,Boolean remote,BanmaerpProperties banmaerpProperties);
 
-    List<ProductDTO> getProductList(Integer pageNumber,Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties);
+    Page<ProductDTO> getProductList(Integer pageNumber,Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties);
 
     /**
      * 获取产品列表并自动保存到数据库，适用定时任务同步
@@ -105,7 +106,7 @@ public interface ProductService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    List<ProductSkusDTO> getProductSkuList(
+    Page<ProductSkusDTO> getProductSkuList(
             String skuIds,
             String code,
             String spuId,
@@ -143,7 +144,7 @@ public interface ProductService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    List<ProductTagsDTO> getProductTagsList(
+    Page<ProductTagsDTO> getProductTagsList(
             String name,
             Integer pageNumber,
             Integer pageSize,
@@ -169,7 +170,7 @@ public interface ProductService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    List<ProductSuppliersDTO>  getProductSuppliersList(
+    Page<ProductSuppliersDTO>  getProductSuppliersList(
             String name,
             Integer pageNumber,
             Integer pageSize,

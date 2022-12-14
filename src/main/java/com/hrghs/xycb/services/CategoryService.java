@@ -6,6 +6,7 @@ import com.hrghs.xycb.domains.banmaerpDTO.CategoryDTO;
 import java.util.List;
 
 import org.joda.time.DateTime;
+import org.springframework.data.domain.Page;
 
 public interface CategoryService {
 
@@ -25,15 +26,15 @@ public interface CategoryService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return 排序方式，具体值参见:SortBy
      */
-    List<CategoryDTO> getCategoryList(
+    Page<CategoryDTO> getCategoryList(
             String ids, String name, String parentId, Integer pageNumber, Integer pageSize,
             DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField,
             String sortBy, Boolean remote,BanmaerpProperties banmaerpProperties
     );
 
-    List<CategoryDTO> getCategoryList(Integer pageNumber, Boolean remote, BanmaerpProperties banmaerpProperties);
+    Page<CategoryDTO> getCategoryList(Integer pageNumber, Boolean remote, BanmaerpProperties banmaerpProperties);
 
-    List<CategoryDTO> getCategoryList(Integer pageNumber,Integer pageSize, Boolean remote, BanmaerpProperties banmaerpProperties);
+    Page<CategoryDTO> getCategoryList(Integer pageNumber,Integer pageSize, Boolean remote, BanmaerpProperties banmaerpProperties);
 
     List<CategoryDTO> getAndSaveCategoryList(Integer pageNumber,Integer pageSize,BanmaerpProperties banmaerpProperties);
     /**

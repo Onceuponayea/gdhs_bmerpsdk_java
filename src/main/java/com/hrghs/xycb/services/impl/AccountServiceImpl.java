@@ -20,6 +20,7 @@ import com.hrghs.xycb.utils.*;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpEntity;
@@ -73,10 +74,10 @@ public class AccountServiceImpl implements AccountService {
      */
     @Override
     @CheckBanmaerpProperties
-    public List<AccountDTO> getAccountList(String ids, String email, String realName, String phone, Integer pageNumber, Integer pageSize
-            , DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy,Boolean remote
+    public Page<AccountDTO> getAccountList(String ids, String email, String realName, String phone, Integer pageNumber, Integer pageSize
+            , DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy, Boolean remote
             , BanmaerpProperties banmaerpProperties) {
-        List<AccountDTO> accountDTOList;
+        Page<AccountDTO> accountDTOList =null;
         pageSize = BanmaParamsUtils.checkPageSize(pageSize);
         pageNumber = BanmaParamsUtils.checkPageNum(pageNumber);
         if (remote){
@@ -87,35 +88,40 @@ public class AccountServiceImpl implements AccountService {
             BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null,httpHeaders);
-            accountDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
-                            .getBody()
-                            .toDataList(BANMAERP_FIELD_ACCOUNTS))
+            BanmaErpResponseDTO<JsonNode> responseDTO =
+                httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+                    .getBody();
+            /**
+            List<AccountDTO> accountList = Arrays.stream(responseDTO.toDataList(BANMAERP_FIELD_ACCOUNTS))
                     .map(o -> (AccountDTO)o)
                     .collect(Collectors.toList());
+            **/
+            accountDTOList = (Page<AccountDTO>) responseDTO.toDataList(AccountDTO.class,banmaerpProperties);
         }else{
             Specification<AccountDTO> specification = createSpecification(ids, email, realName, phone, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
-            accountDTOList = accountRepository.findAll(specification,PageRequest.of(pageNumber,pageSize)).getContent();
+            accountDTOList = accountRepository.findAll(specification,PageRequest.of(pageNumber,pageSize));
         }
         return accountDTOList;
     }
 
     @Override
     @CheckBanmaerpProperties
-    public List<AccountDTO> getAccountList(Integer pageNumber,Boolean remote, BanmaerpProperties banmaerpProperties) {
+    public Page<AccountDTO> getAccountList(Integer pageNumber,Boolean remote, BanmaerpProperties banmaerpProperties) {
         return getAccountList(null,null,null,null,pageNumber,null,null,null,null,null,null,remote,banmaerpProperties);
     }
 
     @Override
     @CheckBanmaerpProperties
-    public List<AccountDTO> getAccountList(Integer pageNumber, Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties) {
+    public Page<AccountDTO> getAccountList(Integer pageNumber, Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties) {
         return getAccountList(null,null,null,null,pageNumber,pageSize,null,null,null,null,null,remote,banmaerpProperties);
     }
 
     @Override
     @CheckBanmaerpProperties
     public List<AccountDTO> getAndSaveAccountList(Integer pageNumber,Integer pageSize,BanmaerpProperties banmaerpProperties) {
-        List<AccountDTO> accountDTOS =getAccountList(null,null,null,null,pageNumber,null,null,null,null,null,null,true,banmaerpProperties);
+        List<AccountDTO> accountDTOS =getAccountList(null,null,null,null,pageNumber,null,null,null,null,null,null,true,banmaerpProperties)
+                .getContent();
         banmaerpProperties.setBanmaErpAccounts(accountDTOS);
         return banmaerpPropertiesRepository.saveAndFlush(banmaerpProperties).getBanmaErpAccounts();
     }

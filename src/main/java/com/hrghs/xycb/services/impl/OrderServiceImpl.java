@@ -19,6 +19,7 @@ import com.hrghs.xycb.utils.HttpClientsUtils;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpEntity;
@@ -74,12 +75,12 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     @CheckBanmaerpProperties
-    public List<OrderDTO> getOrderList(String ids, String storeId, String platform, String status, String payStatus,
+    public Page<OrderDTO> getOrderList(String ids, String storeId, String platform, String status, String payStatus,
                                        String holdStatus, String refundStatus, String inventoryStatus, String countryCode,
                                        Integer pageNumber, Integer pageSize, DateTime searchTimeStart, DateTime searchTimeEnd,
-                                       String searchTimeField, String sortField, String sortBy,Boolean remote,
+                                       String searchTimeField, String sortField, String sortBy, Boolean remote,
                                        BanmaerpProperties banmaerpProperties) {
-        List<OrderDTO> orderDTOList;
+        Page<OrderDTO> orderDTOList;
         pageSize = BanmaParamsUtils.checkPageSize(pageSize);
         pageNumber = BanmaParamsUtils.checkPageNum(pageNumber);
         if (remote){
@@ -89,29 +90,34 @@ public class OrderServiceImpl implements OrderService {
             BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
-            orderDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+//            orderDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+//                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+//                            .getBody()
+//                            .toDataList(BANMAERP_FIELD_ORDERS))
+//                    .map(o -> (OrderDTO) o)
+//                    .collect(Collectors.toList());
+            orderDTOList = (Page<OrderDTO>)
+                    httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
                             .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
                             .getBody()
-                            .toDataList(BANMAERP_FIELD_ORDERS))
-                    .map(o -> (OrderDTO) o)
-                    .collect(Collectors.toList());
+                            .toDataList(OrderDTO.class,banmaerpProperties);
             orderDTOList.forEach(orderDTO -> orderDTO.setBanmaerpProperties(banmaerpProperties));
         }else{
             Specification<OrderDTO> specification = createSpecification(ids, storeId, platform,status,payStatus,holdStatus,refundStatus,inventoryStatus,countryCode, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
-            orderDTOList = orderRepository.findAll(specification,PageRequest.of(pageNumber,pageSize)).toList();
+            orderDTOList = orderRepository.findAll(specification,PageRequest.of(pageNumber,pageSize));
         }
         return orderDTOList;
     }
 
     @Override
     @CheckBanmaerpProperties
-    public List<OrderDTO> getOrderList(Integer pageNumber,Boolean remote, BanmaerpProperties banmaerpProperties) {
+    public Page<OrderDTO> getOrderList(Integer pageNumber,Boolean remote, BanmaerpProperties banmaerpProperties) {
         return getOrderList(null, null, null, null, null, null, null, null, null, pageNumber, null, null, null, null, null, null, remote,banmaerpProperties);
     }
 
     @Override
     @CheckBanmaerpProperties
-    public List<OrderDTO> getOrderList(Integer pageNumber, Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties) {
+    public Page<OrderDTO> getOrderList(Integer pageNumber, Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties) {
         return getOrderList(null, null, null, null, null, null, null, null, null, pageNumber, pageSize, null, null, null, null, null, remote,banmaerpProperties);
     }
 
@@ -119,7 +125,9 @@ public class OrderServiceImpl implements OrderService {
     @CheckBanmaerpProperties
     public List<OrderDTO> getAndSaveOrderList(Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties) {
         List<OrderDTO> orderDTOList =
-                getOrderList(null, null, null, null, null, null, null, null, null, pageNumber, pageSize, null, null, null, null, null, true,banmaerpProperties);
+                getOrderList(null, null, null, null, null, null, null,
+                        null, null, pageNumber, pageSize, null, null, null,
+                        null, null, true,banmaerpProperties).getContent();
         orderDTOList = orderRepository.saveAll(orderDTOList);
         orderDTOList.forEach(orderDTO -> {
             orderDTO.getMaster().setOrderDTO(orderDTO);

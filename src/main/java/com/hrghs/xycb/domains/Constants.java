@@ -14,7 +14,7 @@ public class Constants {
     public static final String DB_HIKARI_JDBC_URL = "spring.datasource.banmaerp.hikari.jdbc-url";
     public static final Long DB_HIKARI_MINIMUM_KEEPALIVETIME = 30000l;
     public static final Long DB_HIKARI_DEFAULT_KEEPALIVETIME = 60000l;
-
+    public static final Integer PAGE_SIZE_DEFAULT = 100;
 
     public static final String DB_JDBC_PROPERTY_CACHEPREPARESTATEMENTS = "jdbc.property.cachePrepStmts";
     public static final String DB_JDBC_PROPERTY_PREPARESTATEMENT_CACHESIZE = "jdbc.property.prepStmtCacheSize";
@@ -56,6 +56,10 @@ public class Constants {
     public static final String BANMAERP_FIELD_SUPPLIERS = "Suppliers";
     public static final String BANMAERP_FIELD_STORAGES = "Storages";
     public static final String BANMAERP_FIELD_PAGE = "Page";
+    public static final String BANMAERP_FIELD_PAGE_TotalCount = "TotalCount";//数据总量
+    public static final String BANMAERP_FIELD_PAGE_PageSize = "PageSize";
+    public static final String BANMAERP_FIELD_PAGE_PageCount = "PageCount";//总页数
+    public static final String BANMAERP_FIELD_PAGE_PageNumber = "PageNumber";
     public static final String BANMAERP_FIELD_PRODUCT = "Product";
     public static final String BANMAERP_FIELD_FULFILLMENTS = "Fulfillments";
     public static final String BANMAERP_FIELD_TRACKINGS = "Trackings";

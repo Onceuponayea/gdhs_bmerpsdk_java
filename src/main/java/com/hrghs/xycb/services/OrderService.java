@@ -7,6 +7,7 @@ import com.hrghs.xycb.domains.banmaerpDTO.OrderFulfillmentDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.OrderTrackingDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import org.joda.time.DateTime;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -35,16 +36,16 @@ public interface OrderService {
      * @param banmaerpProperties 斑马erp主账号（供应商或者平台）
      * @return
      */
-    List<OrderDTO> getOrderList(
+    Page<OrderDTO> getOrderList(
             String ids, String storeId, String platform, String status, String payStatus, String holdStatus,
             String refundStatus, String inventoryStatus, String countryCode, Integer pageNumber, Integer pageSize,
             DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy,
             Boolean remote,BanmaerpProperties banmaerpProperties
     );
 
-    List<OrderDTO> getOrderList(Integer pageNumber,Boolean remote, BanmaerpProperties banmaerpProperties);
+    Page<OrderDTO> getOrderList(Integer pageNumber,Boolean remote, BanmaerpProperties banmaerpProperties);
 
-    List<OrderDTO> getOrderList(Integer pageNumber,Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties);
+    Page<OrderDTO> getOrderList(Integer pageNumber,Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties);
 
     List<OrderDTO> getAndSaveOrderList(Integer pageNumber,Integer pageSize,BanmaerpProperties banmaerpProperties);
 
