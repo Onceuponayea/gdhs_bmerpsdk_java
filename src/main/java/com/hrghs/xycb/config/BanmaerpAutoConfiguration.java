@@ -70,7 +70,7 @@ public class BanmaerpAutoConfiguration implements BeanDefinitionRegistryPostProc
                 .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS,false)
                 .configure(FAIL_ON_UNKNOWN_PROPERTIES,false)
                 .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS,true)
-                .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+                .setSerializationInclusion(JsonInclude.Include.NON_EMPTY)
                 .registerModule(jodaModule());
         return objectMapper;
     }

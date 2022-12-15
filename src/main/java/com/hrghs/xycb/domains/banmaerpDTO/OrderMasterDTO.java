@@ -62,6 +62,7 @@ public class OrderMasterDTO {
 
     @Column(name = "pay_type")
     @JsonProperty("PayType")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private Integer payType;
 
     @Column(name = "pay_amount")
@@ -144,6 +145,7 @@ public class OrderMasterDTO {
     private String refundStatus;
 
     @JsonProperty(value = "Quantity")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private Integer Quantity;
 
     @Column(name = "purchase_freight")

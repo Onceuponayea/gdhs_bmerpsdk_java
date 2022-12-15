@@ -4,7 +4,7 @@
   <groupId>com.startup-union.net</groupId>
   <artifactId>spring-boot-starter-banmaerp</artifactId>
   <packaging>jar</packaging>
-  <version>1.2-SNAPSHOTS</version>
+  <version>1.2.7-SNAPSHOTS</version>
   <name>spring-boot-starter-banmaerp</name>
   <url>http://maven.apache.org</url>
   <properties>
@@ -141,6 +141,45 @@
             <descriptorRef>jar-with-dependencies</descriptorRef>
             <descriptorRef>src</descriptorRef>
           </descriptors>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>com.github.wvengen</groupId>
+        <artifactId>proguard-maven-plugin</artifactId>
+        <version>2.6.0</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>proguard</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <attachArtifactClassifier></attachArtifactClassifier>
+          <obfuscate>true</obfuscate>
+          <options>
+            <option>-verbose</option>
+            <option>-allowaccessmodification</option>
+<!--            <option>-overloadaggressively</option>--><!-- buggy, will have duplicated attributes -->
+            <option>-dontoptimize</option>
+            <option>-ignorewarnings</option>
+            <option>-keepdirectories</option>
+            <option>-keepclassmembers class * {
+              @org.springframework.beans.factory.annotation.Autowired *;
+              @org.springframework.beans.factory.annotation.Value *;
+              }
+            </option>
+            <option>-keepattributes *Annotation*, Signature, Deprecated, LineNumberTable, InnerClasses</option>
+            <option>-keep class com.hrghs.xycb.** { public *; }</option>
+            <option>-keepclassmembers class com.hrghs.xycb.domains.** { *;} </option>
+          </options>
+          <libs>
+            <!-- 添加依赖 java8-->
+            <lib>${java.home}/lib/rt.jar</lib>
+            <lib>${java.home}/lib/jce.jar</lib>
+          </libs>
         </configuration>
       </plugin>
     </plugins>

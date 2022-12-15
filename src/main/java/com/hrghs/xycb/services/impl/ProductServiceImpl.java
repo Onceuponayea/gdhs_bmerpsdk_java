@@ -1,8 +1,10 @@
 package com.hrghs.xycb.services.impl;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
 import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.BanmaerpSigningVO;
@@ -34,8 +36,7 @@ import javax.persistence.criteria.Predicate;
 import java.util.*;
 import java.util.stream.Collectors;
 import static com.hrghs.xycb.domains.Constants.*;
-import static jodd.util.StringPool.COLON;
-import static jodd.util.StringPool.UNDERSCORE;
+import static jodd.util.StringPool.*;
 
 public class ProductServiceImpl implements ProductService {
 
@@ -230,9 +231,13 @@ public class ProductServiceImpl implements ProductService {
                                                                BanmaerpProperties banmaerpProperties) {
         String requestBodyJson = null;
         try {
+            objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
             requestBodyJson = objectMapper.writeValueAsString(productDto);
             JsonNode jsonNode = objectMapper.readTree(requestBodyJson);
-            requestBodyJson = jsonNode.get(BANMAERP_FIELD_PRODUCT).toString();
+            requestBodyJson = jsonNode.get(BANMAERP_FIELD_PRODUCT).toString()
+                    .replace("\\r","").replace("\\n","")
+                    .replace(BACK_SLASH,"").replace("\"[","[")
+                    .replace("]\"","]");
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -243,9 +248,9 @@ public class ProductServiceImpl implements ProductService {
         httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         HttpEntity requestBody = new HttpEntity(requestBodyJson, httpHeaders);
         return
-                httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                        .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), method, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<ProductDTO>>() {})
-                        .getBody();
+        httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), method, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<ProductDTO>>() {})
+                .getBody();
     }
 
     /**

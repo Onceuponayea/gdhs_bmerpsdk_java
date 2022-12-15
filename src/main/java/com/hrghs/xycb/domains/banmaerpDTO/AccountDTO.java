@@ -33,7 +33,7 @@ public class AccountDTO {
     @Id
     @Column(name = "id")
     @JsonProperty(value = "ID")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private Integer ID;
 
     @Column(name = "real_name")

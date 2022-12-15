@@ -31,10 +31,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
-import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_ACCOUNTS;
 
 
 public class AccountServiceImpl implements AccountService {
@@ -178,7 +175,7 @@ public class AccountServiceImpl implements AccountService {
         httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
                 .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.POST, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<AccountDTO>>() {})
                 .getBody().getData();
-        accountDTO.setUserType(BanmaerpAccountEnums.UserType.MasterAccount);
+        accountDTO.setUserType(BanmaerpAccountEnums.UserType.SubAccount);
         accountDTO.setState(BanmaerpAccountEnums.UserState.Normal);
         return accountRepository.saveAndFlush(accountDTO);
     }
@@ -201,6 +198,10 @@ public class AccountServiceImpl implements AccountService {
         BanmaErpResponseDTO<Boolean> body = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
                 .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.DELETE, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<Boolean>>() {})
                 .getBody();
+        accountRepository.findById(id).ifPresent(accountDTO -> {
+            accountDTO.setState(BanmaerpAccountEnums.UserState.Resigned);
+            accountRepository.saveAndFlush(accountDTO);
+        });
         return body;
     }
 

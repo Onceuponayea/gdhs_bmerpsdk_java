@@ -16,6 +16,7 @@ public class ProductSuppliersDTO {
     private String ID;
     @JsonProperty(value = "Remark")
     private String remark;
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     @JsonProperty(value = "Sort")
     private Integer sort;
 

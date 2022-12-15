@@ -8,7 +8,6 @@ import org.joda.time.DateTime;
 import org.springframework.data.domain.Page;
 import org.springframework.lang.Nullable;
 import reactor.core.publisher.Mono;
-
 import java.util.List;
 
 public interface StoreService {

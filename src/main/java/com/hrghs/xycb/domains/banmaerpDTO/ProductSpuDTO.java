@@ -17,6 +17,7 @@ public class ProductSpuDTO {
 
     @Column(name = "spu_id")
     @Id
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     @JsonProperty(value = "SPUID")
     private Long SPUID;
 

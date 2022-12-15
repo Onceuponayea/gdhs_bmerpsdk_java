@@ -1,6 +1,7 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hrghs.xycb.domains.BanmaerpProperties;
 import lombok.Data;
@@ -15,6 +16,7 @@ import javax.persistence.*;
 public class ProductPackMaterialsDTO {
 
     @Id
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     @JsonProperty(value = "ID")
     private Long ID;
     @JsonProperty(value = "Name")

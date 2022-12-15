@@ -1,6 +1,7 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hrghs.xycb.utils.converters.JpaListStringConverter;
 import lombok.AllArgsConstructor;
@@ -76,13 +77,16 @@ public class OrderDetailsDTO {
     private String originalImage;
 
     @JsonProperty(value = "Quantity")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private Integer quantity;
 
     @Column(name = "original_quantity")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     @JsonProperty(value = "OriginalQuantity")
     private Integer originalQuantity;
 
     @JsonProperty(value = "Amount")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private Double amount;
 
     @JsonProperty(value = "Status")
@@ -114,6 +118,7 @@ public class OrderDetailsDTO {
 
     @Column(name = "inventory_lock_quantity")
     @JsonProperty(value = "InventoryLockQuantity")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private Integer inventoryLockQuantity;
 
     @Column(name = "sku_change_status")
@@ -134,6 +139,7 @@ public class OrderDetailsDTO {
     private List<OrderDetailsInventoryDataDTO> inventoryData;
 
     @JsonProperty(value = "Sort")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private Integer sort;
 
     @JsonProperty(value = "Type")
@@ -156,6 +162,7 @@ public class OrderDetailsDTO {
     private String deliveryInstructions;
 
     @JsonProperty(value = "Priority")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private Integer priority;
 
 

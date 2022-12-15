@@ -5,6 +5,7 @@ import com.atomikos.icatch.jta.UserTransactionImp;
 import com.atomikos.icatch.jta.UserTransactionManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.TokenResponseDTO;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -28,9 +29,7 @@ import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
-import org.springframework.data.redis.core.ReactiveRedisOperations;
-import org.springframework.data.redis.core.ReactiveRedisTemplate;
-import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
+import org.springframework.data.redis.core.*;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
@@ -62,8 +61,6 @@ import static com.hrghs.xycb.domains.Constants.*;
 public class BanmaerpDbAutoConfiguration {
     @Autowired
     private Environment env;
-    @Autowired
-    private ApplicationContext ctx;
     private org.h2.tools.Server h2DBServer;
     @Autowired
     @Lazy
@@ -102,7 +99,6 @@ public class BanmaerpDbAutoConfiguration {
         return new ReactiveStringRedisTemplate(redisConnectionFactory);
     }
     @Bean(name = "tokenRespReactiveRedisOperations")
-    @Lazy
     @DependsOn(value = {"jacksonObjectMapper","jodaModule"})
     public ReactiveRedisOperations<String, TokenResponseDTO> tokenRespReactiveRedisOperations(@Qualifier("reactiveRedisConnectionFactory")ReactiveRedisConnectionFactory redisConnectionFactory
             , @Qualifier(value = "jacksonObjectMapper") ObjectMapper objectMapper, @Qualifier(value = "jodaModule") JodaModule jodaModule){
@@ -113,6 +109,18 @@ public class BanmaerpDbAutoConfiguration {
         jsonRedisSerializer.setObjectMapper(objectMapper);
         return new ReactiveRedisTemplate<>(redisConnectionFactory,builder.value(jsonRedisSerializer).build());
     }
+    @Bean
+    @DependsOn(value = {"jacksonObjectMapper","jodaModule"})
+    public ReactiveRedisOperations<String, BanmaerpProperties> banmaerpPropertiesRedisOperations(@Qualifier("reactiveRedisConnectionFactory")ReactiveRedisConnectionFactory redisConnectionFactory
+            ,@Qualifier(value = "jacksonObjectMapper") ObjectMapper objectMapper){
+        RedisSerializationContext.RedisSerializationContextBuilder<Long,BanmaerpProperties> builder =
+        RedisSerializationContext.newSerializationContext(new StringRedisSerializer());
+        Jackson2JsonRedisSerializer<BanmaerpProperties> jsonRedisSerializer = new Jackson2JsonRedisSerializer<BanmaerpProperties>(BanmaerpProperties.class);
+        jsonRedisSerializer.setObjectMapper(objectMapper);
+        RedisSerializationContext redisSerializationContext= builder.value(jsonRedisSerializer).build();
+        return new ReactiveRedisTemplate<>(redisConnectionFactory,redisSerializationContext);
+    }
+
     @Bean
     public LockProvider lockProvider(@Qualifier("reactiveRedisConnectionFactory") ReactiveRedisConnectionFactory connectionFactory){
         return new ReactiveRedisLockProvider.Builder(connectionFactory).build();
@@ -140,7 +148,6 @@ public class BanmaerpDbAutoConfiguration {
      * @throws SQLException
      */
     @Bean(name = "dataSourceAtomikosBanmaerp")
-    @Lazy
     public AtomikosDataSourceBean atomikosDataSourceBean(BanmaerpDruidXADataSource banmaerpDruidXADataSource) throws SQLException {
         AtomikosDataSourceBean dataSourceBean = new AtomikosDataSourceBean();
         banmaerpDruidXADataSource.setValidationQuery(DB_JDBC_TEST_QUERY);
@@ -241,6 +248,7 @@ public class BanmaerpDbAutoConfiguration {
     @ConditionalOnProperty(prefix = "h2server", name = "enabled",havingValue = "true")
     public org.h2.tools.Server h2Server(@Value("${h2server.port:7777}")String h2DBPort) throws SQLException {
         org.h2.tools.Server server = h2ServerEnabled?org.h2.tools.Server.createPgServer("-web","-webAllowOthers","-webPort",h2DBPort).start() :null;
+        this.h2DBServer = server;
         return server;
     }
 

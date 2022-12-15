@@ -5,7 +5,6 @@ import com.hrghs.xycb.domains.banmaerpDTO.StorageDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import org.joda.time.DateTime;
 import org.springframework.data.domain.Page;
-
 import java.util.List;
 
 public interface StorageService {

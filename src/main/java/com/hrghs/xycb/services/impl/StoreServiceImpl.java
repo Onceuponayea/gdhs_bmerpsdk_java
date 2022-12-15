@@ -28,15 +28,12 @@ import org.springframework.http.MediaType;
 import org.springframework.lang.Nullable;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import static com.hrghs.xycb.domains.BanmaerpProperties.BANMA_HEADER_SIGN;
 import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_STORES;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;

@@ -5,11 +5,8 @@ import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.OrderDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.OrderFulfillmentDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.OrderTrackingDTO;
-import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import org.joda.time.DateTime;
 import org.springframework.data.domain.Page;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 
 public interface OrderService {

@@ -6,11 +6,10 @@ import com.hrghs.xycb.services.BanmaerpPropertiesService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.data.redis.core.RedisOperations;
-import java.util.concurrent.TimeUnit;
+import org.springframework.data.redis.core.ReactiveRedisOperations;
+import java.time.Duration;
 
 import static com.hrghs.xycb.domains.Constants.BANMAERP_MESSAGE_CONFIGURATION_ERROR;
 
@@ -21,19 +20,19 @@ public class BanmaerpPropertiesServiceImpl implements BanmaerpPropertiesService 
     private BanmaerpPropertiesRepository repository;
     @Autowired
     @Lazy
-    private RedisOperations<Long,BanmaerpProperties> redisOperations;
+    private ReactiveRedisOperations<String,BanmaerpProperties> redisOperations;
 
     @Autowired
     private ApplicationContext applicationContext;
 
     @Override
     public BanmaerpProperties getByPhone(Long phone) {
-        BanmaerpProperties banmaerpProperties = redisOperations.opsForValue().get(phone);
-        banmaerpProperties = banmaerpProperties==null?
-                repository.findBanmaerpPropertiesByX_BANMA_MASTER_APP_ACCOUNT(phone.toString()):
-                banmaerpProperties;
-        redisOperations.opsForValue().set(phone,banmaerpProperties,1, TimeUnit.DAYS);
-        return banmaerpProperties;
+        return
+        redisOperations.opsForValue().get(phone.toString()).defaultIfEmpty(repository.findBanmaerpPropertiesByX_BANMA_MASTER_APP_ACCOUNT(phone.toString()))
+        .map(banmaerpProperties -> {
+            redisOperations.opsForValue().set(phone.toString(),banmaerpProperties, Duration.ofDays(1));
+            return banmaerpProperties;
+        }).block();
     }
 
     @Override

@@ -7,7 +7,6 @@ import com.hrghs.xycb.domains.banmaerpDTO.TokenResponseDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import org.joda.time.DateTime;
 import org.springframework.data.domain.Page;
-
 import java.util.List;
 
 public interface AccountService {

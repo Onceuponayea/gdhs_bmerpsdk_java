@@ -1,6 +1,7 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hrghs.xycb.utils.converters.JpaUUIDConverter;
 import lombok.Data;
@@ -39,10 +40,12 @@ public class OrderDetailsInventoryDataDTO {
 
     @Column(name = "shortage_quantity")
     @JsonProperty(value = "ShortageQuantity")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private Integer shortageQuantity;
 
     @Column(name = "lock_quantity")
     @JsonProperty(value = "LockQuantity")
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private Integer lockQuantity;
 
     @Column(name = "spu_id")
