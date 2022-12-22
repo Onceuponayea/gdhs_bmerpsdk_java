@@ -4,7 +4,8 @@ spring:
             # for test only
 #            host: 192.168.18.151
 #            port: 3306
-            host: rds.xmsuodi.com
+#            host: rds.xmsuodi.com
+            host: 110.87.104.125
             port: 49906
             password: lilishop
             username: root
@@ -13,7 +14,9 @@ spring:
 #        port: 6379
 #        host: 192.168.18.151
         port: 46379
-        host: rds.xmsuodi.com
+        host: 110.87.104.125
+#        host: rds.xmsuodi.com
+#        port: 6379
+#        host: 127.0.0.1
         database: 4
         password: lilishop
-

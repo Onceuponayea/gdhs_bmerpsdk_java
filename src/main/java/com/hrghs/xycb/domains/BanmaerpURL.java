@@ -12,7 +12,7 @@ public class BanmaerpURL {
     public final static String Banmaerp_product_skulist_GET = "/v1/product/sku?SKUIDs=%s&Code=%s&SPUID=%s&CostPriceStart=%s&CostPriceEnd=%s&PageNumber=%d&PageSize=%d&SearchTimeStart=%s&SearchTimeEnd=%s&SearchTimeField=%s&SortField=%s&SortBy=%s";
     public final static String Banmaerp_taglist_GET = "/v1/product/tag?Name=%s&PageNumber=%d&PageSize=%d&SearchTimeStart=%s&SearchTimeEnd=%s&SearchTimeField=%s&SortField=%s&SortBy=%s";
     public final static String Banmaerp_supplierlist_GET = "/v1/product/supplier?Name=%s&PageNumber=%d&PageSize=%d&SearchTimeStart=%s&SearchTimeEnd=%s&SearchTimeField=%s&SortField=%s&SortBy=%s";
-    public final static String banmaerp_order_GET = "/v1/order?IDs=%s&StoreID=%s&Platform=%s&Status=%s&PayStatus=%s&HoldStatus=%s&RefundStatus=%s&InventoryStatus=%s&CountryCode=%s&PageNumber=%d&PageSize=%d&SearchTimeStart=%s&SearchTimeEnd=%s&SearchTimeField=%s&SortField=%s&SortBy=%s";
+    public final static String banmaerp_order_GET = "/v1/order?WithAccessUser=true&IDs=%s&StoreID=%s&Platform=%s&Status=%s&PayStatus=%s&HoldStatus=%s&RefundStatus=%s&InventoryStatus=%s&CountryCode=%s&PageNumber=%d&PageSize=%d&SearchTimeStart=%s&SearchTimeEnd=%s&SearchTimeField=%s&SortField=%s&SortBy=%s";
     public final static String banmaerp_orderdetail_GET = "/v1/order/%s";
     public final static String banmaerp_orderFulfillments_GET = "/v1/order/%s/fulfillments";
     public final static String banmaerp_orderTrackings_GET = "/v1/order/%s/trackings";
@@ -25,6 +25,7 @@ public class BanmaerpURL {
     public final static String banmaerp_category_GET = "/v1/category/%s";
     public final static String banmaerp_storelist_GET = "/v1/store?ids=%s&name=%s&platform=%s&PageNumber=%d&PageSize=%d&SearchTimeStart=%s" +
             "&SearchTimeEnd=%s&SearchTimeField=%s&SortField=%s&SortBy=%s";
+    public final static String banmaerp_storelist_GET_Simple = "/v1/store?PageNumber=%d";
     public final static String banmaerp_store_GET = "/v1/store/%s";
     public final static String banmaerp_accountlist_GET = "/v1/Account?IDs=%s&Email=%s&Phone=%s&RealName=%s&PageNumber=%d&PageSize=%d&SearchTimeStart=%s" +
             "&SearchTimeEnd=%s&SearchTimeField=%s&SortField=%s&SortBy=%s";

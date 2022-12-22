@@ -85,7 +85,7 @@ public class ProductSkusDTO implements Serializable {
     private List<ProductSkusOptionsDTO> options;
 
     @JsonIgnore
-    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @ManyToOne(cascade = CascadeType.REFRESH,fetch = FetchType.LAZY)
     @JoinColumn(name = "banma_master_app_id")
     private BanmaerpProperties banmaerpProperties;
 

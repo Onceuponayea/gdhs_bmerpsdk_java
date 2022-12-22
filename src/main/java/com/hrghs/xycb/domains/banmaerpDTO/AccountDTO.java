@@ -12,6 +12,7 @@ import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Component
 @Data
@@ -28,6 +29,9 @@ public class AccountDTO {
         this.email = _email;
         this.phone = _phone;
         this.department = _department;
+    }
+    public AccountDTO(Integer _id){
+        this.ID = _id;
     }
 
     @Id
@@ -81,5 +85,20 @@ public class AccountDTO {
     @JoinColumn(name = "banma_master_app_id")
     @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
     BanmaerpProperties banmaerpProperties;
+    /**
+     * @@apiNote
+     * 如果是主账号则有多个店铺列表，如果是子账号就只有一个（目前也是多个）
+     */
+    @JsonIgnore
+    @JoinColumn(name = "banma_account_id" )
+    @OneToMany(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    List<StoreDTO> storeDTOList;
+
+    @JsonIgnore
+    @JsonManagedReference
+    @JoinColumn(name = "banma_data_access_id", referencedColumnName = "id")
+    @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER,orphanRemoval = true)
+    DataAccessDTO dataAccessDTO;
+
 
 }

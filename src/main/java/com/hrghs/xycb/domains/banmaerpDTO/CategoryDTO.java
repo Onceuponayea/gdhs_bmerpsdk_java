@@ -57,7 +57,7 @@ public class CategoryDTO {
     private DateTime updateTime;
 
     @JsonIgnore
-    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @ManyToOne(cascade = CascadeType.REFRESH,fetch = FetchType.EAGER)
     @JoinColumn(name = "banma_master_app_id")
     private BanmaerpProperties banmaerpProperties;
 }

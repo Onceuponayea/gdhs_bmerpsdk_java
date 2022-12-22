@@ -21,7 +21,7 @@ public class ProductSpuDTO {
     @JsonProperty(value = "SPUID")
     private Long SPUID;
 
-    @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "product_id", referencedColumnName = "product_uuid")
     @JsonBackReference
     private ProductDTO productDTO;
@@ -77,7 +77,7 @@ public class ProductSpuDTO {
     private DateTime updateTime;
 
     @JsonIgnore
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "banma_master_app_id")
     private BanmaerpProperties banmaerpProperties;
 }

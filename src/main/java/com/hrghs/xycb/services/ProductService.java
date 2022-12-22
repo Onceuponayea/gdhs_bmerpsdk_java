@@ -170,15 +170,9 @@ public interface ProductService {
      * @return
      */
     Page<ProductSuppliersDTO>  getProductSuppliersList(
-            String name,
-            Integer pageNumber,
-            Integer pageSize,
-            DateTime searchTimeStart,
-            DateTime searchTimeEnd,
-            String searchTimeField,
-            String sortField,
-            String sortBy,
-            Boolean remote,
+            String name, Integer pageNumber, Integer pageSize, DateTime searchTimeStart,
+            String phone,String address,String qq,String we_chat,String wang_wang,
+            DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy, Boolean remote,
             BanmaerpProperties banmaerpProperties
     );
 

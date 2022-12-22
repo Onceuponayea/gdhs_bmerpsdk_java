@@ -35,9 +35,7 @@ public class ProductSerialiser {
     public static class ProductSkusSerializer extends JsonSerializer<List<ProductSkusDTO>> {
         @Override
         public void serialize(List<ProductSkusDTO> value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-            JsonNode jsonNode =objectMapper.convertValue(value, JsonNode.class);
-            String result = jsonNode!=null? jsonNode.toPrettyString() : "";
-            gen.writeString(result);
+            gen.writeObject(value);
         }
     }
     public static class OrderMasterSerializer extends JsonSerializer<OrderMasterDTO> {

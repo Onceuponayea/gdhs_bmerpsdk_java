@@ -1,6 +1,9 @@
 package com.hrghs.xycb.services;
 
 import com.hrghs.xycb.domains.BanmaerpProperties;
+import com.hrghs.xycb.domains.banmaerpDTO.AccountDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.DataAccessDTO;
+import com.hrghs.xycb.domains.enums.BanmaerpAccountEnums;
 import com.hrghs.xycb.repositories.BanmaerpPropertiesRepository;
 import net.javacrumbs.shedlock.core.SchedulerLock;
 import org.joda.time.LocalDateTime;
@@ -84,6 +87,15 @@ public class ScheduleService {
                         case BANMAERP_FIELD_ACCOUNTS:
                             logger.info("synchronising Account list from BanmaErp for {},  page {} and size {}",banmaerpProperties.getX_BANMA_MASTER_APP_ACCOUNT(),pageNum,pageSize);
                             accountService.getAndSaveAccountList(pageNum,pageSize,banmaerpProperties);
+                            break;
+                        case BANMAERP_FIELD_DATAACCESS:
+                            //todo bug: 有可能在查询的过程中，用户在斑马那边又点了激活子账号或者修改子账号的权限，这就导致数据不全
+                            List<AccountDTO> accountDTOS = accountService.findAllByUserState(BanmaerpAccountEnums.UserState.Normal);
+                            List<DataAccessDTO> dataAccessDTOS= new ArrayList<>();
+                            accountDTOS.parallelStream().forEach(accountDTO -> {
+                                logger.info("synchronising Store privileges for Account {}, Phone: {}",accountDTO.getRealName(),accountDTO.getPhone());
+                                dataAccessDTOS.add(accountService.getDataAccess(accountDTO,true,banmaerpProperties));
+                            });
                             break;
                     }
                     //把新的页码和页数增加1并保存到新的set中,然后回写到redis中

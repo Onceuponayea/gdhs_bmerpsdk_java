@@ -4,14 +4,16 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.hrghs.xycb.aops.RestTemplateInterceptor;
 import com.hrghs.xycb.domains.BanmaerpProperties;
-import com.hrghs.xycb.domains.banmaerpDTO.StoreDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.TokenResponseDTO;
+import com.hrghs.xycb.domains.enums.BanmaerpAccountEnums;
+import com.hrghs.xycb.domains.enums.BanmaerpOrderEnums;
 import com.hrghs.xycb.services.*;
 import com.hrghs.xycb.services.impl.*;
-import com.hrghs.xycb.utils.BanmaTokenUtils;
-import com.hrghs.xycb.utils.BanmaEncryptionUtils;
-import com.hrghs.xycb.utils.HttpClientsUtils;
-import com.hrghs.xycb.utils.WebHookUtils;
+import com.hrghs.xycb.utils.*;
+import com.hrghs.xycb.utils.converters.EnumeratorDeserialiser;
+import com.hrghs.xycb.utils.converters.EnumeratorSerialiser;
 import com.hrghs.xycb.utils.converters.JodaDateTimeDeserialiser;
 import com.hrghs.xycb.utils.converters.JodaDateTimeSerialiser;
 import net.javacrumbs.shedlock.spring.annotation.EnableSchedulerLock;
@@ -33,19 +35,24 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.*;
-import org.springframework.context.event.EventListener;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
+import org.springframework.data.redis.core.ReactiveRedisOperations;
 import org.springframework.http.client.BufferingClientHttpRequestFactory;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.retry.annotation.EnableRetry;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
 import javax.sql.DataSource;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -58,6 +65,8 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKN
 @EnableConfigurationProperties(value = {BanmaerpProperties.class,BanmaerpDruidXADataSource.class})
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableScheduling
+@EnableRetry(proxyTargetClass = true)
+@EnableAsync
 @EnableSchedulerLock(defaultLockAtLeastFor = "PT30S",defaultLockAtMostFor = "PT300S")
 @AutoConfigureAfter(BanmaerpDbAutoConfiguration.class)
 @ConditionalOnProperty(value = "enabled",prefix = "erp.banmaerp", havingValue = "true", matchIfMissing = false)
@@ -78,14 +87,21 @@ public class BanmaerpAutoConfiguration implements BeanDefinitionRegistryPostProc
     @Bean
     public JodaModule jodaModule(){
         JodaModule jodaModule = new JodaModule();
-        jodaModule.addDeserializer(DateTime.class, new JodaDateTimeDeserialiser());
-        jodaModule.addSerializer(DateTime.class,new JodaDateTimeSerialiser());
+        jodaModule.addDeserializer(DateTime.class, new JodaDateTimeDeserialiser())
+                .addSerializer(DateTime.class,new JodaDateTimeSerialiser())
+                .addSerializer(BanmaerpAccountEnums.DataAccessMode.class,new EnumeratorSerialiser.DataAccessSerialiser())
+                .addDeserializer(BanmaerpAccountEnums.DataAccessMode.class,new EnumeratorDeserialiser.DataAccessDeSerialiser())
+                .addSerializer(BanmaerpOrderEnums.Status.class,new EnumeratorSerialiser.OrderStatusSerialiser())
+                .addDeserializer(BanmaerpOrderEnums.Status.class,new EnumeratorDeserialiser.OrderStatusDeserialiser());
         return jodaModule;
     }
     @Primary
     @Bean
-    public Jackson2ObjectMapperBuilderCustomizer jacksonCustomizer(){
-        return jacksonObjectMapperBuilder -> jacksonObjectMapperBuilder.configure(objectMapper());
+    public Jackson2ObjectMapperBuilderCustomizer jacksonCustomizer(ApplicationContext context){
+        Jackson2ObjectMapperBuilderCustomizer jbc= jacksonObjectMapperBuilder ->
+                jacksonObjectMapperBuilder.applicationContext(context)
+                .configure(objectMapper());
+        return jbc;
     }
     @Bean
     @ConditionalOnMissingBean
@@ -123,8 +139,18 @@ public class BanmaerpAutoConfiguration implements BeanDefinitionRegistryPostProc
 
     @Bean
     @ConditionalOnMissingBean
-    public RestTemplate restTemplate(){
-        return new RestTemplate(new BufferingClientHttpRequestFactory(new SimpleClientHttpRequestFactory()));
+    @DependsOn({"tokenRespReactiveRedisOperations"})
+    public RestTemplate restTemplate(ReactiveRedisOperations<String, TokenResponseDTO> tokenRespReactiveRedisOperations
+            , ReactiveRedisOperations<String, BanmaerpProperties> bmerp_props,BanmaTokenUtils banmaTokenUtils){
+        RestTemplate restTemplate = new RestTemplate(new BufferingClientHttpRequestFactory(new SimpleClientHttpRequestFactory()));
+        /* circle reference,add interceptors when application is started */
+        List<ClientHttpRequestInterceptor> interceptorList = restTemplate.getInterceptors();
+        if (CollectionUtils.isEmpty(interceptorList)){
+        interceptorList = new ArrayList<>();
+        }
+        interceptorList.add(new RestTemplateInterceptor(tokenRespReactiveRedisOperations,bmerp_props,banmaTokenUtils));
+        restTemplate.setInterceptors(interceptorList);
+        return restTemplate;
     }
     @Bean
     @DependsOn(value = {"restTemplate"})
@@ -143,7 +169,6 @@ public class BanmaerpAutoConfiguration implements BeanDefinitionRegistryPostProc
         return new BanmaEncryptionUtils();
     }
     @Bean
-    @DependsOn(value = {"restTemplate"})
     public BanmaTokenUtils banmaTokenUtils(){
         return new BanmaTokenUtils();
     }

@@ -5,6 +5,7 @@ import com.hrghs.xycb.domains.banmaerpDTO.AccountDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.DataAccessDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.TokenResponseDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
+import com.hrghs.xycb.domains.enums.BanmaerpAccountEnums;
 import org.joda.time.DateTime;
 import org.springframework.data.domain.Page;
 import java.util.List;
@@ -42,6 +43,9 @@ public interface AccountService {
 
     List<AccountDTO> getAndSaveAccountList(Integer pageNumber,Integer pageSize, BanmaerpProperties banmaerpProperties);
 
+    List<AccountDTO> findAll();
+
+    List<AccountDTO> findAllByUserState(BanmaerpAccountEnums.UserState userState);
 
     /**
      * 查询单个用户
@@ -82,7 +86,7 @@ public interface AccountService {
      * @param id 用户id
      * @return
      */
-    DataAccessDTO getDataAccess(Integer id, BanmaerpProperties banmaerpProperties);
+    DataAccessDTO getDataAccess(AccountDTO accountDTO,Boolean remote, BanmaerpProperties banmaerpProperties);
 
     List<AccountDTO> saveAccountList(List<AccountDTO> accountDTOList, BanmaerpProperties banmaerpProperties);
 

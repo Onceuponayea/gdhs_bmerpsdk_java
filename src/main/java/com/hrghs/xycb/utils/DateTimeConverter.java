@@ -38,7 +38,6 @@ public class DateTimeConverter implements JsonSerializer<DateTime>, JsonDeserial
                 dateTime = dateTimeFormatter.parseDateTime(dateTimeSrc);
                 dateTimeFormatter = ISODateTimeFormat.dateHourMinuteSecond();
             }catch (IllegalArgumentException illegalArgumentException){
-                //todo enumerate all ISODateTimeFormat
                 //ISODateTimeFormat
                 dateTimeFormatter = dateTimeUtils.detectPattern(dateTimeSrc);
                 return format(dateTimeSrc);

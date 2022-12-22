@@ -1,10 +1,12 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
 import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.hrghs.xycb.domains.BanmaerpProperties;
+import com.hrghs.xycb.domains.enums.BanmaerpOrderEnums;
 import com.hrghs.xycb.domains.enums.BanmaerpPlatformEnums;
-import com.hrghs.xycb.utils.converters.JodaDateTimeConverter;
-import com.hrghs.xycb.utils.converters.JpaListStringConverter;
+import com.hrghs.xycb.utils.converters.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -121,8 +123,11 @@ public class OrderMasterDTO {
     @JsonProperty(value = "DiscountCurrency")
     private String discountCurrency;
 
+    @JsonSerialize(using = EnumeratorSerialiser.OrderStatusSerialiser.class)
+    @JsonDeserialize(using = EnumeratorDeserialiser.OrderStatusDeserialiser.class)
+    @Convert(converter = JpaEnumConverters.OrderStatusConverter.class)
     @JsonProperty(value = "Status")
-    private String status;
+    private BanmaerpOrderEnums.Status status;
 
     @Column(name = "pay_status")
     @JsonProperty(value = "PayStatus")

@@ -53,6 +53,8 @@ public interface StoreService {
     Page<StoreDTO> getStoretList(Integer pageNumber, Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties);
 
     List<StoreDTO> getAndSaveStoretList(Integer pageNumber, Integer pageSize,BanmaerpProperties banmaerpProperties);
+
+    List<StoreDTO> getAllStores(Integer pageNum,List<StoreDTO> storeDTOList,BanmaerpProperties banmaerpProperties);
     /**
      * 查询单个店铺
      *

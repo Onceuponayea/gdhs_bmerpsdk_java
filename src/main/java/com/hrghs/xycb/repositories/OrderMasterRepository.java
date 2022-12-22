@@ -11,4 +11,7 @@ import java.util.List;
 public interface OrderMasterRepository extends JpaRepository<OrderMasterDTO,String> {
     @Query(nativeQuery = true, value = "select * from bmerp_order_master where id in (:orderMasterId)")
     List<OrderMasterDTO> findByMasterIds(@Param("orderMasterId") List<String> orderMasterId);
+
+    @Query(nativeQuery = true, value = "select count(ID) from bmerp_order_master where store_id =:storeId")
+    Long countOrderByStore(Long storeId);
 }

@@ -3,8 +3,10 @@ package com.hrghs.xycb.services.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
 import com.hrghs.xycb.domains.BanmaerpProperties;
+import com.hrghs.xycb.domains.banmaerpDTO.DataAccessDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.StoreDTO;
 import com.hrghs.xycb.repositories.StoreRepository;
+import com.hrghs.xycb.services.AccountService;
 import com.hrghs.xycb.utils.BanmaParamsUtils;
 import com.hrghs.xycb.utils.BanmaTokenUtils;
 import com.hrghs.xycb.utils.HttpClientsUtils;
@@ -15,6 +17,8 @@ import com.hrghs.xycb.domains.enums.BanmaerpPlatformEnums;
 import com.hrghs.xycb.services.StoreService;
 import com.hrghs.xycb.utils.BanmaEncryptionUtils;
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
@@ -31,14 +35,19 @@ import reactor.core.publisher.Mono;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
+import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import static com.hrghs.xycb.domains.BanmaerpProperties.BANMA_HEADER_SIGN;
-import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_STORES;
+import static com.hrghs.xycb.domains.Constants.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 
 public class StoreServiceImpl implements StoreService {
+
+    private final static Logger logger = LoggerFactory.getLogger(StoreServiceImpl.class);
+
     @Autowired
     private HttpClientsUtils httpClients;
     @Autowired
@@ -92,8 +101,8 @@ public class StoreServiceImpl implements StoreService {
                                         DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy, Boolean remote, BanmaerpProperties banmaerpProperties) {
         Page<StoreDTO> storeDTOList;
         pageSize = BanmaParamsUtils.checkPageSize(pageSize);
-        pageNumber = BanmaParamsUtils.checkPageNum(pageNumber);
         if (remote){
+            pageNumber = BanmaParamsUtils.checkPageNum(pageNumber,remote);
             String apiUrl = String.format(BanmaerpURL.banmaerp_storelist_GET,ids,name,platform==null?"":platform.toString(),pageNumber,pageSize,
                     searchTimeStart, searchTimeEnd,searchTimeField,sortField,sortBy);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
@@ -101,12 +110,6 @@ public class StoreServiceImpl implements StoreService {
             BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null,httpHeaders);
-//            storeDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-//                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
-//                            .getBody()
-//                            .toDataList(BANMAERP_FIELD_STORES))
-//                    .map(o -> (StoreDTO)o)
-//                    .collect(Collectors.toList());
             storeDTOList = (Page<StoreDTO>)
                     httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
                             .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
@@ -116,7 +119,8 @@ public class StoreServiceImpl implements StoreService {
             storeRepository.saveAll(storeDTOList);
             storeRepository.flush();
         }else {
-            Specification<StoreDTO> specification = createSpecification(ids, name, platform, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
+            pageNumber = BanmaParamsUtils.checkPageNum(pageNumber,false);
+            Specification<StoreDTO> specification = createSpecification(ids, name, platform, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy,banmaerpProperties);
             storeDTOList = storeRepository.findAll(specification,PageRequest.of(pageNumber,pageSize));
         }
         return storeDTOList;
@@ -140,10 +144,34 @@ public class StoreServiceImpl implements StoreService {
         List<StoreDTO> storeDTOList =
                 getStoretList(null, null, null, pageNumber, pageSize, null, null,
                         null, null, null,true, banmaerpProperties).getContent();
-        storeDTOList.forEach(storeDTO -> storeDTO.setBanmaerpProperties(banmaerpProperties));
         List<StoreDTO> storeDTOS = storeRepository.saveAll(storeDTOList);
         storeRepository.flush();
         return storeDTOS;
+    }
+
+    @Override
+    public List<StoreDTO> getAllStores(Integer pageNum,List<StoreDTO> storeDTOList, BanmaerpProperties banmaerpProperties) {
+        storeDTOList = storeDTOList==null?new ArrayList<>():storeDTOList;
+        String apiUrl = String.format(BanmaerpURL.banmaerp_storelist_GET_Simple,pageNum);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
+        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
+        HttpEntity requestBody = new HttpEntity(null,httpHeaders);
+        JsonNode jsonNode =
+        httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl),HttpMethod.GET,requestBody,new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
+                .getBody()
+                .getData();
+        Boolean hasMore =jsonNode.findPath(BANMAERP_FIELD_PAGE).get(BANMAERP_FIELD_HasMore).asBoolean();
+        Type type = BanmaErpResponseDTO.getGsonType(BANMAERP_FIELD_STORES);
+        StoreDTO[]  storeDTOS = BanmaErpResponseDTO.gson.fromJson(jsonNode.findPath(BANMAERP_FIELD_STORES).toString(),type);
+        storeDTOList.addAll(Arrays.asList(storeDTOS));
+        logger.info("retrieving stores from banmaerp at page {}, has more page {} ",pageNum, hasMore);
+        if (hasMore){
+            return getAllStores(pageNum++,storeDTOList,banmaerpProperties);
+        }else{
+            return storeDTOList;
+        }
     }
 
     /**
@@ -165,7 +193,7 @@ public class StoreServiceImpl implements StoreService {
                     .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<StoreDTO>>() {})
                     .getBody().getData();
         }else{
-            return storeRepository.findById(storeId).get();
+            return storeRepository.findById(Long.parseLong(storeId)).get();
         }
     }
 
@@ -174,7 +202,7 @@ public class StoreServiceImpl implements StoreService {
     public List<StoreDTO> saveStoreList(List<StoreDTO> storeDTOList, BanmaerpProperties banmaerpProperties) {
         storeDTOList.forEach(storeDTO -> storeDTO.setBanmaerpProperties(banmaerpProperties));
         List<StoreDTO> storeDTOS = storeRepository.saveAll(storeDTOList);
-        storeRepository.flush();
+        storeDTOS=storeRepository.saveAllAndFlush(storeDTOS);
         return storeDTOS;
     }
 
@@ -185,7 +213,9 @@ public class StoreServiceImpl implements StoreService {
         return storeRepository.saveAndFlush(storeDTO);
     }
 
-    private Specification<StoreDTO> createSpecification(String ids, String name, BanmaerpPlatformEnums.Platform platform, Integer pageNumber, Integer pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+    private Specification<StoreDTO> createSpecification(String ids, String name, BanmaerpPlatformEnums.Platform platform
+            , DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy
+            , BanmaerpProperties banmaerpProperties) {
         return (root, criteriaQuery, criteriaBuilder) -> {
             List<Predicate> predicateList = new ArrayList<>();
 
@@ -218,7 +248,7 @@ public class StoreServiceImpl implements StoreService {
                 predicateList.add(criteriaBuilder
                         .between(root.<DateTime>get(searchTimeField), searchTimeStart, searchTimeEnd));
             }
-
+            predicateList.add(criteriaBuilder.equal(root.get("banmaerpProperties").get("X_BANMA_MASTER_APP_ID"),banmaerpProperties.getX_BANMA_MASTER_APP_ID()));
             Predicate and = criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
             Order order = criteriaBuilder.desc(root.get("createTime"));
             if (sortBy != null && sortBy != "") {

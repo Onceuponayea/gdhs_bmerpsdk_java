@@ -3,6 +3,7 @@ package com.hrghs.xycb.domains.banmaerpDTO;
 import com.fasterxml.jackson.annotation.*;
 import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.utils.converters.JpaUUIDConverter;
+import com.hrghs.xycb.utils.converters.JpaUserAccessOrderConverter;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -57,6 +58,11 @@ public class OrderDTO {
     @JoinColumn(name = "order_id")
     @JsonProperty(value = "Refunds")
     private List<OrderRefundsDTO> refunds;
+
+    @Column(name = "banma_account_id")
+    @Convert(converter = JpaUserAccessOrderConverter.class)
+    @JsonProperty(value = "AccessUsers")
+    private List<OrderAccessUsersDTO> accessUsers;
 
     @JsonIgnore
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)

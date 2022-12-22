@@ -1,5 +1,6 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
+import com.alibaba.druid.util.StringUtils;
 import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -13,11 +14,14 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
+
+import static jodd.util.StringPool.COMMA;
 
 @Component
 @Data
@@ -53,7 +57,7 @@ public class ProductDTO implements Serializable {
 
     @JsonSerialize(using = ProductSerialiser.ProductSkusSerializer.class)
     @JsonDeserialize(using = ProductDeserialiser.ProductSkusDeserializer.class)
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "product_id")
     @JsonProperty(value = "SKUs")
     private List<ProductSkusDTO> SKUs;

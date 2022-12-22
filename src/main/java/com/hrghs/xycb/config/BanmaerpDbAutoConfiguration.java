@@ -216,6 +216,7 @@ public class BanmaerpDbAutoConfiguration {
         jpaPros.put(JPA_PROS_HIBERNATE_FORMAT_SQL,false);
         jpaPros.put(JPA_PROS_TRANSACTION_TYPE,"jta");
         jpaPros.put(JPA_PROS_HIBERNATE_SESSION_CONTEXT_CLASS,"jta");
+        jpaPros.put(JPA_PROS_HIBERNATE_ENABLE_LAZYLOAD_NOTRANS,"true");
         jpaPros.put(JPA_PROS_HIBERNATE_DIALECT, MySQL8Dialect.class.getName());
         jpaPros.put(JPA_PROS_HIBERNATE_ALLOW_UPDATE_OUTSIDE_TRANSACATION,true);
         jpaPros.put(JPA_PROS_HIBERNATE_TRANSACTIONMANAGER_COORDINATE_CLASS,"jdbc");//full name: org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl
@@ -235,7 +236,7 @@ public class BanmaerpDbAutoConfiguration {
         UserTransactionManager userTransactionManager = new UserTransactionManager();
         userTransactionManager.setForceShutdown(true);
         UserTransaction userTransaction = new UserTransactionImp();
-        userTransaction.setTransactionTimeout(timeoutMs);
+        userTransaction.setTransactionTimeout(timeoutMs/1000);
         JtaTransactionManager jtaTransactionManager = new JtaTransactionManager();
         jtaTransactionManager.setTransactionManager(userTransactionManager);
         jtaTransactionManager.setUserTransaction(userTransaction);

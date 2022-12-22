@@ -7,6 +7,7 @@ import com.hrghs.xycb.domains.BanmaerpSigningVO;
 import com.hrghs.xycb.domains.BanmaerpURL;
 import com.hrghs.xycb.domains.banmaerpDTO.CategoryDTO;
 import com.hrghs.xycb.repositories.CategoryRepository;
+import com.hrghs.xycb.utils.BanmaParamsUtils;
 import com.hrghs.xycb.utils.BanmaTokenUtils;
 import com.hrghs.xycb.utils.BanmaEncryptionUtils;
 import com.hrghs.xycb.utils.HttpClientsUtils;
@@ -56,26 +57,26 @@ public class CategoryServiceImpl implements CategoryService {
     public Page<CategoryDTO> getCategoryList(String ids, String name, String parentId, Integer pageNumber, Integer pageSize, DateTime searchTimeStart
             , DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy, Boolean remote, BanmaerpProperties banmaerpProperties) {
         Page<CategoryDTO> categoryDTOList;
+        pageSize = BanmaParamsUtils.checkPageSize(pageSize);
         if (remote){
+            pageNumber = BanmaParamsUtils.checkPageNum(pageNumber,remote);
             String apiUrl = String.format(BanmaerpURL.banmaerp_categorylist_GET, ids, name, parentId, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField,sortField,sortBy);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
             BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
-//            categoryDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-//                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
-//                            .getBody()
-//                            .toDataList(BANMAERP_FIELD_CATEGORYS))
-//                    .map(o -> (CategoryDTO) o)
-//                    .collect(Collectors.toList());
             categoryDTOList = (Page<CategoryDTO>)
                     httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
                             .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
                             .getBody()
                             .toDataList(CategoryDTO.class,banmaerpProperties);
+            categoryDTOList.forEach(categoryDTO -> categoryDTO.setBanmaerpProperties(banmaerpProperties));
+            List<CategoryDTO> categoryDTOS = categoryRepository.saveAll(categoryDTOList);
+            categoryRepository.saveAllAndFlush(categoryDTOS);
         }else {
-            Specification<CategoryDTO> specification = createSpecification(ids, name, parentId, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
+            pageNumber = BanmaParamsUtils.checkPageNum(pageNumber,false);
+            Specification<CategoryDTO> specification = createSpecification(ids, name, parentId, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy,banmaerpProperties);
             categoryDTOList = categoryRepository.findAll(specification,PageRequest.of(pageNumber,pageSize));
         }
         return categoryDTOList;
@@ -100,7 +101,7 @@ public class CategoryServiceImpl implements CategoryService {
                         null, null, null, null,true, banmaerpProperties).getContent();
         categoryDTOList.forEach(categoryDTO -> categoryDTO.setBanmaerpProperties(banmaerpProperties));
         List<CategoryDTO> categoryDTOS = categoryRepository.saveAll(categoryDTOList);
-        categoryRepository.flush();
+        categoryDTOS=categoryRepository.saveAllAndFlush(categoryDTOS);
         return categoryDTOS;
     }
 
@@ -133,7 +134,7 @@ public class CategoryServiceImpl implements CategoryService {
     public List<CategoryDTO> saveCategoryList(List<CategoryDTO> categoryDTOList, BanmaerpProperties banmaerpProperties) {
         categoryDTOList.forEach(categoryDTO -> categoryDTO.setBanmaerpProperties(banmaerpProperties));
         List<CategoryDTO> categoryDTOS = categoryRepository.saveAll(categoryDTOList);
-        categoryRepository.flush();
+        categoryDTOS=categoryRepository.saveAllAndFlush(categoryDTOS);
         return categoryDTOS;
     }
 
@@ -143,7 +144,8 @@ public class CategoryServiceImpl implements CategoryService {
         categoryDTO.setBanmaerpProperties(banmaerpProperties);
         return categoryRepository.saveAndFlush(categoryDTO);
     }
-    private Specification<CategoryDTO> createSpecification(String ids, String name, String parentId, Integer pageNumber, Integer pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+    private Specification<CategoryDTO> createSpecification(String ids, String name, String parentId, DateTime searchTimeStart
+            , DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy,BanmaerpProperties banmaerpProperties) {
         return (root, criteriaQuery, criteriaBuilder) -> {
             List<Predicate> predicateList = new ArrayList<>();
 
@@ -176,7 +178,7 @@ public class CategoryServiceImpl implements CategoryService {
                 predicateList.add(criteriaBuilder
                         .between(root.<DateTime>get(searchTimeField), searchTimeStart, searchTimeEnd));
             }
-
+            predicateList.add(criteriaBuilder.equal(root.get("banmaerpProperties").get("X_BANMA_MASTER_APP_ID"),banmaerpProperties.getX_BANMA_MASTER_APP_ID()));
             Predicate and = criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
             Order order = criteriaBuilder.desc(root.get("createTime"));
             if (sortBy != null && sortBy != "") {

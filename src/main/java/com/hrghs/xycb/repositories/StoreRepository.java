@@ -8,5 +8,5 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
-public interface StoreRepository extends JpaRepository<StoreDTO,String>, JpaSpecificationExecutor<StoreDTO> {
+public interface StoreRepository extends JpaRepository<StoreDTO,Long>, JpaSpecificationExecutor<StoreDTO> {
 }

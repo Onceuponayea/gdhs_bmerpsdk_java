@@ -7,6 +7,8 @@ import com.hrghs.xycb.domains.BanmaerpSigningVO;
 import com.hrghs.xycb.domains.BanmaerpURL;
 import com.hrghs.xycb.domains.banmaerpDTO.*;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
+import com.hrghs.xycb.domains.enums.BanmaerpOrderEnums;
+import com.hrghs.xycb.domains.resultSet.Monetary;
 import com.hrghs.xycb.repositories.OrderFulfillmentRepository;
 import com.hrghs.xycb.repositories.OrderMasterRepository;
 import com.hrghs.xycb.repositories.OrderRepository;
@@ -28,12 +30,14 @@ import org.springframework.http.HttpMethod;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import static com.hrghs.xycb.domains.Constants.*;
+import static jodd.util.StringPool.DASH;
 
 public class OrderServiceImpl implements OrderService {
 
@@ -81,28 +85,24 @@ public class OrderServiceImpl implements OrderService {
                                        BanmaerpProperties banmaerpProperties) {
         Page<OrderDTO> orderDTOList;
         pageSize = BanmaParamsUtils.checkPageSize(pageSize);
-        pageNumber = BanmaParamsUtils.checkPageNum(pageNumber);
         if (remote){
+            pageNumber = BanmaParamsUtils.checkPageNum(pageNumber,remote);
             String apiUrl = String.format(BanmaerpURL.banmaerp_order_GET, ids,storeId,platform,status,payStatus,holdStatus,refundStatus,inventoryStatus,countryCode,pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField,sortField,sortBy);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
             BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
             httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders, banmaerpProperties, banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null, httpHeaders);
-//            orderDTOList = Arrays.stream(httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-//                            .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
-//                            .getBody()
-//                            .toDataList(BANMAERP_FIELD_ORDERS))
-//                    .map(o -> (OrderDTO) o)
-//                    .collect(Collectors.toList());
             orderDTOList = (Page<OrderDTO>)
                     httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
                             .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
                             .getBody()
                             .toDataList(OrderDTO.class,banmaerpProperties);
             orderDTOList.forEach(orderDTO -> orderDTO.setBanmaerpProperties(banmaerpProperties));
+            saveAll(orderDTOList,banmaerpProperties);
         }else{
-            Specification<OrderDTO> specification = createSpecification(ids, storeId, platform,status,payStatus,holdStatus,refundStatus,inventoryStatus,countryCode, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
+            pageNumber = BanmaParamsUtils.checkPageNum(pageNumber,false);
+            Specification<OrderDTO> specification = createSpecification(ids, storeId, platform,status,payStatus,holdStatus,refundStatus,inventoryStatus,countryCode, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy,banmaerpProperties);
             orderDTOList = orderRepository.findAll(specification,PageRequest.of(pageNumber,pageSize));
         }
         return orderDTOList;
@@ -121,20 +121,26 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public Page<OrderDTO> getOrderList(Integer pageNumber, Integer pageSize, AccountDTO account) {
+       // List<OrderDTO> orderDTOS = orderRepository.findOrderByAccount(pageNumber,pageSize,account);
+        //orderRepository.countOrderByStore()
+        //todo 获取总条数
+        return null;
+    }
+
+    @Override
+    public Page<OrderDTO> getOrderList(Integer pageNumber, Integer pageSize, StoreDTO account) {
+        return null;
+    }
+
+    @Override
     @CheckBanmaerpProperties
     public List<OrderDTO> getAndSaveOrderList(Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties) {
         List<OrderDTO> orderDTOList =
                 getOrderList(null, null, null, null, null, null, null,
                         null, null, pageNumber, pageSize, null, null, null,
                         null, null, true,banmaerpProperties).getContent();
-        orderDTOList = orderRepository.saveAll(orderDTOList);
-        orderDTOList.forEach(orderDTO -> {
-            orderDTO.getMaster().setOrderDTO(orderDTO);
-            orderDTO.setBanmaerpProperties(banmaerpProperties);
-        });
-        List<OrderDTO> orderDTOS =  orderRepository.saveAll(orderDTOList);
-        orderRepository.flush();
-        return orderDTOS;
+        return saveAll(orderDTOList,banmaerpProperties);
     }
 
     /**
@@ -190,7 +196,7 @@ public class OrderServiceImpl implements OrderService {
                 orderFulfillmentDTO.setBanmaerpProperties(banmaerpProperties);
             });
             orderFulfillmentDTOList = fulfillmentRepository.saveAll(orderFulfillmentDTOList);
-            fulfillmentRepository.flush();
+            orderFulfillmentDTOList =fulfillmentRepository.saveAllAndFlush(orderFulfillmentDTOList);
         }else{
             orderFulfillmentDTOList = fulfillmentRepository.findOrderFulfillmentDTOSByOrderId(orderId);
         }
@@ -226,7 +232,7 @@ public class OrderServiceImpl implements OrderService {
                 orderFulfillmentDTO.setBanmaerpProperties(banmaerpProperties);
             });
             orderTrackingDTOList = trackingRepository.saveAll(orderTrackingDTOList);
-            trackingRepository.flush();
+            orderTrackingDTOList = trackingRepository.saveAllAndFlush(orderTrackingDTOList);
         }else{
             orderTrackingDTOList = trackingRepository.findOrderTrackingDTOSByOrderId(orderId);
         }
@@ -258,7 +264,11 @@ public class OrderServiceImpl implements OrderService {
             saveOrUpdateOrders.set(i,orderDTO);
         }
         List<OrderDTO> orderDTOList =  orderRepository.saveAll(saveOrUpdateOrders);
-        orderRepository.flush();
+        orderDTOList.forEach(orderDTO -> {
+            orderDTO.getMaster().setOrderDTO(orderDTO);
+            orderDTO.getMaster().setBanmaerpProperties(banmaerpProperties);
+        });
+        orderDTOList = orderRepository.saveAllAndFlush(orderDTOList);
         return orderDTOList;
     }
 
@@ -272,7 +282,91 @@ public class OrderServiceImpl implements OrderService {
         orderDTO.setBanmaerpProperties(banmaerpProperties);
         return orderRepository.saveAndFlush(orderDTO);
     }
-    private Specification<OrderDTO> createSpecification(String ids, String storeId, String platform, String status, String payStatus, String holdStatus, String refundStatus, String inventoryStatus, String countryCode, Integer pageNumber, Integer pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+
+    @Override
+    @CheckBanmaerpProperties
+    public Monetary countAmountByStatus(BanmaerpOrderEnums.Status orderStatus,BanmaerpProperties banmaerpProperties) {
+        if (orderStatus.equals(BanmaerpOrderEnums.Status.All)){
+            return countAmount(banmaerpProperties);
+        }
+        Object result = orderRepository.countAmountByStatusAndBanmaerpProperties(banmaerpProperties.getX_BANMA_MASTER_APP_ID(),orderStatus.getValue());
+        Object[] resultset= (Object[])result;
+        Monetary monetary = new Monetary();
+        monetary.setPay_Amount((BigDecimal)resultset[0]);
+        monetary.setPay_amount_usd((BigDecimal) resultset[1]);
+        return monetary;
+    }
+
+    @Override
+    @CheckBanmaerpProperties
+    public Monetary countAmount(BanmaerpProperties banmaerpProperties) {
+        Object result = orderRepository.countAmountByBanmaerpProperties(banmaerpProperties.getX_BANMA_MASTER_APP_ID());
+        Object[] resultset= (Object[])result;
+        Monetary monetary = new Monetary();
+        monetary.setPay_Amount((BigDecimal)resultset[0]);
+        monetary.setPay_amount_usd((BigDecimal) resultset[1]);
+        return monetary;
+    }
+
+    @Override
+    @CheckBanmaerpProperties
+    public Monetary countAmountByStatusAndAccount(BanmaerpOrderEnums.Status orderStatus, AccountDTO accountDTO, BanmaerpProperties banmaerpProperties) {
+        if (orderStatus.equals(BanmaerpOrderEnums.Status.All)){
+            return countAmountByAccount(accountDTO,banmaerpProperties);
+        }
+        Object result =  orderRepository.countAmountByAccountAndStatus(banmaerpProperties.getX_BANMA_MASTER_APP_ID(),orderStatus.getValue(),accountDTO.getID().toString().concat(DASH));
+        Object[] resultset= (Object[])result;
+        Monetary monetary = new Monetary();
+        monetary.setPay_Amount((BigDecimal)resultset[0]);
+        monetary.setPay_amount_usd((BigDecimal) resultset[1]);
+        return monetary;
+    }
+
+    @Override
+    public Monetary countAmountByAccount(AccountDTO accountDTO, BanmaerpProperties banmaerpProperties) {
+        Object result = orderRepository.countAmountByAccount(banmaerpProperties.getX_BANMA_MASTER_APP_ID(),accountDTO.getID().toString().concat(DASH));
+        Object[] resultset= (Object[])result;
+        Monetary monetary = new Monetary();
+        monetary.setPay_Amount((BigDecimal)resultset[0]);
+        monetary.setPay_amount_usd((BigDecimal) resultset[1]);
+        return monetary;
+    }
+
+    @Override
+    @CheckBanmaerpProperties
+    public Long countByStatus(BanmaerpOrderEnums.Status orderStatus,BanmaerpProperties banmaerpProperties) {
+        if (orderStatus.equals(BanmaerpOrderEnums.Status.All)){
+            return orderRepository.countByBanmaerpProperties(banmaerpProperties.getX_BANMA_MASTER_APP_ID());
+        }
+        return orderRepository.countByStatusAndBanmaerpProperties(orderStatus.getValue(),banmaerpProperties.getX_BANMA_MASTER_APP_ID());
+    }
+
+    @Override
+    @CheckBanmaerpProperties
+    public Long countByStatusAndAccount(BanmaerpOrderEnums.Status orderStatus, AccountDTO accountDTO,BanmaerpProperties banmaerpProperties) {
+        return orderRepository.countByAccountAndStatus(banmaerpProperties.getX_BANMA_MASTER_APP_ID(),orderStatus.getValue(),accountDTO.getID().toString());
+    }
+
+    @Override
+    @CheckBanmaerpProperties
+    public Long countAll(BanmaerpProperties banmaerpProperties) {
+        return orderRepository.countByBanmaerpProperties(banmaerpProperties.getX_BANMA_MASTER_APP_ID());
+    }
+
+    @Override
+    @CheckBanmaerpProperties
+    public Long countAllByAccount(AccountDTO accountDTO, BanmaerpProperties banmaerpProperties) {
+        return orderRepository.countByAccount(accountDTO.getID().toString(),banmaerpProperties.getX_BANMA_MASTER_APP_ID());
+    }
+
+    @Override
+    public Long countOrderByStore(Long storeId) {
+        return orderMasterRepository.countOrderByStore(storeId);
+    }
+
+    private Specification<OrderDTO> createSpecification(String ids, String storeId, String platform, String status, String payStatus
+            , String holdStatus, String refundStatus, String inventoryStatus, String countryCode, DateTime searchTimeStart
+            , DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy,BanmaerpProperties banmaerpProperties) {
         return (root, criteriaQuery, criteriaBuilder) -> {
             List<Predicate> predicateList = new ArrayList<>();
 
@@ -340,7 +434,7 @@ public class OrderServiceImpl implements OrderService {
                         .between(root.<DateTime>get("master").get(searchTimeField), searchTimeStart, searchTimeEnd));
             }
 
-
+            predicateList.add(criteriaBuilder.equal(root.get("banmaerpProperties").get("X_BANMA_MASTER_APP_ID"),banmaerpProperties.getX_BANMA_MASTER_APP_ID()));
             Predicate and = criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
             Order order = criteriaBuilder.desc(root.get("master").get("createTime"));
             if (sortBy != null && sortBy != "") {

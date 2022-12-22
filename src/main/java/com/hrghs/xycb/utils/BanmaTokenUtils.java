@@ -1,5 +1,6 @@
 package com.hrghs.xycb.utils;
 
+import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
 import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.TokenResponseDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
@@ -9,6 +10,7 @@ import com.hrghs.xycb.domains.enums.BanmaerpAuthEnums;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.redis.core.ReactiveRedisOperations;
@@ -20,6 +22,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+
 import java.nio.charset.Charset;
 import java.time.Duration;
 import static com.hrghs.xycb.domains.BanmaerpProperties.*;
@@ -32,35 +35,39 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 
 public class BanmaTokenUtils {
 
-    private WebClient.Builder webClientBuilder = WebClient.builder();
     @Autowired
     private BanmaEncryptionUtils encryptionUtils;
     @Autowired
+    private ApplicationContext context;
+
+    @Autowired
+    @Lazy
     private RestTemplate restTemplate;
+
     @Autowired
     @Lazy
     private ReactiveRedisOperations<String,TokenResponseDTO> tokenRespReactiveRedisOperations;
 
     /**
-     * todo 提供非阻塞式调用方式，返回结果序列化有问题，暂时不修复.
-     * 调用之前确保BanmaerpProperties非空checkNull(BanmaerpProperties)
      * @param banmaerpProperties
      * @return
      */
     @Deprecated
-    public Mono<TokenResponseDTO> getBanmaErpMasterTokenMono(BanmaerpProperties banmaerpProperties){
-        BanmaerpSigningVO banmaerpSigningVO = banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,banmaerp_GetToken_GET,null);
+    @CheckBanmaerpProperties
+    public  Mono<TokenResponseDTO> getBanmaErpMasterTokenMono(BanmaerpProperties banmaerpProperties){
+        BanmaerpSigningVO banmaerpSigningVO = banmaerpSigningVO(banmaerpProperties, HttpMethod.GET,banmaerp_GetToken_GET,null);
+        WebClient.Builder webClientBuilder = WebClient.builder();
         return
-                webClientBuilder.baseUrl(BanmaerpURL.banmaerp_gateway.concat(banmaerp_GetToken_GET)).build()
-                        .method(HttpMethod.GET)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .accept(APPLICATION_JSON_UTF8)
-                        .acceptCharset(Charset.defaultCharset())
-                        .headers(httpHeaders -> banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO))
-                        .retrieve()
-                        //.toEntity(new ParameterizedTypeReference<BanmaErpResponseDTO<TokenResponseDTO>>() {})
-                        .bodyToMono(new ParameterizedTypeReference<BanmaErpResponseDTO<TokenResponseDTO>>() {})
-                        .map(banmaErpResponseDTO -> banmaErpResponseDTO.getData());
+        webClientBuilder.baseUrl(BanmaerpURL.banmaerp_gateway.concat(banmaerp_GetToken_GET)).build()
+                .method(HttpMethod.GET)
+                .accept(MediaType.APPLICATION_JSON)
+                .accept(APPLICATION_JSON_UTF8)
+                .acceptCharset(Charset.defaultCharset())
+                .headers(httpHeaders -> banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO))
+                .retrieve()
+                //.toEntity(new ParameterizedTypeReference<BanmaErpResponseDTO<TokenResponseDTO>>() {})
+                .bodyToMono(new ParameterizedTypeReference<BanmaErpResponseDTO<TokenResponseDTO>>() {})
+                .map(banmaErpResponseDTO -> banmaErpResponseDTO.getData());
     }
 
     /**
@@ -77,15 +84,15 @@ public class BanmaTokenUtils {
         httpHeaders = banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
         HttpEntity requestBody = new HttpEntity(null,httpHeaders);
         return
-                tokenRespReactiveRedisOperations.opsForValue().get(redisKey)
-                        .map(tokenResponseDTO -> validateToken(tokenResponseDTO,banmaerpProperties,redisKey))
-                        .switchIfEmpty(Mono.defer(() -> {
-                            TokenResponseDTO tokenResponseDTO = restTemplate.exchange(BanmaerpURL.banmaerp_gateway.concat(banmaerp_GetToken_GET),HttpMethod.GET,
-                                            requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<TokenResponseDTO>>() {})
-                                    .getBody().getData();
-                            tokenResponseDTO = validateToken(tokenResponseDTO,banmaerpProperties,redisKey);
-                            return Mono.just(tokenResponseDTO);
-                        }));
+        tokenRespReactiveRedisOperations.opsForValue().get(redisKey)
+            .map(tokenResponseDTO -> validateToken(tokenResponseDTO,banmaerpProperties,redisKey))
+            .switchIfEmpty(Mono.defer(() -> {
+                TokenResponseDTO tokenResponseDTO = restTemplate.exchange(BanmaerpURL.banmaerp_gateway.concat(banmaerp_GetToken_GET),HttpMethod.GET,
+                                requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<TokenResponseDTO>>() {})
+                        .getBody().getData();
+                tokenResponseDTO = validateToken(tokenResponseDTO,banmaerpProperties,redisKey);
+                return Mono.just(tokenResponseDTO);
+            }));
     }
     private TokenResponseDTO validateToken(TokenResponseDTO _tokenResponseDTO,BanmaerpProperties banmaerpProperties,String redisKey){
         TokenResponseDTO tokenResponseDTO = _tokenResponseDTO;
@@ -105,7 +112,7 @@ public class BanmaTokenUtils {
                 .subscribe();
         return tokenResponseDTO;
     }
-    public HttpHeaders banmaerpCommonHeaders(HttpHeaders httpHeaders,BanmaerpProperties banmaerpProperties,BanmaerpSigningVO banmaerpSigningVO){
+    public  HttpHeaders banmaerpCommonHeaders(HttpHeaders httpHeaders,BanmaerpProperties banmaerpProperties,BanmaerpSigningVO banmaerpSigningVO){
         httpHeaders.set(BANMA_HEADER_APPID,banmaerpProperties.getX_BANMA_MASTER_APP_ID());
         httpHeaders.set(BANMA_HEADER_TIMESTAMP,String.valueOf(banmaerpSigningVO.getTimestamp()));
         if (banmaerpProperties.getX_BANMA_MASTER_SIGN_METHOD() != BanmaerpAuthEnums.AuthMethod.IP_WHITELIST.getAuthType()){

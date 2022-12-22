@@ -14,7 +14,7 @@ public class Constants {
     public static final String DB_HIKARI_JDBC_URL = "spring.datasource.banmaerp.hikari.jdbc-url";
     public static final Long DB_HIKARI_MINIMUM_KEEPALIVETIME = 30000l;
     public static final Long DB_HIKARI_DEFAULT_KEEPALIVETIME = 60000l;
-    public static final Integer PAGE_SIZE_DEFAULT = 100;
+    public static final Integer PAGE_SIZE_DEFAULT = 50;
 
     public static final String DB_JDBC_PROPERTY_CACHEPREPARESTATEMENTS = "jdbc.property.cachePrepStmts";
     public static final String DB_JDBC_PROPERTY_PREPARESTATEMENT_CACHESIZE = "jdbc.property.prepStmtCacheSize";
@@ -38,6 +38,7 @@ public class Constants {
     public static final String JPA_PROS_HIBERNATE_DIALECT = "hibernate.dialect";
     public static final String JPA_PROS_HIBERNATE_SESSION_CONTEXT_CLASS = "hibernate.current_session_context_class";
     public static final String JPA_PROS_HIBERNATE_SHOW_SQL = "hibernate.show_sql";
+    public static final String JPA_PROS_HIBERNATE_ENABLE_LAZYLOAD_NOTRANS = "hibernate.enable_lazy_load_no_trans";
     public static final String JPA_PROS_HIBERNATE_FORMAT_SQL = "hibernate.format_sql";
     public static final String JPA_PROS_TRANSACTION_TYPE = "javax.persistence.transactionType";
 
@@ -46,6 +47,7 @@ public class Constants {
 //    spring.jpa.hibernate.ddl-auto=update
 //    spring.jpa.generate-ddl=true
     public static final String Data ="Data";
+    public static final String BANMAERP_FIELD_DATAACCESS ="DataAccess";
     public static final String BANMAERP_FIELD_STORES = "Stores";
     public static final String BANMAERP_FIELD_ACCOUNTS = "Accounts";
     public static final String BANMAERP_FIELD_CATEGORYS = "Categorys";
@@ -56,6 +58,7 @@ public class Constants {
     public static final String BANMAERP_FIELD_SUPPLIERS = "Suppliers";
     public static final String BANMAERP_FIELD_STORAGES = "Storages";
     public static final String BANMAERP_FIELD_PAGE = "Page";
+    public static final String BANMAERP_FIELD_HasMore = "HasMore";
     public static final String BANMAERP_FIELD_PAGE_TotalCount = "TotalCount";//数据总量
     public static final String BANMAERP_FIELD_PAGE_PageSize = "PageSize";
     public static final String BANMAERP_FIELD_PAGE_PageCount = "PageCount";//总页数
@@ -65,12 +68,19 @@ public class Constants {
     public static final String BANMAERP_FIELD_TRACKINGS = "Trackings";
     public static final String BANMAERP_FIELD_PREFIX = "banmaerp";
     public static final String BANMAERP_FIELD_TOKEN = "token";
+    public static final String BANMAERP_FIELD_APPINFO = "appinfo";
+
     public static final String BANMAERP_FIELD_SSOTOKEN = "ssotoken";
     public static final String BANMAERP_FIELD_TASK = "task";
     public static final String BANMAERP_FIELD_CLIENTIP = "clientIp";
     public static final String BANMAERP_FIELD_APPID = "app_id";
     public static final String BANMAERP_FIELD_APPSECRET = "app_secret";
     public static final String BANMAERP_MESSAGE_UNKNOWNERROR = "Unknown Error!";
+    public static final String BANMAERP_MESSAGE_ILLEGAL_ARGS = "Illegal Arguments!";
+    public static final String BANMAERP_MESSAGE_TOKEN_EXPIRED = "ACCESS_TOKEN Has Expired!";
+    public static final String BANMAERP_MESSAGE_ILLEGAL_ARGS_BanmaerpProperties = "BanmaerpProperties can not be null!";
+
+
     public static final String BANMAERP_MESSAGE_REGISTER_ERROR = "账号注册失败!";
     public static final String BANMAERP_MESSAGE_CONFIGURATION_ERROR = "erp.banmaerp.BanmaerpProperties not config properly!";
 

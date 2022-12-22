@@ -2,11 +2,13 @@ package com.hrghs.xycb.services;
 
 
 import com.hrghs.xycb.domains.BanmaerpProperties;
-import com.hrghs.xycb.domains.banmaerpDTO.OrderDTO;
-import com.hrghs.xycb.domains.banmaerpDTO.OrderFulfillmentDTO;
-import com.hrghs.xycb.domains.banmaerpDTO.OrderTrackingDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.*;
+import com.hrghs.xycb.domains.enums.BanmaerpOrderEnums;
+import com.hrghs.xycb.domains.resultSet.Monetary;
 import org.joda.time.DateTime;
 import org.springframework.data.domain.Page;
+
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface OrderService {
@@ -44,6 +46,24 @@ public interface OrderService {
 
     Page<OrderDTO> getOrderList(Integer pageNumber,Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties);
 
+    /**
+     * 通过子账号查询归属的订单
+     * @param pageNumber
+     * @param pageSize
+     * @param account
+     * @return
+     */
+    Page<OrderDTO> getOrderList(Integer pageNumber, Integer pageSize, AccountDTO account);
+
+    /**
+     * 通过店铺查询归属的订单
+     * @param pageNumber
+     * @param pageSize
+     * @param account
+     * @return
+     */
+    Page<OrderDTO> getOrderList(Integer pageNumber, Integer pageSize, StoreDTO account);
+
     List<OrderDTO> getAndSaveOrderList(Integer pageNumber,Integer pageSize,BanmaerpProperties banmaerpProperties);
 
     /**
@@ -76,4 +96,29 @@ public interface OrderService {
     List<OrderDTO> saveAll(Iterable<OrderDTO> orderDTOS, BanmaerpProperties banmaerpProperties);
 
     OrderDTO save(OrderDTO orderDTO, BanmaerpProperties banmaerpProperties);
+
+    /**
+     * 根据订单状态统计订单金额，先按人民币和美金，上层应用自行换算汇率；历史汇率和换算时汇率差由上层应用自行处理
+     * @param orderStatus
+     * @param banmaerpProperties
+     * @return
+     */
+    Monetary countAmountByStatus(BanmaerpOrderEnums.Status orderStatus,BanmaerpProperties banmaerpProperties);
+
+    Monetary countAmount(BanmaerpProperties banmaerpProperties);
+
+    Monetary countAmountByStatusAndAccount(BanmaerpOrderEnums.Status orderStatus, AccountDTO accountDTO, BanmaerpProperties banmaerpProperties);
+
+    Monetary countAmountByAccount(AccountDTO accountDTO,BanmaerpProperties banmaerpProperties);
+
+
+    Long countByStatus(BanmaerpOrderEnums.Status orderStatus,BanmaerpProperties banmaerpProperties);
+
+    Long countByStatusAndAccount(BanmaerpOrderEnums.Status orderStatus, AccountDTO accountDTO,BanmaerpProperties banmaerpProperties);
+
+    Long countAll(BanmaerpProperties banmaerpProperties);
+
+    Long countAllByAccount(AccountDTO accountDTO,BanmaerpProperties banmaerpProperties);
+
+    Long countOrderByStore(Long storeId);
 }

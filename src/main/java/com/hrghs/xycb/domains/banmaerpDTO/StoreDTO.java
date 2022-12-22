@@ -23,7 +23,7 @@ public class StoreDTO {
     @Id
     @Column(name = "id")
     @JsonProperty(value = "ID")
-    private String ID;
+    private Long ID;
     @JsonProperty(value = "Name")
     private String name;
     @JsonProperty(value = "Platform")

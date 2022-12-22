@@ -32,7 +32,7 @@ public class ProductSuppliersDTO {
     private ProductSuppliersInfoDTO info;
 
     @JsonIgnore
-    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "banma_master_app_id")
     private BanmaerpProperties banmaerpProperties;
 }

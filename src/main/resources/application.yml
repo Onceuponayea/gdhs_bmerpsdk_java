@@ -31,8 +31,8 @@ msg:
 
 spring:
     # for test only
-    profiles:
-        active: devbanmaerp
+#    profiles:
+#        active: devbanmaerp
     # test end
     datasource:
         banmaerp:

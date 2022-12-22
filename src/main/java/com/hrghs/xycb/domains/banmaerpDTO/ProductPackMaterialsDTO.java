@@ -28,6 +28,6 @@ public class ProductPackMaterialsDTO {
 
     @JsonIgnore
     @JoinColumn(name = "product_id")
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(cascade = CascadeType.REFRESH ,fetch = FetchType.EAGER)
     private ProductDTO productDTO;
 }

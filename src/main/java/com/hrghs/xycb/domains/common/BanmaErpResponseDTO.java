@@ -11,7 +11,12 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.*;
+import com.hrghs.xycb.domains.enums.BanmaerpAccountEnums;
 import com.hrghs.xycb.utils.DateTimeConverter;
+import com.hrghs.xycb.utils.converters.EnumeratorDeserialiser;
+import com.hrghs.xycb.utils.converters.EnumeratorSerialiser;
+import com.hrghs.xycb.utils.converters.JodaDateTimeDeserialiser;
+import com.hrghs.xycb.utils.converters.JodaDateTimeSerialiser;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -80,9 +85,14 @@ public class BanmaErpResponseDTO<T> {
     private String requestId;
 
     @JsonIgnore
-    private ObjectMapper objectMapper = new ObjectMapper().registerModule(new JodaModule()).setTimeZone(SimpleTimeZone.getDefault());
+    private ObjectMapper objectMapper = new ObjectMapper().registerModule(new JodaModule()
+                    .addDeserializer(DateTime.class, new JodaDateTimeDeserialiser())
+                    .addSerializer(DateTime.class,new JodaDateTimeSerialiser())
+                    .addSerializer(BanmaerpAccountEnums.DataAccessMode.class,new EnumeratorSerialiser.DataAccessSerialiser())
+                    .addDeserializer(BanmaerpAccountEnums.DataAccessMode.class,new EnumeratorDeserialiser.DataAccessDeSerialiser()))
+            .setTimeZone(SimpleTimeZone.getDefault());
     @JsonIgnore
-    private Gson gson = new GsonBuilder().disableHtmlEscaping()
+    public static Gson gson = new GsonBuilder().disableHtmlEscaping()
             .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)
             .registerTypeAdapter(DateTime.class,new DateTimeConverter())
             .setDateFormat("yyyy-MM-dd HH:mm:ss")
@@ -93,13 +103,21 @@ public class BanmaErpResponseDTO<T> {
         List<Object> datas = new ArrayList<>();
         if (data !=null && data instanceof JsonNode){
             JsonNode dataList = (JsonNode)data;
-            if(dataList.has(objClass)){
-                JsonNode jsonNodeSrc = dataList.get(objClass);
-                Type type = getGsonType(objClass);
-                datas = gson.fromJson(jsonNodeSrc.toString(),type);
+            if (objClass.equalsIgnoreCase(BANMAERP_FIELD_DATAACCESS)){
+                DataAccessDTO dataAccessDTO = objectMapper.readValue(dataList.toString(),DataAccessDTO.class);
+                datas = Arrays.asList(dataAccessDTO);
+            }else {
+                if(dataList.has(objClass)){
+                    JsonNode jsonNodeSrc = dataList.get(objClass);
+                    Type type = getGsonType(objClass);
+                    datas = gson.fromJson(jsonNodeSrc.toString(),type);
+                }
             }
         }
         return datas.toArray();
+    }
+    public DataAccessDTO toDataAccessDTO(String objClass){
+        return  (DataAccessDTO) toDataList(objClass)[0];
     }
     public Page<?> toDataList(Class clazz, BanmaerpProperties banmaerpProperties){
         List<?> datas = new ArrayList<>();
@@ -127,10 +145,11 @@ public class BanmaErpResponseDTO<T> {
             if (dataList.has(BANMAERP_FIELD_PAGE)){
                 totalSize = dataList.get(BANMAERP_FIELD_PAGE).get(BANMAERP_FIELD_PAGE_TotalCount).asLong(totalSize);
                 pageSize = dataList.get(BANMAERP_FIELD_PAGE).get(BANMAERP_FIELD_PAGE_PageSize).asInt(PAGE_SIZE_DEFAULT);
-                pageNum = dataList.get(BANMAERP_FIELD_PAGE).get(BANMAERP_FIELD_PAGE_PageNumber).asInt(0);
+                pageNum = dataList.get(BANMAERP_FIELD_PAGE).get(BANMAERP_FIELD_PAGE_PageNumber).asInt(1);
             }
         }
-        Pageable pageable = PageRequest.of(pageNum-1,pageSize);
+        pageNum = pageNum<1?1:pageNum;
+        Pageable pageable = PageRequest.of(pageNum,pageSize);
         Page<?> pageableObj = new PageImpl<>(datas,pageable,totalSize);
         return pageableObj;
     }
@@ -150,7 +169,7 @@ public class BanmaErpResponseDTO<T> {
             put(OrderTrackingDTO.class,BANMAERP_FIELD_TRACKINGS);
         }
     };
-    private Type getGsonType(String objClass){
+    public static Type getGsonType(String objClass){
         Type type = null;
         switch (objClass){
             case BANMAERP_FIELD_STORES:

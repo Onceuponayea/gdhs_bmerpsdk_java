@@ -64,7 +64,7 @@ public class BanmaerpProperties {
      * dynamic added in runtime. must persist to db
      */
     @JsonIgnore
-    @OneToMany(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     @JoinColumn(name = "banma_master_app_id")
     private List<AccountDTO> banmaErpAccounts;
 

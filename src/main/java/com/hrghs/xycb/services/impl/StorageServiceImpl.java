@@ -70,8 +70,8 @@ public class StorageServiceImpl implements StorageService {
             , BanmaerpProperties banmaerpProperties) {
         Page<StorageDTO> storageDTOList;
         pageSize = BanmaParamsUtils.checkPageSize(pageSize);
-        pageNumber = BanmaParamsUtils.checkPageNum(pageNumber);
         if (remote){
+            pageNumber = BanmaParamsUtils.checkPageNum(pageNumber,remote);
             String apiUrl = String.format(BanmaerpURL.banmaerp_storagelist_GET,ids,name,fileType,fileCategoryId, pageNumber, pageSize,
                     searchTimeStart, searchTimeEnd, searchTimeField,sortField,sortBy);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
@@ -91,7 +91,8 @@ public class StorageServiceImpl implements StorageService {
                             .getBody()
                             .toDataList(StorageDTO.class,banmaerpProperties);
         }else{
-            Specification<StorageDTO> specification = createSpecification(ids, name, fileType,fileCategoryId, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
+            pageNumber = BanmaParamsUtils.checkPageNum(pageNumber,false);
+            Specification<StorageDTO> specification = createSpecification(ids, name, fileType,fileCategoryId, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy,banmaerpProperties);
             storageDTOList = storageRepository.findAll(specification,PageRequest.of(pageNumber,pageSize));
         }
         return storageDTOList;
@@ -233,7 +234,7 @@ public class StorageServiceImpl implements StorageService {
     public List<StorageDTO> saveAll(List<StorageDTO> storageDTOList, BanmaerpProperties banmaerpProperties) {
         storageDTOList.forEach(storageDTO -> storageDTO.setBanmaerpProperties(banmaerpProperties));
         List<StorageDTO> storageDTOS = storageRepository.saveAll(storageDTOList);
-        storageRepository.flush();
+        storageDTOS = storageRepository.saveAllAndFlush(storageDTOS);
         return storageDTOS;
     }
 
@@ -251,7 +252,9 @@ public class StorageServiceImpl implements StorageService {
                 .count() > 0;
     }
 
-    private Specification<StorageDTO> createSpecification(String ids, String name, String fileType, String fileCategoryId, Integer pageNumber, Integer pageSize, DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy) {
+    private Specification<StorageDTO> createSpecification(String ids, String name, String fileType, String fileCategoryId
+            , DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy
+            ,BanmaerpProperties banmaerpProperties) {
         return (root, criteriaQuery, criteriaBuilder) -> {
             List<Predicate> predicateList = new ArrayList<>();
 
@@ -288,7 +291,7 @@ public class StorageServiceImpl implements StorageService {
                 predicateList.add(criteriaBuilder
                         .between(root.<DateTime>get(searchTimeField), searchTimeStart, searchTimeEnd));
             }
-
+            predicateList.add(criteriaBuilder.equal(root.get("banmaerpProperties").get("X_BANMA_MASTER_APP_ID"),banmaerpProperties.getX_BANMA_MASTER_APP_ID()));
             Predicate and = criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
             Order order = criteriaBuilder.desc(root.get("createTime"));
             if (sortBy != null && sortBy != "") {
