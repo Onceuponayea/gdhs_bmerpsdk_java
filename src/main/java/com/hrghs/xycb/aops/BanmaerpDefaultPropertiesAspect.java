@@ -24,7 +24,6 @@ public class BanmaerpDefaultPropertiesAspect {
     ApplicationContext applicationContext;
     @Around("@annotation(com.hrghs.xycb.annotations.CheckBanmaerpProperties)")
     public Object checkBanmaerpProperties(ProceedingJoinPoint joinPoint) throws Throwable {
-        logger.info("Banmaerp App Properties Not specified, switching to platform appInfo");
         MethodSignature methodSignature= (MethodSignature) joinPoint.getSignature();
         Object[] args = joinPoint.getArgs();
         Object[] newArgs = new Object[args.length];
@@ -39,6 +38,7 @@ public class BanmaerpDefaultPropertiesAspect {
             banmaerpProsArgsIndex= (parameterTypes[i] == BanmaerpProperties.class)?i:banmaerpProsArgsIndex;
         }
         if (args[banmaerpProsArgsIndex]==null){
+            logger.info("Method: {} , Banmaerp App Properties Not specified, switching to platform appInfo",methodSignature.getName());
             if (banmaerpProsArgsIndex>-1){
                 //说明该方法有BanmaerpProperties类型的参数
                 Object objects = args[banmaerpProsArgsIndex];

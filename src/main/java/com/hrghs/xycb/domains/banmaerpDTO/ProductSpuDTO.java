@@ -67,11 +67,13 @@ public class ProductSpuDTO {
     private String keywords;
 
     @Convert(converter = JodaDateTimeConverter.class)
+    //@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
     @Column(name = "create_time")
     @JsonProperty(value = "CreateTime")
     private DateTime createTime;
 
     @Convert(converter = JodaDateTimeConverter.class)
+    //@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
     @Column(name = "update_time")
     @JsonProperty(value = "UpdateTime")
     private DateTime updateTime;

@@ -113,6 +113,17 @@ public class AccountServiceImpl implements AccountService {
                     .collect(Collectors.toList());
             **/
             accountDTOList = (Page<AccountDTO>) responseDTO.toDataList(AccountDTO.class,banmaerpProperties);
+            accountDTOList.getContent().forEach(accountDTO -> {
+                if (banmaerpProperties.getX_BANMA_MASTER_APP_ACCOUNT().equalsIgnoreCase(accountDTO.getPhone())){
+                    accountDTO.setUserType(BanmaerpAccountEnums.UserType.MasterAccount);
+                }else {
+                    accountDTO.setUserType(BanmaerpAccountEnums.UserType.SubAccount);
+                }
+                accountDTO.setState(BanmaerpAccountEnums.UserState.Normal);
+                accountDTO.setBanmaerpProperties(banmaerpProperties);
+            });
+            List<AccountDTO> accountDTOS = accountRepository.saveAll(accountDTOList);
+//            accountRepository.flush();
         }else{
             pageNumber = BanmaParamsUtils.checkPageNum(pageNumber,false);
             Specification<AccountDTO> specification = createSpecification(ids, email, realName, phone, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy,banmaerpProperties);
@@ -138,7 +149,8 @@ public class AccountServiceImpl implements AccountService {
     public List<AccountDTO> getAndSaveAccountList(Integer pageNumber,Integer pageSize,BanmaerpProperties banmaerpProperties) {
         List<AccountDTO> accountDTOS =getAccountList(null,null,null,null,pageNumber,null,null,null,null,null,null,true,banmaerpProperties)
                 .getContent();
-        accountDTOS.parallelStream().forEach(accountDTO -> {
+        accountDTOS.parallelStream().filter(accountDTO -> !accountDTO.getPhone().equalsIgnoreCase(banmaerpProperties.getX_BANMA_MASTER_APP_ACCOUNT()))
+            .forEach(accountDTO -> {
             DataAccessDTO dataAccessDTO = getDataAccess(accountDTO,true,banmaerpProperties);
             //todo 要把账号关联的店铺也一起写进数据库
             List<String> storeIds=new ArrayList<>();
@@ -159,11 +171,14 @@ public class AccountServiceImpl implements AccountService {
             List<StoreDTO> storeDTOList=storeRepository.findAllById(storeIdList);
             accountDTO.setStoreDTOList(storeDTOList);
             accountDTO.setDataAccessDTO(dataAccessDTO);
+            accountDTO.setBanmaerpProperties(banmaerpProperties);
         });
-        banmaerpProperties.setBanmaErpAccounts(accountDTOS);
-        List<AccountDTO> accounts =  banmaerpPropertiesRepository.saveAndFlush(banmaerpProperties).getBanmaErpAccounts();
-
-        return accounts;
+//        banmaerpProperties.setBanmaErpAccounts(accountDTOS);
+//        List<AccountDTO> result =  accountRepository.saveAll(accountDTOS);
+//        accountRepository.flush();
+        /** cascade saving will erase all relative account **/
+        //List<AccountDTO> accounts =  banmaerpPropertiesRepository.saveAndFlush(banmaerpProperties).getBanmaErpAccounts();
+        return accountDTOS;
     }
 
     @Override
@@ -260,6 +275,20 @@ public class AccountServiceImpl implements AccountService {
         return body;
     }
 
+    @Override
+    public BanmaErpResponseDTO<Boolean> logoutAndDeleteAccount(Integer id, BanmaerpProperties banmaerpProperties) {
+        BanmaErpResponseDTO<Boolean> result =  logoutAccount(id,banmaerpProperties);
+        if (result.getSuccess()){
+            accountRepository.deleteById(id);
+        }
+        return result;
+    }
+
+    @Override
+    public void deleteAccount(Integer id, BanmaerpProperties banmaerpProperties) {
+         accountRepository.deleteById(id);
+    }
+
     /**
      * 查询用户店铺权限
      * @param account 用户id
@@ -269,7 +298,7 @@ public class AccountServiceImpl implements AccountService {
     @CheckBanmaerpProperties
     public DataAccessDTO getDataAccess(AccountDTO account, Boolean remote, BanmaerpProperties banmaerpProperties) {
         if (account ==null)throw  new IllegalArgumentException(BANMAERP_MESSAGE_ILLEGAL_ARGS);
-        DataAccessDTO dataAccessDTO;
+        DataAccessDTO dataAccessDTO=null;
         if (remote){
             String apiUrl = String.format(BanmaerpURL.banmaerp_accountDataAccess_GET,account.getID());
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
@@ -280,11 +309,29 @@ public class AccountServiceImpl implements AccountService {
             dataAccessDTO = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
                     .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.GET, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<JsonNode>>() {})
                     .getBody().toDataAccessDTO(BANMAERP_FIELD_DATAACCESS);
+
+            DataAccessDTO accountDataAccess = null;
+            List<DataAccessDTO> dataAccessDTOList = dataAccessRepository.findByAccountDTOID(account.getID());
+            if (dataAccessDTOList!=null&&dataAccessDTOList.size()>0){
+                accountDataAccess = dataAccessDTOList.get(0);
+                dataAccessDTOList.subList(1,dataAccessDTOList.size()).forEach(dataAccessDTO1 -> dataAccessRepository.delete(dataAccessDTO1));
+            }
+            if (accountDataAccess !=null && accountDataAccess.getId()!=null){
+                dataAccessDTO.setId(accountDataAccess.getId());
+                dataAccessDTO.setUpdateTime(new DateTime());
+                dataAccessDTO.setCreateTime(accountDataAccess.getCreateTime());
+            }else{
+                dataAccessDTO.setCreateTime(new DateTime());
+            }
             dataAccessDTO = dataAccessRepository.save(dataAccessDTO);
             dataAccessDTO.setAccountDTO(account);
-            dataAccessRepository.saveAndFlush(dataAccessDTO);
+            dataAccessDTO = dataAccessRepository.saveAndFlush(dataAccessDTO);
         }else{
-            dataAccessDTO = dataAccessRepository.findById(account.getID().toString()).get();
+            List<DataAccessDTO> dataAccessDTOList = dataAccessRepository.findByAccountDTOID(account.getID());
+            if (dataAccessDTOList!=null&&dataAccessDTOList.size()>0){
+                dataAccessDTO = dataAccessDTOList.get(0);
+                dataAccessDTOList.subList(1,dataAccessDTOList.size()).forEach(dataAccessDTO1 -> dataAccessRepository.delete(dataAccessDTO1));
+            }
         }
         return dataAccessDTO;
     }
@@ -294,7 +341,8 @@ public class AccountServiceImpl implements AccountService {
     public List<AccountDTO> saveAccountList(List<AccountDTO> accountDTOList, BanmaerpProperties banmaerpProperties) {
         accountDTOList.parallelStream().forEach(accountDTO -> accountDTO.setBanmaerpProperties(banmaerpProperties));
         List<AccountDTO> accountDTOS =  accountRepository.saveAll(accountDTOList);
-        accountDTOS=accountRepository.saveAllAndFlush(accountDTOS);
+        //accountDTOS=accountRepository.saveAllAndFlush(accountDTOS);
+        accountRepository.flush();
         return accountDTOS;
     }
 

@@ -149,7 +149,7 @@ public class BanmaErpResponseDTO<T> {
             }
         }
         pageNum = pageNum<1?1:pageNum;
-        Pageable pageable = PageRequest.of(pageNum,pageSize);
+        Pageable pageable = PageRequest.of(pageNum-1,pageSize);
         Page<?> pageableObj = new PageImpl<>(datas,pageable,totalSize);
         return pageableObj;
     }

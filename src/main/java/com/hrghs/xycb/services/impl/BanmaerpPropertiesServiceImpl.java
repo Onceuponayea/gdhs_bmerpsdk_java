@@ -41,11 +41,16 @@ public class BanmaerpPropertiesServiceImpl implements BanmaerpPropertiesService 
         redisOperations.keys(redisKeysPattern)
                 .switchIfEmpty(Mono.defer(()->{
                     BanmaerpProperties bmerp_pros = repository.findBanmaerpPropertiesByX_BANMA_MASTER_APP_ACCOUNT(phone.toString());
-                    String redisKey= redisKeyPrefix.concat(DASH).concat(bmerp_pros.getX_BANMA_MASTER_APP_ID());
-                    redisOperations.opsForValue().set(redisKeyPrefix.concat(DASH).concat(bmerp_pros.getX_BANMA_MASTER_APP_ID()),bmerp_pros)
-                            .subscribe();
-                    return Mono.just(redisKey);}))
-                 .blockFirst();
+                    if (bmerp_pros!=null){
+                        String redisKey= redisKeyPrefix.concat(DASH).concat(bmerp_pros.getX_BANMA_MASTER_APP_ID());
+                        redisOperations.opsForValue().set(redisKeyPrefix.concat(DASH).concat(bmerp_pros.getX_BANMA_MASTER_APP_ID()),bmerp_pros)
+                                .subscribe();
+                        return Mono.just(redisKey);
+                    }else{
+                        return Mono.error(new RuntimeException(BANMAERP_MESSAGE_ILLEGAL_ARGS_BanmaerpProperties));
+                    }
+                }))
+                .blockFirst();
          return redisOperations.opsForValue().get(bmerp_pros_redisKey).block();
     }
     @Override

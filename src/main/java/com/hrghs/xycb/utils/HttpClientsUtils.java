@@ -1,9 +1,11 @@
 package com.hrghs.xycb.utils;
 
 import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
+import com.hrghs.xycb.aops.RestTemplateInterceptor;
 import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.TokenResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.*;
@@ -26,6 +28,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.hrghs.xycb.domains.BanmaerpProperties.*;
 import static com.hrghs.xycb.domains.BanmaerpProperties.BANMA_HEADER_SIGNMETHOD;
@@ -37,6 +40,7 @@ public class HttpClientsUtils {
     @Autowired
     private ApplicationContext applicationContext;
     @Autowired
+    @Qualifier(value = "bmerp_restTemplate")
     private RestTemplate restTemplate;
 
 
@@ -83,11 +87,20 @@ public class HttpClientsUtils {
         TokenResponseDTO tokenResponse = tokenUtils.getBanmaErpMasterToken(banmaerpProperties).block();
         String access_token = tokenResponse.getAccessToken();
         List<ClientHttpRequestInterceptor> interceptorList =  this.restTemplate.getInterceptors();
+        if (interceptorList.size()>1){
+            for (int i=0;i<interceptorList.size();i++){
+             if (!(interceptorList.get(i) instanceof RestTemplateInterceptor)){
+                 interceptorList.remove(i);
+             }
+            }
+        }
         interceptorList.add((httpRequest, bytes, clientHttpRequestExecution) -> {
             HttpHeaders headers = httpRequest.getHeaders();
+            headers.remove(BANMA_HEADER_ACCESSTOKEN);
             headers.add(BANMA_HEADER_ACCESSTOKEN, access_token);
             return clientHttpRequestExecution.execute(httpRequest,bytes);
         });
+        interceptorList= interceptorList.stream().distinct().collect(Collectors.toList());
         this.restTemplate.setInterceptors(interceptorList);
         return restTemplate;
     }

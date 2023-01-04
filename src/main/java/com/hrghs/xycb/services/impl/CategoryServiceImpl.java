@@ -73,7 +73,9 @@ public class CategoryServiceImpl implements CategoryService {
                             .toDataList(CategoryDTO.class,banmaerpProperties);
             categoryDTOList.forEach(categoryDTO -> categoryDTO.setBanmaerpProperties(banmaerpProperties));
             List<CategoryDTO> categoryDTOS = categoryRepository.saveAll(categoryDTOList);
-            categoryRepository.saveAllAndFlush(categoryDTOS);
+            //categoryRepository.saveAllAndFlush(categoryDTOS);
+            //低版本的spring boot没有saveAllAndFlush
+            categoryRepository.flush();
         }else {
             pageNumber = BanmaParamsUtils.checkPageNum(pageNumber,false);
             Specification<CategoryDTO> specification = createSpecification(ids, name, parentId, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy,banmaerpProperties);
@@ -101,7 +103,8 @@ public class CategoryServiceImpl implements CategoryService {
                         null, null, null, null,true, banmaerpProperties).getContent();
         categoryDTOList.forEach(categoryDTO -> categoryDTO.setBanmaerpProperties(banmaerpProperties));
         List<CategoryDTO> categoryDTOS = categoryRepository.saveAll(categoryDTOList);
-        categoryDTOS=categoryRepository.saveAllAndFlush(categoryDTOS);
+        //categoryDTOS=categoryRepository.saveAllAndFlush(categoryDTOS);
+        categoryRepository.flush();
         return categoryDTOS;
     }
 
@@ -134,7 +137,8 @@ public class CategoryServiceImpl implements CategoryService {
     public List<CategoryDTO> saveCategoryList(List<CategoryDTO> categoryDTOList, BanmaerpProperties banmaerpProperties) {
         categoryDTOList.forEach(categoryDTO -> categoryDTO.setBanmaerpProperties(banmaerpProperties));
         List<CategoryDTO> categoryDTOS = categoryRepository.saveAll(categoryDTOList);
-        categoryDTOS=categoryRepository.saveAllAndFlush(categoryDTOS);
+        //categoryDTOS=categoryRepository.saveAllAndFlush(categoryDTOS);
+        categoryRepository.flush();
         return categoryDTOS;
     }
 

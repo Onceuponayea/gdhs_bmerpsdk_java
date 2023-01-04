@@ -1,5 +1,6 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hrghs.xycb.utils.converters.JodaDateTimeConverter;
@@ -31,6 +32,7 @@ public class OrderTrackingTrackInfoDTO {
 
     @JsonProperty(value = "Date")
     @Convert(converter = JodaDateTimeConverter.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
     private DateTime date;
 
     @JsonProperty(value = "Description")

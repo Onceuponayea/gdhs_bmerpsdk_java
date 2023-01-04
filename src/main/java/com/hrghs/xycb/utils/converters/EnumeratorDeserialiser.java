@@ -22,7 +22,6 @@ public class EnumeratorDeserialiser {
 
         @Override
         public BanmaerpOrderEnums.Status deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
-            System.out.println("OrderStatusDeserialiser\t"+ p.getText());
             return BanmaerpOrderEnums.Status.valueof(p.getText());
         }
     }

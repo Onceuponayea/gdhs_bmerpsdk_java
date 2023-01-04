@@ -1,9 +1,6 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.*;
 import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.utils.converters.JodaDateTimeConverter;
 import com.hrghs.xycb.utils.converters.JpaUUIDConverter;
@@ -42,11 +39,13 @@ public class OrderTrackingDTO {
 
     @JsonProperty(value = "ReceiptedTime")
     @Convert(converter = JodaDateTimeConverter.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
     @Column(name = "receipted_time")
     private DateTime receiptedTime;
 
     @JsonProperty(value = "UpdateTime")
     @Convert(converter = JodaDateTimeConverter.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
     @Column(name = "update_time")
     private DateTime updateTime;
 

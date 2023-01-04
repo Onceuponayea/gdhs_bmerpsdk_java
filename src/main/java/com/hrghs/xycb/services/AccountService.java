@@ -80,10 +80,16 @@ public interface AccountService {
      */
     BanmaErpResponseDTO<Boolean> logoutAccount(Integer id, BanmaerpProperties banmaerpProperties);
 
+
+    BanmaErpResponseDTO<Boolean> logoutAndDeleteAccount(Integer id, BanmaerpProperties banmaerpProperties);
+
+    void deleteAccount(Integer id, BanmaerpProperties banmaerpProperties);
+
     /**
-     * 查询用户店铺权限
-     *
-     * @param id 用户id
+     * 查询店铺权限
+     * @param accountDTO
+     * @param remote
+     * @param banmaerpProperties
      * @return
      */
     DataAccessDTO getDataAccess(AccountDTO accountDTO,Boolean remote, BanmaerpProperties banmaerpProperties);

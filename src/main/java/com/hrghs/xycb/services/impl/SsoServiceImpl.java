@@ -1,6 +1,8 @@
 package com.hrghs.xycb.services.impl;
 
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
@@ -10,23 +12,24 @@ import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.*;
 import com.hrghs.xycb.domains.banmaerpDTO.AccountDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.AppsInfoDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.StoreDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.domains.enums.BanmaerpAccountEnums;
 import com.hrghs.xycb.repositories.BanmaerpPropertiesRepository;
 import com.hrghs.xycb.services.SsoService;
 import com.hrghs.xycb.utils.*;
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.redis.core.ReactiveRedisOperations;
 import org.springframework.data.redis.core.RedisOperations;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
@@ -34,15 +37,17 @@ import java.time.Duration;
 import static com.hrghs.xycb.domains.Constants.*;
 import static jodd.util.StringPool.COLON;
 
-@Service
-@Lazy
 public class SsoServiceImpl implements SsoService {
+    private final static Logger logger = LoggerFactory.getLogger(SsoServiceImpl.class);
     @Autowired
     private HttpClientsUtils httpClients;
     @Autowired
     private BanmaTokenUtils banmaTokenUtils;
     @Autowired
     private BanmaEncryptionUtils encryptionUtils;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Autowired
     private WebHookUtils webHookUtils;
@@ -122,16 +127,36 @@ public class SsoServiceImpl implements SsoService {
         httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         HttpEntity requestBody = new HttpEntity(requestBodyJson,httpHeaders);
         BanmaErpResponseDTO<SsoRegisterResponse> body = null;
+        String responseBody=null;
         try {
-            body = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
-                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.POST, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<SsoRegisterResponse>>() {})
-                    .getBody();
-            SsoRegisterResponse  response = body.getData();
-            response.getAccount().setUserType(BanmaerpAccountEnums.UserType.MasterAccount);
-            response.getAccount().setState(BanmaerpAccountEnums.UserState.Normal);
-            banmaerpPropertiesRepository.saveAndFlush(response.toBanmaerpProperties());
+            logger.info("registering banmaerp master account {}",accountDTO.getPhone());
+            /** in order to keep track of data, to ensure safety, switch to string **/
+//            body = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+//                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.POST, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<SsoRegisterResponse>>() {})
+//                    .getBody();
+            ResponseEntity<String> responseEntity = httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                    .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.POST, requestBody, String.class);
+            responseBody = responseEntity.getBody();
+            if (responseEntity.getStatusCode().is2xxSuccessful()){
+                body = objectMapper.readValue(responseBody, new TypeReference<BanmaErpResponseDTO<SsoRegisterResponse>>() {});
+                SsoRegisterResponse  response = body.getData();
+                response.getAccount().setUserType(BanmaerpAccountEnums.UserType.MasterAccount);
+                response.getAccount().setState(BanmaerpAccountEnums.UserState.Normal);
+                banmaerpPropertiesRepository.saveAndFlush(response.toBanmaerpProperties());
+            }else {
+                JsonNode jsonNode = objectMapper.readValue(responseBody,JsonNode.class);
+                String message = jsonNode.has(BANMAERP_FIELD_MESSAGE)?jsonNode.get(BANMAERP_FIELD_MESSAGE).toString():responseBody;
+                webHookUtils.sendNotice(message, accountDTO.getPhone(), accountDTO.getEmail());
+                logger.error("register banmaerp master account {} error due to {}",accountDTO.getPhone(),message);
+            }
         } catch (Exception e) {
             webHookUtils.sendNotice(e.getMessage(), accountDTO.getPhone(), accountDTO.getEmail());
+            if (StringUtils.hasText(responseBody)){
+                logger.error("register banmaerp master account {} error due to {},\r\n response:\r\n {}",accountDTO.getPhone(),e.getMessage(),responseBody);
+                //todo save response to db
+            }else{
+                logger.error("register banmaerp master account {} error due to {}",accountDTO.getPhone(),e.getMessage());
+            }
             throw new IllegalArgumentException(e.getMessage());
         }
         return body;

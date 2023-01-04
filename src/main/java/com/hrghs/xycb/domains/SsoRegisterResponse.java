@@ -8,6 +8,7 @@ import com.hrghs.xycb.domains.banmaerpDTO.TokenResponseDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -38,7 +39,12 @@ public class SsoRegisterResponse {
         banmaerpProperties.setX_BANMA_MASTER_APP_STATUS(app.getStatus());
         banmaerpProperties.setX_BANMA_MASTER_SIGN_METHOD(app.getAuthType());
         banmaerpProperties.setX_BANMA_MASTER_APP_SCOPES(String.join(COMMA,auth.getScopes()));
-        banmaerpProperties.setBanmaErpAccounts(Arrays.asList(account));
+        if (account!=null){
+            if (account.getCreateTime()==null){
+                account.setCreateTime(DateTime.now());
+            }
+            banmaerpProperties.setBanmaErpAccounts(Arrays.asList(account));
+        }
         return banmaerpProperties;
     }
 }

@@ -9,7 +9,10 @@ import com.hrghs.xycb.domains.BanmaerpURL;
 import com.hrghs.xycb.domains.enums.BanmaerpAuthEnums;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
@@ -34,13 +37,12 @@ import static jodd.util.StringPool.QUESTION_MARK;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 
 public class BanmaTokenUtils {
-
+    private final static Logger logger = LoggerFactory.getLogger(BanmaTokenUtils.class);
     @Autowired
     private BanmaEncryptionUtils encryptionUtils;
-    @Autowired
-    private ApplicationContext context;
 
     @Autowired
+    @Qualifier(value = "bmerp_restTemplate")
     @Lazy
     private RestTemplate restTemplate;
 
@@ -87,6 +89,7 @@ public class BanmaTokenUtils {
         tokenRespReactiveRedisOperations.opsForValue().get(redisKey)
             .map(tokenResponseDTO -> validateToken(tokenResponseDTO,banmaerpProperties,redisKey))
             .switchIfEmpty(Mono.defer(() -> {
+                logger.info("token info for {} does not exist in redis, request token from banmaerp!",banmaerpProperties.getX_BANMA_MASTER_APP_ID());
                 TokenResponseDTO tokenResponseDTO = restTemplate.exchange(BanmaerpURL.banmaerp_gateway.concat(banmaerp_GetToken_GET),HttpMethod.GET,
                                 requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<TokenResponseDTO>>() {})
                         .getBody().getData();

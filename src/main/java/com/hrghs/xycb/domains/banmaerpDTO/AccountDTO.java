@@ -59,12 +59,15 @@ public class AccountDTO {
 
     @Column(name = "createTime")
     @Convert(converter = JodaDateTimeConverter.class)
+    /* banma-erp not compatible with json datetime format */
+    //@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
     @JsonProperty(value = "CreateTime")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private DateTime createTime;
 
     @Column(name = "updateTime")
     @Convert(converter = JodaDateTimeConverter.class)
+    //@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
     @JsonProperty(value = "UpdateTime")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private DateTime updateTime;
@@ -83,7 +86,8 @@ public class AccountDTO {
      */
     @JsonIgnore
     @JoinColumn(name = "banma_master_app_id")
-    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    /* cscade ALL will erase all records with same banma_master_app_id */
+    @ManyToOne(fetch = FetchType.EAGER)
     BanmaerpProperties banmaerpProperties;
     /**
      * @@apiNote

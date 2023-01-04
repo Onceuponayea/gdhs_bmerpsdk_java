@@ -15,7 +15,7 @@ public class JpaEnumConverters {
 
         @Override
         public BanmaerpAccountEnums.UserType convertToEntityAttribute(String dbData) {
-            return StringUtils.hasText(dbData)?BanmaerpAccountEnums.UserType.valueOf(dbData): BanmaerpAccountEnums.UserType.Unknown;
+            return StringUtils.hasText(dbData)?BanmaerpAccountEnums.UserType.valueof(dbData): BanmaerpAccountEnums.UserType.Unknown;
         }
     }
     public static class UserStateConverter implements AttributeConverter<BanmaerpAccountEnums.UserState,String> {
@@ -26,7 +26,7 @@ public class JpaEnumConverters {
 
         @Override
         public BanmaerpAccountEnums.UserState convertToEntityAttribute(String dbData) {
-            return StringUtils.hasText(dbData)?BanmaerpAccountEnums.UserState.valueOf(dbData): BanmaerpAccountEnums.UserState.Unknown;
+            return StringUtils.hasText(dbData)?BanmaerpAccountEnums.UserState.valueof(dbData): BanmaerpAccountEnums.UserState.Unknown;
         }
     }
     public static class OrderStatusConverter implements AttributeConverter<BanmaerpOrderEnums.Status,String>{

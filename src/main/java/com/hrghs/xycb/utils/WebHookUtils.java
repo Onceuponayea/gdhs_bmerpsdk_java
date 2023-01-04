@@ -2,6 +2,7 @@ package com.hrghs.xycb.utils;
 
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
@@ -19,6 +20,7 @@ import static com.hrghs.xycb.domains.Constants.*;
 public class WebHookUtils {
 
     @Autowired
+    @Qualifier(value = "bmerp_restTemplate")
     private RestTemplate restTemplate;
     @Value("${msg.webhook.qywechat.enable:false}")
     private Boolean qywechat_enabled;

@@ -26,12 +26,14 @@ import org.springframework.context.annotation.*;
 import org.springframework.core.env.Environment;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.*;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.data.repository.config.BootstrapMode;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -74,7 +76,7 @@ public class BanmaerpDbAutoConfiguration {
                                                                  @Value("${spring.redis.port:3306}")int port,
                                                                  @Value("${spring.redis.password:}")String password,
                                                                  @Value("${spring.redis.database:1}")int db,
-                                                                 @Value("${spring.redis.timeoutsec:3}")int timeoutSec){
+                                                                 @Value("${spring.redis.timeoutsec:5}")int timeoutSec){
         LettuceClientConfiguration clientConfiguration = LettuceClientConfiguration.builder()
                 .commandTimeout(Duration.ofSeconds(timeoutSec))
                 .shutdownTimeout(Duration.ZERO)
@@ -113,12 +115,28 @@ public class BanmaerpDbAutoConfiguration {
     @DependsOn(value = {"jacksonObjectMapper","jodaModule"})
     public ReactiveRedisOperations<String, BanmaerpProperties> banmaerpPropertiesRedisOperations(@Qualifier("reactiveRedisConnectionFactory")ReactiveRedisConnectionFactory redisConnectionFactory
             ,@Qualifier(value = "jacksonObjectMapper") ObjectMapper objectMapper){
+        RedisSerializationContext redisSerializationContext = redisSerializationContext(objectMapper);
+        return new ReactiveRedisTemplate<>(redisConnectionFactory,redisSerializationContext);
+    }
+    private RedisSerializationContext redisSerializationContext(ObjectMapper objectMapper){
         RedisSerializationContext.RedisSerializationContextBuilder<Long,BanmaerpProperties> builder =
-        RedisSerializationContext.newSerializationContext(new StringRedisSerializer());
+                RedisSerializationContext.newSerializationContext(new StringRedisSerializer());
         Jackson2JsonRedisSerializer<BanmaerpProperties> jsonRedisSerializer = new Jackson2JsonRedisSerializer<BanmaerpProperties>(BanmaerpProperties.class);
         jsonRedisSerializer.setObjectMapper(objectMapper);
-        RedisSerializationContext redisSerializationContext= builder.value(jsonRedisSerializer).build();
-        return new ReactiveRedisTemplate<>(redisConnectionFactory,redisSerializationContext);
+        return builder.value(jsonRedisSerializer).build();
+    }
+    @Bean(name = "banmaerpPropertiesRedisTemplate")
+    @DependsOn(value = {"jacksonObjectMapper","jodaModule"})
+    public RedisTemplate<String,BanmaerpProperties> banmaerpPropertiesRedisTemplate(RedisConnectionFactory connectionFactory
+            ,@Qualifier(value = "jacksonObjectMapper") ObjectMapper objectMapper){
+        RedisTemplate<String,BanmaerpProperties> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(connectionFactory);
+        Jackson2JsonRedisSerializer<BanmaerpProperties> redisSerializer = new Jackson2JsonRedisSerializer<>(BanmaerpProperties.class);
+        redisSerializer.setObjectMapper(objectMapper);
+        redisTemplate.setValueSerializer(redisSerializer);
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.afterPropertiesSet();
+        return redisTemplate;
     }
 
     @Bean
@@ -217,6 +235,7 @@ public class BanmaerpDbAutoConfiguration {
         jpaPros.put(JPA_PROS_TRANSACTION_TYPE,"jta");
         jpaPros.put(JPA_PROS_HIBERNATE_SESSION_CONTEXT_CLASS,"jta");
         jpaPros.put(JPA_PROS_HIBERNATE_ENABLE_LAZYLOAD_NOTRANS,"true");
+        jpaPros.put(JPA_PROS_USE_TIMEZONE,"true");
         jpaPros.put(JPA_PROS_HIBERNATE_DIALECT, MySQL8Dialect.class.getName());
         jpaPros.put(JPA_PROS_HIBERNATE_ALLOW_UPDATE_OUTSIDE_TRANSACATION,true);
         jpaPros.put(JPA_PROS_HIBERNATE_TRANSACTIONMANAGER_COORDINATE_CLASS,"jdbc");//full name: org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl

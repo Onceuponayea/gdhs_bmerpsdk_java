@@ -41,8 +41,10 @@ public class Constants {
     public static final String JPA_PROS_HIBERNATE_ENABLE_LAZYLOAD_NOTRANS = "hibernate.enable_lazy_load_no_trans";
     public static final String JPA_PROS_HIBERNATE_FORMAT_SQL = "hibernate.format_sql";
     public static final String JPA_PROS_TRANSACTION_TYPE = "javax.persistence.transactionType";
+    public static final String JPA_PROS_USE_TIMEZONE = "useTimeZone";
 
-//    spring.jpa.hibernate.naming.physical-strategy=org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+
+    //    spring.jpa.hibernate.naming.physical-strategy=org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 //    spring.jpa.hibernate.naming.implicit-strategy=org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
 //    spring.jpa.hibernate.ddl-auto=update
 //    spring.jpa.generate-ddl=true
@@ -69,7 +71,7 @@ public class Constants {
     public static final String BANMAERP_FIELD_PREFIX = "banmaerp";
     public static final String BANMAERP_FIELD_TOKEN = "token";
     public static final String BANMAERP_FIELD_APPINFO = "appinfo";
-
+    public static final String BANMAERP_FIELD_MESSAGE= "Message";
     public static final String BANMAERP_FIELD_SSOTOKEN = "ssotoken";
     public static final String BANMAERP_FIELD_TASK = "task";
     public static final String BANMAERP_FIELD_CLIENTIP = "clientIp";

@@ -14,6 +14,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.hrghs.xycb.domains.Constants.DATETIME_FORMAT_DASH_SHORT;
+import static com.hrghs.xycb.domains.Constants.DATETIME_FORMAT_SLASH_SHORT;
+
 public class DateTimeUtils {
     private static final Logger logger = LoggerFactory.getLogger(DateTimeUtils.class);
     private static final Map<String, String> DATE_FORMAT_REGEXPS = new HashMap<String, String>() {{
@@ -43,8 +46,10 @@ public class DateTimeUtils {
         put("^\\d{4}-[01]\\d-[0-3]\\dT[0-2]\\d:[0-5]\\d:[0-5]\\d{2}$","yyyy-MM-ddTHH:mm:ss");//2019-11-15T13:34:22.178Z
     }};
     private static final List<DateTimeFormatter> defaultDateTimeFormatters = Arrays.asList(
-            DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss"),
-            DateTimeFormat.forPattern("yyyy/MM/dd HH:mm:ss"),
+            //DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss"),
+//            DateTimeFormat.forPattern("yyyy/MM/dd HH:mm:ss"),
+            DateTimeFormat.forPattern(DATETIME_FORMAT_DASH_SHORT),
+            DateTimeFormat.forPattern(DATETIME_FORMAT_SLASH_SHORT),
             ISODateTimeFormat.dateHourMinuteSecond(),
             ISODateTimeFormat.dateHourMinuteSecondFraction(),
             ISODateTimeFormat.dateHourMinuteSecondMillis(),
@@ -108,7 +113,8 @@ public class DateTimeUtils {
         return new Date(dateTime.getMillis());
     }
     public Timestamp joda2SQLTimeStamp(DateTime dateTime){
-        return (dateTime!=null)?new Timestamp(dateTime.getMillis()):null;
+        //return (dateTime!=null)?new Timestamp(dateTime.getMillis()):null;
+        return (dateTime!=null)?Timestamp.valueOf(dateTime.toString(DATETIME_FORMAT_DASH_SHORT)):null;
     }
     public DateTime sqlTimeStamp2JodaDateTime(Timestamp timestamp){
         return (timestamp!=null)?DateTime.parse(timestamp.toLocalDateTime().toString()):null;

@@ -116,7 +116,8 @@ public class StoreServiceImpl implements StoreService {
                             .getBody()
                             .toDataList(StoreDTO.class,banmaerpProperties);
             storeDTOList.forEach(storeDTO -> storeDTO.setBanmaerpProperties(banmaerpProperties));
-            storeRepository.saveAll(storeDTOList);
+            List<StoreDTO> storeDTOS = storeRepository.saveAll(storeDTOList);
+            //storeRepository.saveAllAndFlush(storeDTOS);
             storeRepository.flush();
         }else {
             pageNumber = BanmaParamsUtils.checkPageNum(pageNumber,false);
@@ -202,7 +203,8 @@ public class StoreServiceImpl implements StoreService {
     public List<StoreDTO> saveStoreList(List<StoreDTO> storeDTOList, BanmaerpProperties banmaerpProperties) {
         storeDTOList.forEach(storeDTO -> storeDTO.setBanmaerpProperties(banmaerpProperties));
         List<StoreDTO> storeDTOS = storeRepository.saveAll(storeDTOList);
-        storeDTOS=storeRepository.saveAllAndFlush(storeDTOS);
+        //storeDTOS=storeRepository.saveAllAndFlush(storeDTOS);
+        storeRepository.flush();
         return storeDTOS;
     }
 
@@ -220,14 +222,14 @@ public class StoreServiceImpl implements StoreService {
             List<Predicate> predicateList = new ArrayList<>();
 
             if (ids != null && ids != "") {
-                CriteriaBuilder.In<String> in = criteriaBuilder.in(root.get("ID"));
+                CriteriaBuilder.In<Long> in = criteriaBuilder.in(root.get("ID"));
                 if (ids.contains(",")) {
                     String[] id = ids.split(",");
                     for (int i = 0; i < id.length; i++) {
-                        in.value(id[i]);
+                        in.value(Long.parseLong(id[i]));
                     }
                 } else {
-                    in.value(ids);
+                    in.value(Long.parseLong(ids));
                 }
                 predicateList.add(in);
             }

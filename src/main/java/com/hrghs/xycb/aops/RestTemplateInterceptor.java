@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.ReactiveRedisOperations;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpRequestExecution;
@@ -32,18 +34,18 @@ public class RestTemplateInterceptor implements ClientHttpRequestInterceptor {
     public RestTemplateInterceptor(){}
 
     public RestTemplateInterceptor(ReactiveRedisOperations<String, TokenResponseDTO> arg
-            , ReactiveRedisOperations<String, BanmaerpProperties> arg2,BanmaTokenUtils arg3){
+            , BanmaTokenUtils arg3, RedisTemplate<String,BanmaerpProperties> arg4){
         this.tokenRespReactiveRedisOperations = arg;
-        this.bmerp_props_redisOps = arg2;
         this.banmaTokenUtils = arg3;
+        this.redisTemplate =  arg4;
     }
 
     private static final Logger logger = LoggerFactory.getLogger(RestTemplateInterceptor.class);
 
 
     private ReactiveRedisOperations<String, TokenResponseDTO> tokenRespReactiveRedisOperations;
-    private ReactiveRedisOperations<String, BanmaerpProperties> bmerp_props_redisOps;
     private BanmaTokenUtils banmaTokenUtils;
+    private RedisTemplate<String,BanmaerpProperties> redisTemplate;
     @Override
     public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws IOException {
         List<String> appIds = request.getHeaders().get(BanmaerpProperties.BANMA_HEADER_APPID);
@@ -53,9 +55,9 @@ public class RestTemplateInterceptor implements ClientHttpRequestInterceptor {
                     .concat(appId);
             String bmerpProps_redisKey_pattern = BANMAERP_FIELD_PREFIX.concat(COLON).concat(BANMAERP_FIELD_APPINFO).concat(COLON)
                     .concat(STAR).concat(DASH).concat(appId);
-            String redisKey = bmerp_props_redisOps.keys(bmerpProps_redisKey_pattern).blockFirst();
             /** 先正常执行过一遍拿到response再根据结果判断是否需要retry **/
             ClientHttpResponse response = execution.execute(request,body);
+            String redisKey = redisTemplate.keys(bmerpProps_redisKey_pattern).toArray(new String[0])[0];
             if (!StringUtils.hasText(redisKey)){
                 logger.error("redis key {} has been mysteriously taken away, couldn't find {} !",bmerpProps_redisKey_pattern,redisKey);
             }else {
@@ -73,7 +75,7 @@ public class RestTemplateInterceptor implements ClientHttpRequestInterceptor {
     }
     private ClientHttpResponse retryUnauthorized(HttpRequest request, byte[] body, ClientHttpRequestExecution execution
             ,String redisKey){
-        BanmaerpProperties banmaerpProperties = bmerp_props_redisOps.opsForValue().get(redisKey).block();
+        BanmaerpProperties banmaerpProperties = redisTemplate.opsForValue().get(redisKey);
         RetryTemplate retryTemplate = new RetryTemplate();
         retryTemplate.setRetryPolicy(new SimpleRetryPolicy(1));
         TokenResponseDTO tokenResponseDTO =banmaTokenUtils.getBanmaErpMasterTokenMono(banmaerpProperties).block();

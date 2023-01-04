@@ -21,7 +21,6 @@ public class EnumeratorSerialiser {
 
         @Override
         public void serialize(BanmaerpOrderEnums.Status value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-            System.out.println("订单状态序列化:\t\t" +value.name());
             gen.writeString(value.name());
         }
     }

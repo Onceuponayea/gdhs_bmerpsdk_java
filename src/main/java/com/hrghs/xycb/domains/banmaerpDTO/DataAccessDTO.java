@@ -46,6 +46,7 @@ public class DataAccessDTO {
     @Convert(converter = JodaDateTimeConverter.class)
     @JsonProperty(value = "CreateTime")
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
     @Column(name = "create_time")
     private DateTime createTime;
 
@@ -53,6 +54,7 @@ public class DataAccessDTO {
     @JsonProperty(value = "UpdateTime")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @Column(name = "update_time")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
     private DateTime updateTime;
 
     @JsonIgnore

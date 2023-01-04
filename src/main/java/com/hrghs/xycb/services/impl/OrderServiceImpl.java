@@ -8,7 +8,7 @@ import com.hrghs.xycb.domains.BanmaerpURL;
 import com.hrghs.xycb.domains.banmaerpDTO.*;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.domains.enums.BanmaerpOrderEnums;
-import com.hrghs.xycb.domains.resultSet.Monetary;
+import com.hrghs.xycb.domains.resultSet.OrderStatistics;
 import com.hrghs.xycb.repositories.OrderFulfillmentRepository;
 import com.hrghs.xycb.repositories.OrderMasterRepository;
 import com.hrghs.xycb.repositories.OrderRepository;
@@ -196,7 +196,8 @@ public class OrderServiceImpl implements OrderService {
                 orderFulfillmentDTO.setBanmaerpProperties(banmaerpProperties);
             });
             orderFulfillmentDTOList = fulfillmentRepository.saveAll(orderFulfillmentDTOList);
-            orderFulfillmentDTOList =fulfillmentRepository.saveAllAndFlush(orderFulfillmentDTOList);
+            //orderFulfillmentDTOList =fulfillmentRepository.saveAllAndFlush(orderFulfillmentDTOList);
+            fulfillmentRepository.flush();
         }else{
             orderFulfillmentDTOList = fulfillmentRepository.findOrderFulfillmentDTOSByOrderId(orderId);
         }
@@ -232,7 +233,8 @@ public class OrderServiceImpl implements OrderService {
                 orderFulfillmentDTO.setBanmaerpProperties(banmaerpProperties);
             });
             orderTrackingDTOList = trackingRepository.saveAll(orderTrackingDTOList);
-            orderTrackingDTOList = trackingRepository.saveAllAndFlush(orderTrackingDTOList);
+            //orderTrackingDTOList = trackingRepository.saveAllAndFlush(orderTrackingDTOList);
+            trackingRepository.flush();
         }else{
             orderTrackingDTOList = trackingRepository.findOrderTrackingDTOSByOrderId(orderId);
         }
@@ -247,9 +249,12 @@ public class OrderServiceImpl implements OrderService {
                 .map(orderDTO -> orderDTO.getMaster().getID())
                 .distinct()
                 .collect(Collectors.toList());
-        List<OrderMasterDTO> existingOrderMasters = orderMasterRepository.findByMasterIds(orderMasterId)
-                .parallelStream()
-                .collect(Collectors.toList());;
+        List<OrderMasterDTO> existingOrderMasters = new ArrayList<>();
+        if (orderMasterId!=null && orderMasterId.size()>0){
+            existingOrderMasters = orderMasterRepository.findByMasterIds(orderMasterId)
+                    .parallelStream()
+                    .collect(Collectors.toList());
+        }
         /**
          * prevent duplicate key for orderMasterId
          */
@@ -268,7 +273,8 @@ public class OrderServiceImpl implements OrderService {
             orderDTO.getMaster().setOrderDTO(orderDTO);
             orderDTO.getMaster().setBanmaerpProperties(banmaerpProperties);
         });
-        orderDTOList = orderRepository.saveAllAndFlush(orderDTOList);
+        orderDTOList = orderRepository.saveAll(orderDTOList);
+        orderRepository.flush();
         return orderDTOList;
     }
 
@@ -285,83 +291,139 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @CheckBanmaerpProperties
-    public Monetary countAmountByStatus(BanmaerpOrderEnums.Status orderStatus,BanmaerpProperties banmaerpProperties) {
+    public OrderStatistics countAmountByStatus(BanmaerpOrderEnums.Status orderStatus, DateTime payTimeStart, DateTime payTimeEnd, BanmaerpProperties banmaerpProperties) {
         if (orderStatus.equals(BanmaerpOrderEnums.Status.All)){
-            return countAmount(banmaerpProperties);
+            return countAmount(payTimeStart,payTimeEnd,banmaerpProperties);
         }
-        Object result = orderRepository.countAmountByStatusAndBanmaerpProperties(banmaerpProperties.getX_BANMA_MASTER_APP_ID(),orderStatus.getValue());
-        Object[] resultset= (Object[])result;
-        Monetary monetary = new Monetary();
-        monetary.setPay_Amount((BigDecimal)resultset[0]);
-        monetary.setPay_amount_usd((BigDecimal) resultset[1]);
-        return monetary;
-    }
-
-    @Override
-    @CheckBanmaerpProperties
-    public Monetary countAmount(BanmaerpProperties banmaerpProperties) {
-        Object result = orderRepository.countAmountByBanmaerpProperties(banmaerpProperties.getX_BANMA_MASTER_APP_ID());
-        Object[] resultset= (Object[])result;
-        Monetary monetary = new Monetary();
-        monetary.setPay_Amount((BigDecimal)resultset[0]);
-        monetary.setPay_amount_usd((BigDecimal) resultset[1]);
-        return monetary;
-    }
-
-    @Override
-    @CheckBanmaerpProperties
-    public Monetary countAmountByStatusAndAccount(BanmaerpOrderEnums.Status orderStatus, AccountDTO accountDTO, BanmaerpProperties banmaerpProperties) {
-        if (orderStatus.equals(BanmaerpOrderEnums.Status.All)){
-            return countAmountByAccount(accountDTO,banmaerpProperties);
+        Object result;
+        if (payTimeStart!=null || payTimeEnd !=null){
+            result = orderRepository.countAmountByStatusAndBanmaerpPropertiesAndPayTime(banmaerpProperties.getX_BANMA_MASTER_APP_ID(),orderStatus.getValue()
+                    ,payTimeStart.toString(), payTimeEnd.toString());
+        }else {
+            result = orderRepository.countAmountByStatusAndBanmaerpProperties(banmaerpProperties.getX_BANMA_MASTER_APP_ID(),orderStatus.getValue());
         }
-        Object result =  orderRepository.countAmountByAccountAndStatus(banmaerpProperties.getX_BANMA_MASTER_APP_ID(),orderStatus.getValue(),accountDTO.getID().toString().concat(DASH));
         Object[] resultset= (Object[])result;
-        Monetary monetary = new Monetary();
-        monetary.setPay_Amount((BigDecimal)resultset[0]);
-        monetary.setPay_amount_usd((BigDecimal) resultset[1]);
-        return monetary;
-    }
-
-    @Override
-    public Monetary countAmountByAccount(AccountDTO accountDTO, BanmaerpProperties banmaerpProperties) {
-        Object result = orderRepository.countAmountByAccount(banmaerpProperties.getX_BANMA_MASTER_APP_ID(),accountDTO.getID().toString().concat(DASH));
-        Object[] resultset= (Object[])result;
-        Monetary monetary = new Monetary();
-        monetary.setPay_Amount((BigDecimal)resultset[0]);
-        monetary.setPay_amount_usd((BigDecimal) resultset[1]);
-        return monetary;
+        OrderStatistics orderStatistics = new OrderStatistics();
+        orderStatistics.setPay_Amount((BigDecimal)resultset[0]);
+        orderStatistics.setPay_amount_usd((BigDecimal) resultset[1]);
+        orderStatistics.setOrderQuantities((Long) resultset[2]);
+        orderStatistics.setItemQuantities((Long) resultset[3]);
+        return orderStatistics;
     }
 
     @Override
     @CheckBanmaerpProperties
-    public Long countByStatus(BanmaerpOrderEnums.Status orderStatus,BanmaerpProperties banmaerpProperties) {
+    public OrderStatistics countAmount(DateTime payTimeStart, DateTime payTimeEnd, BanmaerpProperties banmaerpProperties) {
+        Object result;
+        if (payTimeStart!=null || payTimeEnd !=null){
+            result = orderRepository.countAmountByBanmaerpPropertiesAndPayTime(banmaerpProperties.getX_BANMA_MASTER_APP_ID()
+                    ,payTimeStart.toString(), payTimeEnd.toString());
+        }else{
+            result = orderRepository.countAmountByBanmaerpProperties(banmaerpProperties.getX_BANMA_MASTER_APP_ID());
+        }
+        Object[] resultset= (Object[])result;
+        OrderStatistics orderStatistics = new OrderStatistics();
+        orderStatistics.setPay_Amount((BigDecimal)resultset[0]);
+        orderStatistics.setPay_amount_usd((BigDecimal) resultset[1]);
+        orderStatistics.setOrderQuantities(Long.parseLong(resultset[2].toString()));
+        orderStatistics.setItemQuantities(Long.parseLong(resultset[3].toString()));
+        return orderStatistics;
+    }
+
+    @Override
+    @CheckBanmaerpProperties
+    public OrderStatistics countAmountByStatusAndAccount(BanmaerpOrderEnums.Status orderStatus, DateTime payTimeStart, DateTime payTimeEnd, AccountDTO accountDTO, BanmaerpProperties banmaerpProperties) {
         if (orderStatus.equals(BanmaerpOrderEnums.Status.All)){
+            return countAmountByAccount(accountDTO,payTimeStart,payTimeEnd,banmaerpProperties);
+        }
+        Object result;
+        if (payTimeStart!=null || payTimeEnd !=null){
+            result =  orderRepository.countAmountByAccountAndStatusAndPayTime(banmaerpProperties.getX_BANMA_MASTER_APP_ID(),orderStatus.getValue()
+                    ,accountDTO.getID().toString().concat(DASH),payTimeStart.toString(), payTimeEnd.toString());
+        }else{
+            result =  orderRepository.countAmountByAccountAndStatus(banmaerpProperties.getX_BANMA_MASTER_APP_ID(),orderStatus.getValue(),accountDTO.getID().toString().concat(DASH));
+        }
+        Object[] resultset= (Object[])result;
+        OrderStatistics orderStatistics = new OrderStatistics();
+        orderStatistics.setPay_Amount((BigDecimal)resultset[0]);
+        orderStatistics.setPay_amount_usd((BigDecimal) resultset[1]);
+        orderStatistics.setOrderQuantities((Long) resultset[2]);
+        orderStatistics.setItemQuantities((Long) resultset[3]);
+        return orderStatistics;
+    }
+
+    @Override
+    public OrderStatistics countAmountByAccount(AccountDTO accountDTO, DateTime payTimeStart, DateTime payTimeEnd, BanmaerpProperties banmaerpProperties) {
+        Object result;
+        if (payTimeStart!=null || payTimeEnd !=null){
+            result = orderRepository.countAmountByAccountAndPayTime(banmaerpProperties.getX_BANMA_MASTER_APP_ID(),accountDTO.getID().toString().concat(DASH)
+                    ,payTimeStart.toString(), payTimeEnd.toString());
+        }else {
+            result = orderRepository.countAmountByAccount(banmaerpProperties.getX_BANMA_MASTER_APP_ID(),accountDTO.getID().toString().concat(DASH));
+
+        }
+        Object[] resultset= (Object[])result;
+        OrderStatistics orderStatistics = new OrderStatistics();
+        orderStatistics.setPay_Amount((BigDecimal)resultset[0]);
+        orderStatistics.setPay_amount_usd((BigDecimal) resultset[1]);
+        orderStatistics.setOrderQuantities((Long) resultset[2]);
+        orderStatistics.setItemQuantities((Long) resultset[3]);
+        return orderStatistics;
+    }
+
+    @Override
+    @CheckBanmaerpProperties
+    public Long countByStatus(BanmaerpOrderEnums.Status orderStatus,DateTime payTimeStart,DateTime payTimeEnd,BanmaerpProperties banmaerpProperties) {
+        if (payTimeStart!=null || payTimeEnd !=null){
+            if (orderStatus.equals(BanmaerpOrderEnums.Status.All)){
+                return orderRepository.countByBanmaerpPropertiesAndPayTime(banmaerpProperties.getX_BANMA_MASTER_APP_ID(),payTimeStart.toString(), payTimeEnd.toString());
+            }
+            return orderRepository.countByStatusAndBanmaerpPropertiesAndPayTime(orderStatus.getValue(),banmaerpProperties.getX_BANMA_MASTER_APP_ID(),payTimeStart.toString(), payTimeEnd.toString());
+        }else{
+            if (orderStatus.equals(BanmaerpOrderEnums.Status.All)){
+                return orderRepository.countByBanmaerpProperties(banmaerpProperties.getX_BANMA_MASTER_APP_ID());
+            }
+            return orderRepository.countByStatusAndBanmaerpProperties(orderStatus.getValue(),banmaerpProperties.getX_BANMA_MASTER_APP_ID());
+        }
+    }
+
+    @Override
+    @CheckBanmaerpProperties
+    public Long countByStatusAndAccount(BanmaerpOrderEnums.Status orderStatus, AccountDTO accountDTO,DateTime payTimeStart,DateTime payTimeEnd,BanmaerpProperties banmaerpProperties) {
+        if (payTimeStart!=null || payTimeEnd !=null){
+            return orderRepository.countByAccountAndStatusAndPayTime(banmaerpProperties.getX_BANMA_MASTER_APP_ID(),orderStatus.getValue(),accountDTO.getID().toString(),payTimeStart.toString(), payTimeEnd.toString());
+        }else {
+            return orderRepository.countByAccountAndStatus(banmaerpProperties.getX_BANMA_MASTER_APP_ID(),orderStatus.getValue(),accountDTO.getID().toString());
+        }
+    }
+
+    @Override
+    @CheckBanmaerpProperties
+    public Long countAll(DateTime payTimeStart,DateTime payTimeEnd,BanmaerpProperties banmaerpProperties) {
+        if (payTimeStart!=null || payTimeEnd !=null){
+            return orderRepository.countByBanmaerpPropertiesAndPayTime(banmaerpProperties.getX_BANMA_MASTER_APP_ID(),payTimeStart.toString(), payTimeEnd.toString());
+        }else {
             return orderRepository.countByBanmaerpProperties(banmaerpProperties.getX_BANMA_MASTER_APP_ID());
         }
-        return orderRepository.countByStatusAndBanmaerpProperties(orderStatus.getValue(),banmaerpProperties.getX_BANMA_MASTER_APP_ID());
     }
 
     @Override
     @CheckBanmaerpProperties
-    public Long countByStatusAndAccount(BanmaerpOrderEnums.Status orderStatus, AccountDTO accountDTO,BanmaerpProperties banmaerpProperties) {
-        return orderRepository.countByAccountAndStatus(banmaerpProperties.getX_BANMA_MASTER_APP_ID(),orderStatus.getValue(),accountDTO.getID().toString());
+    public Long countAllByAccount(AccountDTO accountDTO,DateTime payTimeStart,DateTime payTimeEnd,BanmaerpProperties banmaerpProperties) {
+        if (payTimeStart!=null || payTimeEnd !=null){
+            return orderRepository.countByAccountAndPayTime(accountDTO.getID().toString(),banmaerpProperties.getX_BANMA_MASTER_APP_ID(),payTimeStart.toString(), payTimeEnd.toString());
+        }else {
+            return orderRepository.countByAccount(accountDTO.getID().toString(),banmaerpProperties.getX_BANMA_MASTER_APP_ID());
+        }
     }
 
     @Override
-    @CheckBanmaerpProperties
-    public Long countAll(BanmaerpProperties banmaerpProperties) {
-        return orderRepository.countByBanmaerpProperties(banmaerpProperties.getX_BANMA_MASTER_APP_ID());
-    }
-
-    @Override
-    @CheckBanmaerpProperties
-    public Long countAllByAccount(AccountDTO accountDTO, BanmaerpProperties banmaerpProperties) {
-        return orderRepository.countByAccount(accountDTO.getID().toString(),banmaerpProperties.getX_BANMA_MASTER_APP_ID());
-    }
-
-    @Override
-    public Long countOrderByStore(Long storeId) {
-        return orderMasterRepository.countOrderByStore(storeId);
+    public Long countOrderByStore(DateTime payTimeStart,DateTime payTimeEnd,Long storeId) {
+        if (payTimeStart!=null || payTimeEnd !=null){
+            return orderMasterRepository.countOrderByStoreAndPayTime(storeId,payTimeStart.toString(), payTimeEnd.toString());
+        }else{
+            return orderMasterRepository.countOrderByStore(storeId);
+        }
     }
 
     private Specification<OrderDTO> createSpecification(String ids, String storeId, String platform, String status, String payStatus

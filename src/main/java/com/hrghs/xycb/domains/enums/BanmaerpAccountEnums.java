@@ -74,6 +74,13 @@ public class BanmaerpAccountEnums {
         public String getValue(){
             return value;
         }
+        public static UserType valueof(String _value){
+            switch (_value){
+                case "MasterAccount": return MasterAccount;
+                case "SubAccount": return SubAccount;
+            }
+            return Unknown;
+        }
         UserType(String _value){
             this.value =  _value;
         }
@@ -85,6 +92,13 @@ public class BanmaerpAccountEnums {
         private String value;
         public String getValue(){
             return value;
+        }
+        public static UserState valueof(String _value){
+            switch (_value) {
+                case "正常": return Normal;
+                case "离职": return Resigned;
+            }
+            return Unknown;
         }
         UserState(String _value){
             this.value = _value;

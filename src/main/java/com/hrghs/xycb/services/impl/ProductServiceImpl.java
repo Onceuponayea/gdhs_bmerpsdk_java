@@ -419,7 +419,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @CheckBanmaerpProperties
     public List<ProductDTO> saveProducts(List<ProductDTO> products,BanmaerpProperties banmaerpProperties) {
-        List<ProductDTO> saveOrUpdateProducts = products ;
+        List<ProductDTO> saveOrUpdateProducts = new ArrayList<>(products.size()) ;
+        saveOrUpdateProducts.addAll(products);
+        //Collections.copy(saveOrUpdateProducts,products);
         List<Long> spuIds = products.parallelStream().map(productDTO -> productDTO.getSPU().getSPUID())
                 .distinct().collect(Collectors.toList());
         List<ProductSpuDTO> existingProducts = productSpuRepository.findProductSpuDTOSBySPUIDIn(spuIds);
@@ -443,7 +445,9 @@ public class ProductServiceImpl implements ProductService {
             productDTO.getSKUs().forEach(skusDTO -> skusDTO.setBanmaerpProperties(banmaerpProperties));
             productDTO.getSuppliers().forEach(suppliersDTO -> suppliersDTO.setBanmaerpProperties(banmaerpProperties));
         });
-        return productRepository.saveAllAndFlush(saveOrUpdateProducts);
+        saveOrUpdateProducts = productRepository.saveAll(saveOrUpdateProducts);
+        productRepository.flush();
+        return saveOrUpdateProducts;
     }
 
     @Override
@@ -477,7 +481,8 @@ public class ProductServiceImpl implements ProductService {
         //todo find existing, one to one
         suppliersDTOS.forEach(suppliersDTO -> suppliersDTO.setBanmaerpProperties(banmaerpProperties));
         List<ProductSuppliersDTO> productSuppliersDTOS =  suppliersRepository.saveAll(suppliersDTOS);
-        productSuppliersDTOS=suppliersRepository.saveAllAndFlush(productSuppliersDTOS);
+        //productSuppliersDTOS=suppliersRepository.saveAllAndFlush(productSuppliersDTOS);
+        suppliersRepository.flush();
         return productSuppliersDTOS;
     }
 
@@ -491,7 +496,8 @@ public class ProductServiceImpl implements ProductService {
     public List<ProductSkusDTO> saveSkus(List<ProductSkusDTO> productSkusDTOS, BanmaerpProperties banmaerpProperties) {
         productSkusDTOS.forEach(productSkusDto -> productSkusDto.setBanmaerpProperties(banmaerpProperties));
         List<ProductSkusDTO> skusDTOS = skusRepository.saveAll(productSkusDTOS);
-        skusDTOS = skusRepository.saveAllAndFlush(skusDTOS);
+        //skusDTOS = skusRepository.saveAllAndFlush(skusDTOS);
+        skusRepository.flush();
         return skusDTOS;
     }
 
@@ -503,7 +509,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<ProductTagsDTO> saveProductTags(List<ProductTagsDTO> productTagsDTOS, BanmaerpProperties banmaerpProperties) {
-        List<ProductTagsDTO> tagsDTOS =  productTagsRepository.saveAllAndFlush(productTagsDTOS);
+        List<ProductTagsDTO> tagsDTOS =  productTagsRepository.saveAll(productTagsDTOS);
+        productTagsRepository.flush();
         return tagsDTOS;
     }
 

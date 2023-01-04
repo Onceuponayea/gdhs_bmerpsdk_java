@@ -4,11 +4,10 @@ package com.hrghs.xycb.services;
 import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.*;
 import com.hrghs.xycb.domains.enums.BanmaerpOrderEnums;
-import com.hrghs.xycb.domains.resultSet.Monetary;
+import com.hrghs.xycb.domains.resultSet.OrderStatistics;
 import org.joda.time.DateTime;
 import org.springframework.data.domain.Page;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 public interface OrderService {
@@ -96,29 +95,28 @@ public interface OrderService {
     List<OrderDTO> saveAll(Iterable<OrderDTO> orderDTOS, BanmaerpProperties banmaerpProperties);
 
     OrderDTO save(OrderDTO orderDTO, BanmaerpProperties banmaerpProperties);
-
+//todo 1、加时间 2、统计件数
     /**
      * 根据订单状态统计订单金额，先按人民币和美金，上层应用自行换算汇率；历史汇率和换算时汇率差由上层应用自行处理
      * @param orderStatus
      * @param banmaerpProperties
      * @return
      */
-    Monetary countAmountByStatus(BanmaerpOrderEnums.Status orderStatus,BanmaerpProperties banmaerpProperties);
+    OrderStatistics countAmountByStatus(BanmaerpOrderEnums.Status orderStatus, DateTime payTimeStart, DateTime payTimeEnd, BanmaerpProperties banmaerpProperties);
 
-    Monetary countAmount(BanmaerpProperties banmaerpProperties);
+    OrderStatistics countAmount(DateTime payTimeStart, DateTime payTimeEnd, BanmaerpProperties banmaerpProperties);
 
-    Monetary countAmountByStatusAndAccount(BanmaerpOrderEnums.Status orderStatus, AccountDTO accountDTO, BanmaerpProperties banmaerpProperties);
+    OrderStatistics countAmountByStatusAndAccount(BanmaerpOrderEnums.Status orderStatus, DateTime payTimeStart, DateTime payTimeEnd, AccountDTO accountDTO, BanmaerpProperties banmaerpProperties);
 
-    Monetary countAmountByAccount(AccountDTO accountDTO,BanmaerpProperties banmaerpProperties);
+    OrderStatistics countAmountByAccount(AccountDTO accountDTO, DateTime payTimeStart, DateTime payTimeEnd, BanmaerpProperties banmaerpProperties);
 
+    Long countByStatus(BanmaerpOrderEnums.Status orderStatus,DateTime payTimeStart,DateTime payTimeEnd,BanmaerpProperties banmaerpProperties);
 
-    Long countByStatus(BanmaerpOrderEnums.Status orderStatus,BanmaerpProperties banmaerpProperties);
+    Long countByStatusAndAccount(BanmaerpOrderEnums.Status orderStatus, AccountDTO accountDTO,DateTime payTimeStart,DateTime payTimeEnd,BanmaerpProperties banmaerpProperties);
 
-    Long countByStatusAndAccount(BanmaerpOrderEnums.Status orderStatus, AccountDTO accountDTO,BanmaerpProperties banmaerpProperties);
+    Long countAll(DateTime payTimeStart,DateTime payTimeEnd,BanmaerpProperties banmaerpProperties);
 
-    Long countAll(BanmaerpProperties banmaerpProperties);
+    Long countAllByAccount(AccountDTO accountDTO,DateTime payTimeStart,DateTime payTimeEnd,BanmaerpProperties banmaerpProperties);
 
-    Long countAllByAccount(AccountDTO accountDTO,BanmaerpProperties banmaerpProperties);
-
-    Long countOrderByStore(Long storeId);
+    Long countOrderByStore(DateTime payTimeStart,DateTime payTimeEnd,Long storeId);
 }

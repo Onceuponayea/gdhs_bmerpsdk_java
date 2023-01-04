@@ -1,6 +1,7 @@
 package com.hrghs.xycb.domains;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.gson.Gson;
 import com.hrghs.xycb.domains.banmaerpDTO.AccountDTO;
 import com.hrghs.xycb.utils.converters.JpaUUIDConverter;
 import lombok.Data;
@@ -64,6 +65,7 @@ public class BanmaerpProperties {
      * dynamic added in runtime. must persist to db
      */
     @JsonIgnore
+    //@OneToMany(cascade = CascadeType.PERSIST,fetch = FetchType.LAZY)
     @OneToMany(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     @JoinColumn(name = "banma_master_app_id")
     private List<AccountDTO> banmaErpAccounts;
@@ -72,5 +74,19 @@ public class BanmaerpProperties {
         X_BANMA_MASTER_SIGN_ALGORITHM = StringUtils.hasText(X_BANMA_MASTER_SIGN_ALGORITHM)?
                 X_BANMA_MASTER_SIGN_ALGORITHM:SHA256.split("#")[1];
         return X_BANMA_MASTER_SIGN_ALGORITHM;
+    }
+    @Override
+    public String toString(){
+        /** prevent dead loop **/
+        return "{\n" +
+                "  \"X_BANMA_APP_NAME\": \""+ this.getX_BANMA_APP_NAME()+"\",\n" +
+                "  \"X_BANMA_MASTER_APP_ID\": \""+ this.getX_BANMA_MASTER_APP_ID()+"\" ,\n" +
+                "  \"X_BANMA_MASTER_APP_SECRET\":\" " +this.getX_BANMA_MASTER_APP_SECRET()+" \",\n" +
+                "  \"X_BANMA_MASTER_APP_ACCOUNT\": "+ this.getX_BANMA_MASTER_APP_ACCOUNT()+ " ,\n" +
+                "  \"X_BANMA_MASTER_SIGN_METHOD\":\" "+this.getX_BANMA_MASTER_SIGN_METHOD()+" \",\n" +
+                "  \"X_BANMA_MASTER_SIGN_ALGORITHM\":\" "+this.getX_BANMA_MASTER_SIGN_ALGORITHM()+" \",\n" +
+                "  \"X_BANMA_MASTER_APP_STATUS\":\""+this.getX_BANMA_MASTER_APP_STATUS()+"\",\n" +
+                "  \"X_BANMA_MASTER_APP_SCOPES\":\""+this.getX_BANMA_MASTER_APP_STATUS()+"\"\n" +
+                "}";
     }
 }

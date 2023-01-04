@@ -1,6 +1,8 @@
 package com.hrghs.xycb.domains.banmaerpDTO;
 
 import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.utils.converters.JodaDateTimeConverter;
 import lombok.AllArgsConstructor;
@@ -23,6 +25,7 @@ public class StoreDTO {
     @Id
     @Column(name = "id")
     @JsonProperty(value = "ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long ID;
     @JsonProperty(value = "Name")
     private String name;

@@ -55,6 +55,7 @@ public class OrderMasterDTO {
 
     @Column(name = "pay_time")
     @Convert(converter = JodaDateTimeConverter.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
     @JsonProperty(value = "PayTime")
     private DateTime payTime;
 
@@ -166,6 +167,7 @@ public class OrderMasterDTO {
 
     @Column(name = "order_time")
     @Convert(converter = JodaDateTimeConverter.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
     @JsonProperty(value = "OrderTime")
     private DateTime orderTime;
 
@@ -179,11 +181,13 @@ public class OrderMasterDTO {
 
     @Column(name = "original_order_time")
     @Convert(converter = JodaDateTimeConverter.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
     @JsonProperty(value = "OriginalOrderTime")
     private DateTime originalOrderTime;
 
     @Column(name = "original_pay_time")
     @Convert(converter = JodaDateTimeConverter.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
     @JsonProperty(value = "OriginalPayTime")
     private DateTime originalPayTime;
 
@@ -197,16 +201,19 @@ public class OrderMasterDTO {
 
     @Column(name = "latest_delivery_time")
     @Convert(converter = JodaDateTimeConverter.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
     @JsonProperty(value = "LatestDeliveryTime")
     private DateTime latestDeliveryTime;
 
     @Column(name = "create_time")
     @Convert(converter = JodaDateTimeConverter.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
     @JsonProperty(value = "CreateTime")
     private DateTime createTime;
 
     @Column(name = "update_time")
     @Convert(converter = JodaDateTimeConverter.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
     @JsonProperty(value = "UpdateTime")
     private DateTime updateTime;
 
@@ -242,11 +249,13 @@ public class OrderMasterDTO {
 
     @Column(name = "shipping_time")
     @Convert(converter = JodaDateTimeConverter.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
     @JsonProperty(value = "ShippingTime")
     private DateTime shippingTime;
 
     @Column(name = "original_shipping_time")
     @Convert(converter = JodaDateTimeConverter.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
     @JsonProperty(value = "OriginalShippingTime")
     private DateTime originalShippingTime;
 
@@ -264,6 +273,7 @@ public class OrderMasterDTO {
      */
     @Column(name = "requested_delivery_date")
     @Convert(converter = JodaDateTimeConverter.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
     @JsonProperty(value = "RequestedDeliveryDate")
     private DateTime requestedDeliveryDate;
 

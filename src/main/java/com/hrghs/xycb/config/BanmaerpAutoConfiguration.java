@@ -3,6 +3,8 @@ package com.hrghs.xycb.config;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.hrghs.xycb.aops.RestTemplateInterceptor;
 import com.hrghs.xycb.domains.BanmaerpProperties;
@@ -26,6 +28,7 @@ import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -40,6 +43,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.*;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.core.ReactiveRedisOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.client.BufferingClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -50,10 +54,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
 import javax.sql.DataSource;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -73,27 +74,33 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKN
 public class BanmaerpAutoConfiguration implements BeanDefinitionRegistryPostProcessor, BeanFactoryAware {
     private static final Logger logger = LoggerFactory.getLogger(BanmaerpAutoConfiguration.class);
 
+    //@Primary
+    @Bean
+    public JodaModule jodaModule(){
+        JodaModule jodaModule = new JodaModule();
+        jodaModule.addDeserializer(DateTime.class, new JodaDateTimeDeserialiser())
+                .addSerializer(DateTime.class,new JodaDateTimeSerialiser());
+        return jodaModule;
+    }
     @Bean(name = "objectMapper")
     public ObjectMapper objectMapper(){
+        SimpleModule simpleModule = new SimpleModule();
+//        simpleModule.addSerializer(Long.class, ToStringSerializer.instance);
+//        simpleModule.addSerializer(Long.TYPE,ToStringSerializer.instance);
+        simpleModule.addSerializer(BanmaerpAccountEnums.DataAccessMode.class,new EnumeratorSerialiser.DataAccessSerialiser())
+                .addDeserializer(BanmaerpAccountEnums.DataAccessMode.class,new EnumeratorDeserialiser.DataAccessDeSerialiser())
+                .addSerializer(BanmaerpOrderEnums.Status.class,new EnumeratorSerialiser.OrderStatusSerialiser())
+                .addDeserializer(BanmaerpOrderEnums.Status.class,new EnumeratorDeserialiser.OrderStatusDeserialiser());
         ObjectMapper objectMapper = new ObjectMapper()
                 .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS,false)
                 .configure(FAIL_ON_UNKNOWN_PROPERTIES,false)
                 .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS,true)
                 .setSerializationInclusion(JsonInclude.Include.NON_EMPTY)
-                .registerModule(jodaModule());
+                .setTimeZone(TimeZone.getDefault())
+                .registerModule(jodaModule())
+                //.registerModule(jodaModule)
+                .registerModule(simpleModule);
         return objectMapper;
-    }
-    @Primary
-    @Bean
-    public JodaModule jodaModule(){
-        JodaModule jodaModule = new JodaModule();
-        jodaModule.addDeserializer(DateTime.class, new JodaDateTimeDeserialiser())
-                .addSerializer(DateTime.class,new JodaDateTimeSerialiser())
-                .addSerializer(BanmaerpAccountEnums.DataAccessMode.class,new EnumeratorSerialiser.DataAccessSerialiser())
-                .addDeserializer(BanmaerpAccountEnums.DataAccessMode.class,new EnumeratorDeserialiser.DataAccessDeSerialiser())
-                .addSerializer(BanmaerpOrderEnums.Status.class,new EnumeratorSerialiser.OrderStatusSerialiser())
-                .addDeserializer(BanmaerpOrderEnums.Status.class,new EnumeratorDeserialiser.OrderStatusDeserialiser());
-        return jodaModule;
     }
     @Primary
     @Bean
@@ -101,6 +108,7 @@ public class BanmaerpAutoConfiguration implements BeanDefinitionRegistryPostProc
         Jackson2ObjectMapperBuilderCustomizer jbc= jacksonObjectMapperBuilder ->
                 jacksonObjectMapperBuilder.applicationContext(context)
                 .configure(objectMapper());
+                //.configure(objectMapper);//error: The dependencies of some of the beans in the application context form a cycle
         return jbc;
     }
     @Bean
@@ -137,29 +145,29 @@ public class BanmaerpAutoConfiguration implements BeanDefinitionRegistryPostProc
         return new ScheduleService();
     }
 
-    @Bean
-    @ConditionalOnMissingBean
-    @DependsOn({"tokenRespReactiveRedisOperations"})
+    @Bean(name = "bmerp_restTemplate")
+    //@ConditionalOnMissingBean
+    @DependsOn({"tokenRespReactiveRedisOperations","banmaerpPropertiesRedisTemplate"})
     public RestTemplate restTemplate(ReactiveRedisOperations<String, TokenResponseDTO> tokenRespReactiveRedisOperations
-            , ReactiveRedisOperations<String, BanmaerpProperties> bmerp_props,BanmaTokenUtils banmaTokenUtils){
+            , BanmaTokenUtils banmaTokenUtils,@Qualifier("banmaerpPropertiesRedisTemplate") RedisTemplate<String,BanmaerpProperties> redisTemplate){
         RestTemplate restTemplate = new RestTemplate(new BufferingClientHttpRequestFactory(new SimpleClientHttpRequestFactory()));
         /* circle reference,add interceptors when application is started */
         List<ClientHttpRequestInterceptor> interceptorList = restTemplate.getInterceptors();
         if (CollectionUtils.isEmpty(interceptorList)){
         interceptorList = new ArrayList<>();
         }
-        interceptorList.add(new RestTemplateInterceptor(tokenRespReactiveRedisOperations,bmerp_props,banmaTokenUtils));
+        interceptorList.add(new RestTemplateInterceptor(tokenRespReactiveRedisOperations,banmaTokenUtils,redisTemplate));
         restTemplate.setInterceptors(interceptorList);
         return restTemplate;
     }
     @Bean
-    @DependsOn(value = {"restTemplate"})
+    @DependsOn(value = {"bmerp_restTemplate"})
     public WebHookUtils webHookUtils(){
         return new WebHookUtils();
     }
 
     @Bean
-    @DependsOn(value = {"restTemplate"})
+    @DependsOn(value = {"bmerp_restTemplate"})
     public HttpClientsUtils httpClientsUtils() {
         return new HttpClientsUtils();
     }

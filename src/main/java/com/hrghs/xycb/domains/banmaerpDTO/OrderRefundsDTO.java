@@ -53,6 +53,7 @@ public class OrderRefundsDTO {
 
     @Column(name = "refund_time")
     @Convert(converter = JodaDateTimeConverter.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd hh:mm:ss")
     @JsonProperty(value = "RefundTime")
     private DateTime refundTime;
 
