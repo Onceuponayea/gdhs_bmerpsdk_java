@@ -53,6 +53,7 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.concurrent.ScheduledExecutorService;
 
+import static com.alibaba.druid.pool.DruidAbstractDataSource.DEFAULT_MIN_EVICTABLE_IDLE_TIME_MILLIS;
 import static com.hrghs.xycb.domains.Constants.*;
 
 @AutoConfigureAfter({DataSourceAutoConfiguration.class})
@@ -175,18 +176,28 @@ public class BanmaerpDbAutoConfiguration {
          * atomikos代理druid数据源：
          * druid数据源有自己的线程管理连接池的销毁和声明，atomikos的线程lifeTime不能超过druid的最小空闲时间+检测时间
          */
+//        ds.setMaintenanceInterval(druidProperties.getTimeBetweenEvictionRunsMillis()/1000);
+//        ds.setMaxIdleTime(druidProperties.getMinEvictableIdleTimeMillis()/1000);
+//        ds.setMaxLifetime(druidProperties.getMinEvictableIdleTimeMillis()/1000);
+
         int maxIdleTime = (int)((banmaerpDruidXADataSource.getTimeBetweenEvictionRunsMillis()+ banmaerpDruidXADataSource.getMinEvictableIdleTimeMillis())/1000l);
         int maxLifeTime  = (int)(banmaerpDruidXADataSource.getMaxEvictableIdleTimeMillis()/1000l);
-        dataSourceBean.setMaxIdleTime(maxIdleTime);
-        dataSourceBean.setMaxLifetime(maxLifeTime);
-        dataSourceBean.setMaintenanceInterval((int)(banmaerpDruidXADataSource.getKeepAliveBetweenTimeMillis()/1000l));
+        int minEvictableIdleTime=(int)(banmaerpDruidXADataSource.getMinEvictableIdleTimeMillis()/1000l);
+//        dataSourceBean.setMaxIdleTime(maxIdleTime);
+//        dataSourceBean.setMaxLifetime(maxLifeTime);
+//        dataSourceBean.setMaintenanceInterval((int)(banmaerpDruidXADataSource.getKeepAliveBetweenTimeMillis()/1000l));
+        dataSourceBean.setMaxIdleTime(minEvictableIdleTime);
+        dataSourceBean.setMaxLifetime(minEvictableIdleTime);
+        dataSourceBean.setMaintenanceInterval((int)(banmaerpDruidXADataSource.getTimeBetweenEvictionRunsMillis()/1000l));
         dataSourceBean.setBorrowConnectionTimeout((int)(banmaerpDruidXADataSource.getMaxWait()/1000l));
         dataSourceBean.setLoginTimeout(banmaerpDruidXADataSource.getLoginTimeout());
         /**
          * reapTimeout 是管理 Connection 被占用的时间
          */
-        dataSourceBean.setReapTimeout(maxLifeTime-maxIdleTime);
+        //dataSourceBean.setReapTimeout(maxLifeTime-maxIdleTime);
+        dataSourceBean.setReapTimeout(60);
         dataSourceBean.setTestQuery(DB_JDBC_TEST_QUERY);
+        dataSourceBean.setConcurrentConnectionValidation(true);
         boolean useH2DB = Arrays.stream(env.getActiveProfiles())
                 .anyMatch(s -> s.toLowerCase(Locale.ROOT).equalsIgnoreCase(ENV_PROFILES_H2DB));
         String driverClass="",jdbcurl="";
@@ -196,10 +207,18 @@ public class BanmaerpDbAutoConfiguration {
             banmaerpDruidXADataSource.setUsername("");
             banmaerpDruidXADataSource.setPassword("");
         }
+        if (banmaerpDruidXADataSource.getMaxEvictableIdleTimeMillis()==DEFAULT_MIN_EVICTABLE_IDLE_TIME_MILLIS){
+            banmaerpDruidXADataSource.setMaxEvictableIdleTimeMillis(7200000);
+        }
         banmaerpDruidXADataSource.setUrl(jdbcurl);
+        banmaerpDruidXADataSource.setLogAbandoned(true);
+        /** true性能下降10倍，避免出现Communications link failure  **/
+        banmaerpDruidXADataSource.setTestOnReturn(false);
+        banmaerpDruidXADataSource.setTestOnBorrow(false);
         banmaerpDruidXADataSource.setDriverClassName(driverClass);
         banmaerpDruidXADataSource.setBreakAfterAcquireFailure(true);
-        banmaerpDruidXADataSource.setInitialSize(200);
+        //banmaerpDruidXADataSource.setInitialSize(100);
+        //banmaerpDruidXADataSource.setMaxActive();
         dataSourceBean.setXaDataSource(banmaerpDruidXADataSource);
         return dataSourceBean;
     }
@@ -231,7 +250,7 @@ public class BanmaerpDbAutoConfiguration {
         factoryBean.setPackagesToScan(ENTITY_PACKGES_BANMAERP);
         Properties jpaPros = new Properties();
         jpaPros.put(JPA_PROS_HIBERNATE_SHOW_SQL,false);
-        jpaPros.put(JPA_PROS_HIBERNATE_FORMAT_SQL,false);
+        jpaPros.put(JPA_PROS_HIBERNATE_FORMAT_SQL,true);
         jpaPros.put(JPA_PROS_TRANSACTION_TYPE,"jta");
         jpaPros.put(JPA_PROS_HIBERNATE_SESSION_CONTEXT_CLASS,"jta");
         jpaPros.put(JPA_PROS_HIBERNATE_ENABLE_LAZYLOAD_NOTRANS,"true");
@@ -254,6 +273,7 @@ public class BanmaerpDbAutoConfiguration {
     public JtaTransactionManager jtaTransactionManager(@Value("${spring.jta.atomikos.transaction.timeout:30000}")int timeoutMs) throws SystemException {
         UserTransactionManager userTransactionManager = new UserTransactionManager();
         userTransactionManager.setForceShutdown(true);
+        userTransactionManager.setStartupTransactionService(false);
         UserTransaction userTransaction = new UserTransactionImp();
         userTransaction.setTransactionTimeout(timeoutMs/1000);
         JtaTransactionManager jtaTransactionManager = new JtaTransactionManager();

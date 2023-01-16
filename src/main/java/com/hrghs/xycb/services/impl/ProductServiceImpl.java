@@ -35,8 +35,10 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+import javax.persistence.EntityExistsException;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
@@ -154,12 +156,13 @@ public class ProductServiceImpl implements ProductService {
         String value = BANMAERP_FIELD_PRODUCTS.concat(UNDERSCORE).concat(pageNumber.toString())
                 .concat(UNDERSCORE).concat(pageSize.toString()).concat(UNDERSCORE).concat(LocalDateTime.now().toString());
         Set<String> bmerp_tasks_state = redisTemplate.opsForSet().members(redisKey);
-        List<String> bmerp_tasks_newstate = bmerp_tasks_state.stream().filter(taskState -> !taskState.split(UNDERSCORE)[0].equalsIgnoreCase(BANMAERP_FIELD_PRODUCTS))
-                .collect(Collectors.toList());
-        bmerp_tasks_newstate.add(value);
-        redisTemplate.opsForSet().add(redisKey,bmerp_tasks_newstate.toArray(new String[0]));
-        saveProducts(productDTOS,banmaerpProperties);
-        return productDTOS;
+        if (bmerp_tasks_state!=null && bmerp_tasks_state.size()>0){
+            String[] productTasks = bmerp_tasks_state.stream().filter(taskState -> taskState.split(UNDERSCORE)[0].equalsIgnoreCase(BANMAERP_FIELD_PRODUCTS)).toArray(String[]::new);
+            redisTemplate.opsForSet().remove(redisKey,productTasks);
+            redisTemplate.opsForSet().add(redisKey,value);
+        }
+        List<ProductDTO> products = saveProducts(productDTOS,banmaerpProperties);
+        return products;
     }
 
 
@@ -368,7 +371,6 @@ public class ProductServiceImpl implements ProductService {
     }
 
     /**
-     * todo 需要根据产品ID来查看供应商，这样才能把供应商和产品绑定起来
      * 查询供应商列表
      *
      * @param name            供应商名称
@@ -429,24 +431,27 @@ public class ProductServiceImpl implements ProductService {
             ProductDTO productDTO = products.get(i);
             for (ProductSpuDTO existingProduct : existingProducts){
                 if (productDTO.getSPU().getSPUID().toString().equalsIgnoreCase(existingProduct.getSPUID().toString())){
+                    /* existing Item */
                     productDTO.setProductUUId(existingProduct.getProductDTO().getProductUUId());
                 }
             }
             saveOrUpdateProducts.set(i,productDTO);
         }
-        saveOrUpdateProducts = productRepository.saveAll(products);
         saveOrUpdateProducts.forEach(productDTO -> {
-            productDTO.getSPU().setProductDTO(productDTO);
+                /* new Item */
             if (productDTO.getDescriptions()!=null){
                 productDTO.getDescriptions().setProductDTO(productDTO);
             }
+            productDTO.getSPU().setProductDTO(productDTO);
             productDTO.setBanmaerpProperties(banmaerpProperties);
             productDTO.getSPU().setBanmaerpProperties(banmaerpProperties);
             productDTO.getSKUs().forEach(skusDTO -> skusDTO.setBanmaerpProperties(banmaerpProperties));
             productDTO.getSuppliers().forEach(suppliersDTO -> suppliersDTO.setBanmaerpProperties(banmaerpProperties));
+            productRepository.saveAndFlush(productDTO);
         });
-        saveOrUpdateProducts = productRepository.saveAll(saveOrUpdateProducts);
-        productRepository.flush();
+        /* to compatible with old spring boot which doesn't have saveAllAndFlush */
+//        saveOrUpdateProducts = productRepository.saveAll(products);
+//        productRepository.saveAllAndFlush(saveOrUpdateProducts);
         return saveOrUpdateProducts;
     }
 

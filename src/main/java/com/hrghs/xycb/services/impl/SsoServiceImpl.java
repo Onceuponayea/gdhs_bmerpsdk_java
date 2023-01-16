@@ -14,8 +14,10 @@ import com.hrghs.xycb.domains.banmaerpDTO.AccountDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.AppsInfoDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.StoreDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
+import com.hrghs.xycb.domains.common.BanmaErpResponseLog;
 import com.hrghs.xycb.domains.enums.BanmaerpAccountEnums;
 import com.hrghs.xycb.repositories.BanmaerpPropertiesRepository;
+import com.hrghs.xycb.services.LoggerService;
 import com.hrghs.xycb.services.SsoService;
 import com.hrghs.xycb.utils.*;
 import org.joda.time.DateTime;
@@ -45,7 +47,8 @@ public class SsoServiceImpl implements SsoService {
     private BanmaTokenUtils banmaTokenUtils;
     @Autowired
     private BanmaEncryptionUtils encryptionUtils;
-
+    @Autowired
+    private LoggerService loggerService;
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -151,9 +154,15 @@ public class SsoServiceImpl implements SsoService {
             }
         } catch (Exception e) {
             webHookUtils.sendNotice(e.getMessage(), accountDTO.getPhone(), accountDTO.getEmail());
+            BanmaErpResponseLog banmaErpResponseLog = new BanmaErpResponseLog();
+            banmaErpResponseLog.setResponseBody(responseBody);
+            banmaErpResponseLog.setSuccess(false);
+            banmaErpResponseLog.setRequestPhone(Long.parseLong(accountDTO.getPhone()));
+            banmaErpResponseLog.setRequestBody(requestBody.toString());
+            banmaErpResponseLog.setRequestTime(DateTime.now());
+            loggerService.saveBanmaErpResponseLog(banmaErpResponseLog);
             if (StringUtils.hasText(responseBody)){
                 logger.error("register banmaerp master account {} error due to {},\r\n response:\r\n {}",accountDTO.getPhone(),e.getMessage(),responseBody);
-                //todo save response to db
             }else{
                 logger.error("register banmaerp master account {} error due to {}",accountDTO.getPhone(),e.getMessage());
             }

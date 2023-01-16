@@ -65,7 +65,7 @@ public class OrderDTO {
     private List<OrderAccessUsersDTO> accessUsers;
 
     @JsonIgnore
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "banma_master_app_id")
     private BanmaerpProperties banmaerpProperties;
 }

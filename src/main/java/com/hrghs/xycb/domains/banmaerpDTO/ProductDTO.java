@@ -58,6 +58,7 @@ public class ProductDTO implements Serializable {
     @JsonSerialize(using = ProductSerialiser.ProductSkusSerializer.class)
     @JsonDeserialize(using = ProductDeserialiser.ProductSkusDeserializer.class)
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    //@OneToMany(fetch = FetchType.EAGER)
     @JoinColumn(name = "product_id")
     @JsonProperty(value = "SKUs")
     private List<ProductSkusDTO> SKUs;
@@ -98,7 +99,8 @@ public class ProductDTO implements Serializable {
     private List<ProductPackMaterialsDTO> packMaterials;
 
     @JsonIgnore
-    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    //@ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "banma_master_app_id")
     private BanmaerpProperties banmaerpProperties;
 

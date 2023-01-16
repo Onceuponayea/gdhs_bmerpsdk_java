@@ -58,7 +58,7 @@ public class ScheduleService {
 
     private void bmerpTasks() throws InterruptedException {
         List<BanmaerpProperties> banmaerpPropertiesList = banmaerpPropertiesRepository.findAll();
-        for (BanmaerpProperties banmaerpProperties: banmaerpPropertiesList){
+        banmaerpPropertiesList.parallelStream().forEach(banmaerpProperties -> {
             String redisKey =BANMAERP_FIELD_PREFIX.concat(COLON).concat(BANMAERP_FIELD_TASK).concat(COLON).concat(banmaerpProperties.getX_BANMA_MASTER_APP_ID());
             Set<String> taskStates = redisOperations.opsForSet().members(redisKey);
             if (!taskStates.isEmpty()){
@@ -89,7 +89,6 @@ public class ScheduleService {
                             accountService.getAndSaveAccountList(pageNum,pageSize,banmaerpProperties);
                             break;
                         case BANMAERP_FIELD_DATAACCESS:
-                            //todo bug: 有可能在查询的过程中，用户在斑马那边又点了激活子账号或者修改子账号的权限，这就导致数据不全
                             List<AccountDTO> accountDTOS = accountService.findAllByUserState(BanmaerpAccountEnums.UserState.Normal);
                             List<DataAccessDTO> dataAccessDTOS= new ArrayList<>();
                             accountDTOS.parallelStream().forEach(accountDTO -> {
@@ -106,14 +105,22 @@ public class ScheduleService {
                     newtaskStates.add(newTaskState);
                     if (taskDelayInMs > 0){
                         logger.info("delaying task banmaerp_periodically_pull for {} milleSecond",taskDelayInMs);
-                        Thread.sleep(taskDelayInMs);
+                        try {
+                            Thread.sleep(taskDelayInMs);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     }
+                    //把相同开头的key[0]任务都清空
+                    String[] removableTaskState= taskStates.stream().filter(s -> s.split(UNDERSCORE)[0].equalsIgnoreCase(keys[0])).toArray(String[]::new);
+                    redisOperations.opsForSet().remove(redisKey,removableTaskState);
+                    redisOperations.opsForSet().add(redisKey, newTaskState);
                 }
-                redisOperations.opsForSet().remove(redisKey,taskStates.toArray(new String[0]));
-                redisOperations.opsForSet().add(redisKey, newtaskStates.toArray(new String[0]));
+//                redisOperations.opsForSet().remove(redisKey,taskStates.toArray(new String[taskStates.size()]));
+//                redisOperations.opsForSet().add(redisKey, newtaskStates.toArray(new String[newtaskStates.size()]));
             }else{
                 redisOperations.opsForSet().add(redisKey,bmerpDefaultTaskState());
             }
-        }
+        });
     }
 }

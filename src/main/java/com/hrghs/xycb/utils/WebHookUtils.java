@@ -1,5 +1,8 @@
 package com.hrghs.xycb.utils;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -51,19 +54,31 @@ public class WebHookUtils {
         }
     }
     // 企业微信机器人
-    public void qywechatSendText(String massage, String phone, String email) {
+    public void qywechatSendText(String message, String phone, String email) {
         httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        message = message.replaceAll("\"", "");
+        if (message.contains("{")) {
+            String response = message.substring(message.indexOf("{"), message.lastIndexOf("}")+1);
+            JsonParser parser = new JsonParser();
+
+            // 2.获得 根节点元素
+            JsonElement element = parser.parse(response);
+
+            // 3.根据 文档判断根节点属于 什么类型的 Gson节点对象
+            JsonObject root = element.getAsJsonObject();
+
+            message = root.get("Message").getAsString();
+        }
         String msg = "{\n" +
                 "    \"msgtype\": \"markdown\",\n" +
                 "    \"markdown\": {\n" +
-                "        \"content\": \"实时新增用户反馈<font color=\\\"warning\\\">" + massage + "</font>，选品中心账户无法绑定到斑马，请相关同事注意。\\n\n" +
+                "        \"content\": \"实时新增用户反馈:\n<font color=\\\"red\\\">" + message + "</font>\n选品中心账户无法绑定到斑马，请相关同事注意。\\n\n" +
                 "         >手机：<font color=\\\"comment\\\">" + phone + "</font>\n" +
                 "         >邮箱：<font color=\\\"comment\\\">" + email + "</font>\"\n" +
                 "    }\n" +
                 "}";
         restTemplate.exchange(qywechat_url, HttpMethod.POST, new HttpEntity<>(msg, httpHeaders), new ParameterizedTypeReference<Object>() {
         });
-
     }
 
     // 钉钉机器人

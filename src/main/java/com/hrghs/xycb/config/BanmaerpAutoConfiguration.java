@@ -189,6 +189,10 @@ public class BanmaerpAutoConfiguration implements BeanDefinitionRegistryPostProc
         return new CategoryServiceImpl();
     }
     @Bean
+    public LoggerService loggerService(){
+        return new LoggerServiceImpl();
+    }
+    @Bean
     public OrderService orderService(){
         return new OrderServiceImpl();
     }

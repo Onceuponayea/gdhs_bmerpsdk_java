@@ -9,14 +9,13 @@ erp:
         enabled: true
         tasks:
             sync:
-#                cron: 0 0/10 * * * ? #for test only
+#                cron: 0 0/30 * * * ? #for test only
                 cron:  0 0 0/1 * * ?
-                delayInMs: 10000
+                delayInMs: 1000
                 enabled: true
 h2server:
     enabled: false
     port: 7777
-
 msg:
     webhook:
         dingtalk:
@@ -38,25 +37,27 @@ spring:
         banmaerp:
             url: jdbc:mysql://${spring.datasource.banmaerp.host}:${spring.datasource.banmaerp.port}/banmaerp?characterEncoding=utf8&autoReconnect=true&useUnicode=true&tcpKeepAlive=true&useSSL=false&allowPublicKeyRetrieval=true&useLegacyDateTimeCode=false&serverTimezone=Asia/Shanghai&
             druid:
-                connection-error-retry-attempts: 3
-                connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
-                initial-size: 3
+                connection-error-retry-attempts: 3 # 3
+                connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=30000
+                initial-size: 30
                 keep-alive: true
-                keep-alive-between-time-millis: 60000
+                keep-alive-between-time-millis: 120000
                 maxActive: 600
                 maxPoolPreparedStatementPerConnectionSize: 20
                 maxWait: 60000
-                min-idle: 10
-                minEvictableIdleTimeMillis: 300000
+                min-idle: 30
+                minEvictableIdleTimeMillis: 300000 #300000
+                maxEvictableIdleTimeMillis: 7200000 #set to 1Hr, default 7Hrs, mysql 8Hrs
                 password: ${spring.datasource.banmaerp.password}
                 poolPreparedStatements: true
                 testOnBorrow: false
                 testOnReturn: false
-                testWhileIdle: true
-                timeBetweenEvictionRunsMillis: 30000
+                testWhileIdle: true #建议开启 keepAlive 参数用于对空闲连接做有效性检测。Druid 中 testWhileIdle 和普通的连接池（DBCP 等）所表达的含义并不相同，使用时候需要慎重
+                timeBetweenEvictionRunsMillis: 90000 #60000
                 url: ${spring.datasource.banmaerp.url}
                 username: ${spring.datasource.banmaerp.username}
-                validationQuery: SELECT 1 FROM DUAL
+                validationQuery: SELECT 1
+                validation-query: SELECT 1
             hikari:
                 connection-timeout: 10000
                 idle-timeout: 600000

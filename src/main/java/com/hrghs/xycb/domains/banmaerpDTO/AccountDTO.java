@@ -82,12 +82,12 @@ public class AccountDTO {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private BanmaerpAccountEnums.UserType userType;
     /**
-     * todo 暂时不清楚斑马erp的Account是关联主账号还是app，如果一个主账号创建多个app，用app1接口创建的子账号能够被app2使用吗
+     * 暂时不清楚斑马erp的Account是关联主账号还是app，如果一个主账号创建多个app，用app1接口创建的子账号能够被app2使用吗
      */
     @JsonIgnore
     @JoinColumn(name = "banma_master_app_id")
     /* cscade ALL will erase all records with same banma_master_app_id */
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     BanmaerpProperties banmaerpProperties;
     /**
      * @@apiNote

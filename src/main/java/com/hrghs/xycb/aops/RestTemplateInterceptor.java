@@ -17,6 +17,7 @@ import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.retry.RetryPolicy;
+import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.util.CollectionUtils;
@@ -55,7 +56,10 @@ public class RestTemplateInterceptor implements ClientHttpRequestInterceptor {
                     .concat(appId);
             String bmerpProps_redisKey_pattern = BANMAERP_FIELD_PREFIX.concat(COLON).concat(BANMAERP_FIELD_APPINFO).concat(COLON)
                     .concat(STAR).concat(DASH).concat(appId);
-            /** 先正常执行过一遍拿到response再根据结果判断是否需要retry **/
+            /** 先正常执行过一遍拿到response再根据结果判断是否需要retry
+             * 1、unAuthorized
+             * 2、java.net.UnknownHostException
+             * 3、TOO_MANY_REQUESTS**/
             ClientHttpResponse response = execution.execute(request,body);
             String redisKey = redisTemplate.keys(bmerpProps_redisKey_pattern).toArray(new String[0])[0];
             if (!StringUtils.hasText(redisKey)){
@@ -63,6 +67,8 @@ public class RestTemplateInterceptor implements ClientHttpRequestInterceptor {
             }else {
             /** 所有的retry请求都需要appID,从redis获取到 **/
                 switch (response.getStatusCode()){
+                    //case FORBIDDEN:
+                    case TOO_MANY_REQUESTS:
                     case UNAUTHORIZED:
                         response = retryUnauthorized(request,body,execution,redisKey);
                         break;
@@ -78,6 +84,8 @@ public class RestTemplateInterceptor implements ClientHttpRequestInterceptor {
         BanmaerpProperties banmaerpProperties = redisTemplate.opsForValue().get(redisKey);
         RetryTemplate retryTemplate = new RetryTemplate();
         retryTemplate.setRetryPolicy(new SimpleRetryPolicy(1));
+        retryTemplate.setBackOffPolicy(new ExponentialBackOffPolicy());
+        /** webclient,不走restTemplate, 如果还401, 则说明是要嘛ip要嘛账号真的不能登录 **/
         TokenResponseDTO tokenResponseDTO =banmaTokenUtils.getBanmaErpMasterTokenMono(banmaerpProperties).block();
         tokenRespReactiveRedisOperations.opsForValue().set(BANMAERP_FIELD_PREFIX.concat(COLON).concat(BANMAERP_FIELD_TOKEN).concat(COLON)
                         .concat(banmaerpProperties.getX_BANMA_MASTER_APP_ID()),tokenResponseDTO, Duration.ofMillis(
@@ -87,7 +95,8 @@ public class RestTemplateInterceptor implements ClientHttpRequestInterceptor {
         request.getHeaders().set(BanmaerpProperties.BANMA_HEADER_ACCESSTOKEN,accessToken);
         return retryTemplate.execute(context -> {
             try {
-                logger.info("access_token are different from redis, retry the request again!");
+                logger.info("exception for request {}, either access_token are different from redis or too many request or remote host is offline" +
+                        ", retry the request again!", request.getURI());
                 return execution.execute(request,body);
             } catch (Throwable e) {
                 throw new RuntimeException(e);

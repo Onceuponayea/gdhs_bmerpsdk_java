@@ -23,8 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
 
-import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_APPINFO;
-import static com.hrghs.xycb.domains.Constants.BANMAERP_FIELD_PREFIX;
+import static com.hrghs.xycb.domains.Constants.*;
 import static jodd.util.StringPool.COLON;
 import static jodd.util.StringPool.DASH;
 
@@ -42,6 +41,7 @@ public class EventService {
     @EventListener(ApplicationReadyEvent.class)
     public void ready(){
         logger.info("Banmaerp module integrating successfully!");
+        System.setProperty(DRUID_PROS_USE_PINGMETHOD,"false");
         BanmaerpProperties banmaerpProperties = banmaerpPropertiesService.getPlatformProperties();
         banmaerpPropertiesService.saveBanmaerpProperties(banmaerpProperties);
         banmaerpPropertiesService.findAll().parallelStream().forEach(bmerp_pros ->

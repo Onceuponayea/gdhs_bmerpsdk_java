@@ -35,7 +35,7 @@ public interface OrderService {
      * @return
      */
     Page<OrderDTO> getOrderList(
-            String ids, String storeId, String platform, String status, String payStatus, String holdStatus,
+            Integer accountId,String ids, String storeId, String platform, String status, String payStatus, String holdStatus,
             String refundStatus, String inventoryStatus, String countryCode, Integer pageNumber, Integer pageSize,
             DateTime searchTimeStart, DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy,
             Boolean remote,BanmaerpProperties banmaerpProperties
@@ -52,7 +52,7 @@ public interface OrderService {
      * @param account
      * @return
      */
-    Page<OrderDTO> getOrderList(Integer pageNumber, Integer pageSize, AccountDTO account);
+    List<OrderDTO> getOrderList(Integer pageNumber, Integer pageSize,DateTime payTimeStart,DateTime payTimeEnd, AccountDTO account);
 
     /**
      * 通过店铺查询归属的订单
@@ -95,7 +95,7 @@ public interface OrderService {
     List<OrderDTO> saveAll(Iterable<OrderDTO> orderDTOS, BanmaerpProperties banmaerpProperties);
 
     OrderDTO save(OrderDTO orderDTO, BanmaerpProperties banmaerpProperties);
-//todo 1、加时间 2、统计件数
+
     /**
      * 根据订单状态统计订单金额，先按人民币和美金，上层应用自行换算汇率；历史汇率和换算时汇率差由上层应用自行处理
      * @param orderStatus

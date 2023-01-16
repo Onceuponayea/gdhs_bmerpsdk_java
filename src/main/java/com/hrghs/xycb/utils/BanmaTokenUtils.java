@@ -59,17 +59,20 @@ public class BanmaTokenUtils {
     public  Mono<TokenResponseDTO> getBanmaErpMasterTokenMono(BanmaerpProperties banmaerpProperties){
         BanmaerpSigningVO banmaerpSigningVO = banmaerpSigningVO(banmaerpProperties, HttpMethod.GET,banmaerp_GetToken_GET,null);
         WebClient.Builder webClientBuilder = WebClient.builder();
-        return
+        String redisKey = BANMAERP_FIELD_PREFIX.concat(COLON).concat(BANMAERP_FIELD_TOKEN).concat(COLON)
+                .concat(banmaerpProperties.getX_BANMA_MASTER_APP_ID());
+        WebClient.RequestBodySpec requestBodySpec =
         webClientBuilder.baseUrl(BanmaerpURL.banmaerp_gateway.concat(banmaerp_GetToken_GET)).build()
                 .method(HttpMethod.GET)
                 .accept(MediaType.APPLICATION_JSON)
                 .accept(APPLICATION_JSON_UTF8)
                 .acceptCharset(Charset.defaultCharset())
-                .headers(httpHeaders -> banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO))
-                .retrieve()
+                .headers(httpHeaders -> banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO));
+        return requestBodySpec.retrieve()
                 //.toEntity(new ParameterizedTypeReference<BanmaErpResponseDTO<TokenResponseDTO>>() {})
                 .bodyToMono(new ParameterizedTypeReference<BanmaErpResponseDTO<TokenResponseDTO>>() {})
-                .map(banmaErpResponseDTO -> banmaErpResponseDTO.getData());
+                .map(bmerpResponse -> validateToken(bmerpResponse.getData(),banmaerpProperties,redisKey));
+                //.map(banmaErpResponseDTO -> banmaErpResponseDTO.getData());
     }
 
     /**

@@ -6,10 +6,16 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface OrderRepository extends JpaRepository<OrderDTO,String>, JpaSpecificationExecutor<OrderDTO> {
 
     OrderDTO findOrderDTOByMaster(OrderMasterDTO orderMasterDTO);
+    @Query(nativeQuery = true,value = "select bmerp_order.*,bmerp_order_master.* from bmerp_order left join bmerp_order_master on " +
+            "bmerp_order.order_UUID=bmerp_order_master.order_uuid where bmerp_order.banma_master_app_id =:appID and " +
+            "bmerp_order.banma_account_id like %:accountId% and bmerp_order_master.pay_time >:payTimeStart and bmerp_order_master.pay_time <:payTimeEnd limit :limitStart,:limitEnd")
+    List<OrderDTO> findOrderByAccount(Integer accountId, String payTimeStart, String payTimeEnd,Integer limitStart,Integer limitEnd);
 
     /**
      * 根据订单状态统计金额（人民币和美金）

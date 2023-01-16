@@ -42,6 +42,7 @@ public class Constants {
     public static final String JPA_PROS_HIBERNATE_FORMAT_SQL = "hibernate.format_sql";
     public static final String JPA_PROS_TRANSACTION_TYPE = "javax.persistence.transactionType";
     public static final String JPA_PROS_USE_TIMEZONE = "useTimeZone";
+    public static final String DRUID_PROS_USE_PINGMETHOD= "druid.mysql.usePingMethod";
 
 
     //    spring.jpa.hibernate.naming.physical-strategy=org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl

@@ -29,6 +29,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Order;
+import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -78,7 +79,7 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     @CheckBanmaerpProperties
-    public Page<OrderDTO> getOrderList(String ids, String storeId, String platform, String status, String payStatus,
+    public Page<OrderDTO> getOrderList(Integer accountId,String ids, String storeId, String platform, String status, String payStatus,
                                        String holdStatus, String refundStatus, String inventoryStatus, String countryCode,
                                        Integer pageNumber, Integer pageSize, DateTime searchTimeStart, DateTime searchTimeEnd,
                                        String searchTimeField, String sortField, String sortBy, Boolean remote,
@@ -102,7 +103,7 @@ public class OrderServiceImpl implements OrderService {
             saveAll(orderDTOList,banmaerpProperties);
         }else{
             pageNumber = BanmaParamsUtils.checkPageNum(pageNumber,false);
-            Specification<OrderDTO> specification = createSpecification(ids, storeId, platform,status,payStatus,holdStatus,refundStatus,inventoryStatus,countryCode, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy,banmaerpProperties);
+            Specification<OrderDTO> specification = createSpecification(accountId,ids, storeId, platform,status,payStatus,holdStatus,refundStatus,inventoryStatus,countryCode, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy,banmaerpProperties);
             orderDTOList = orderRepository.findAll(specification,PageRequest.of(pageNumber,pageSize));
         }
         return orderDTOList;
@@ -111,21 +112,22 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @CheckBanmaerpProperties
     public Page<OrderDTO> getOrderList(Integer pageNumber,Boolean remote, BanmaerpProperties banmaerpProperties) {
-        return getOrderList(null, null, null, null, null, null, null, null, null, pageNumber, null, null, null, null, null, null, remote,banmaerpProperties);
+        return getOrderList(null,null, null, null, null, null, null, null, null, null, pageNumber, null, null, null, null, null, null, remote,banmaerpProperties);
     }
 
     @Override
     @CheckBanmaerpProperties
     public Page<OrderDTO> getOrderList(Integer pageNumber, Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties) {
-        return getOrderList(null, null, null, null, null, null, null, null, null, pageNumber, pageSize, null, null, null, null, null, remote,banmaerpProperties);
+        return getOrderList(null,null, null, null, null, null, null, null, null, null, pageNumber, pageSize, null, null, null, null, null, remote,banmaerpProperties);
     }
 
     @Override
-    public Page<OrderDTO> getOrderList(Integer pageNumber, Integer pageSize, AccountDTO account) {
-       // List<OrderDTO> orderDTOS = orderRepository.findOrderByAccount(pageNumber,pageSize,account);
-        //orderRepository.countOrderByStore()
-        //todo 获取总条数
-        return null;
+    public List<OrderDTO> getOrderList(Integer pageNumber, Integer pageSize,DateTime payTimeStart,DateTime payTimeEnd, AccountDTO account) {
+        int limitStart = pageSize * pageNumber;
+        int limitEnd = (pageSize+1) * pageNumber;
+        List<OrderDTO> orderDTOS = orderRepository.findOrderByAccount(account.getID(),payTimeStart.toString(),payTimeEnd.toString(),
+                limitStart,limitEnd);
+        return orderDTOS;
     }
 
     @Override
@@ -137,7 +139,7 @@ public class OrderServiceImpl implements OrderService {
     @CheckBanmaerpProperties
     public List<OrderDTO> getAndSaveOrderList(Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties) {
         List<OrderDTO> orderDTOList =
-                getOrderList(null, null, null, null, null, null, null,
+                getOrderList(null,null, null, null, null, null, null, null,
                         null, null, pageNumber, pageSize, null, null, null,
                         null, null, true,banmaerpProperties).getContent();
         return saveAll(orderDTOList,banmaerpProperties);
@@ -426,7 +428,7 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    private Specification<OrderDTO> createSpecification(String ids, String storeId, String platform, String status, String payStatus
+    private Specification<OrderDTO> createSpecification(Integer accountId,String ids, String storeId, String platform, String status, String payStatus
             , String holdStatus, String refundStatus, String inventoryStatus, String countryCode, DateTime searchTimeStart
             , DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy,BanmaerpProperties banmaerpProperties) {
         return (root, criteriaQuery, criteriaBuilder) -> {
@@ -461,7 +463,7 @@ public class OrderServiceImpl implements OrderService {
             if (status != null && status != "") {
                 predicateList.add(criteriaBuilder
                         .equal(root.get("master").get("status"),
-                                status));
+                                BanmaerpOrderEnums.Status.valueof(status)));
             }
 
             if (payStatus != null && payStatus != "") {
@@ -495,7 +497,11 @@ public class OrderServiceImpl implements OrderService {
                 predicateList.add(criteriaBuilder
                         .between(root.<DateTime>get("master").get(searchTimeField), searchTimeStart, searchTimeEnd));
             }
-
+            if (accountId != null){
+                Path<Object> accessUsers = root.get("accessUsers");
+                Predicate p1 = criteriaBuilder.like(accessUsers.as(String.class), "%"+accountId+"%");
+                predicateList.add(p1);
+            }
             predicateList.add(criteriaBuilder.equal(root.get("banmaerpProperties").get("X_BANMA_MASTER_APP_ID"),banmaerpProperties.getX_BANMA_MASTER_APP_ID()));
             Predicate and = criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
             Order order = criteriaBuilder.desc(root.get("master").get("createTime"));

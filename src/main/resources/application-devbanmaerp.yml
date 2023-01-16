@@ -1,22 +1,22 @@
 spring:
-    datasource:
-      banmaerp:
+  datasource:
+    banmaerp:
             # for test only
-#            host: 192.168.18.151
-#            port: 3306
+      host: 192.168.18.151
+      port: 3306
 #            host: rds.xmsuodi.com
-        host: 120.41.239.166
-        port: 49906
-        password: lilishop
-        username: root
+#      host: 120.41.238.146
+#      port: 49906
+      password: lilishop
+      username: root
             # test end
-    redis:
-#        port: 6379
-#        host: 192.168.18.151
-      port: 46379
-      host: 120.41.239.166
+  redis:
+    port: 6379
+    host: 192.168.18.151
+#    port: 46379
+#    host: 120.41.238.146
 #        host: rds.xmsuodi.com
 #        port: 6379
 #        host: 127.0.0.1
-      database: 4
-      password: lilishop
+    database: 3
+    password: lilishop
