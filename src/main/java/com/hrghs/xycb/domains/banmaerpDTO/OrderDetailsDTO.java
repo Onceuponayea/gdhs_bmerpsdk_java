@@ -26,7 +26,7 @@ public class OrderDetailsDTO {
 
     @JsonIgnore
 //    @JoinColumn(name = "ID",nullable = false,insertable = false,updatable = false)
-    @ManyToOne(cascade = CascadeType.REFRESH,fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
     @JoinColumn(name = "order_id")
     private OrderDTO orderDTO;
 

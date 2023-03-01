@@ -1,3 +1,4 @@
+#java -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=9000 -Dserver.port=48080 -Dcom.atomikos.icatch.enable_logging=false -jar bootstrap-new-debug.jar
 erp:
     banmaerp:
         X_BANMA_APP_NAME: 选品中心

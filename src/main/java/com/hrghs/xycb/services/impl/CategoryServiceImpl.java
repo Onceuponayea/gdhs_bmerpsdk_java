@@ -1,20 +1,25 @@
 package com.hrghs.xycb.services.impl;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
 import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.BanmaerpSigningVO;
 import com.hrghs.xycb.domains.BanmaerpURL;
 import com.hrghs.xycb.domains.banmaerpDTO.CategoryDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.ProductDTO;
 import com.hrghs.xycb.repositories.CategoryRepository;
-import com.hrghs.xycb.utils.BanmaParamsUtils;
-import com.hrghs.xycb.utils.BanmaTokenUtils;
-import com.hrghs.xycb.utils.BanmaEncryptionUtils;
-import com.hrghs.xycb.utils.HttpClientsUtils;
+import com.hrghs.xycb.utils.*;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.services.CategoryService;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,6 +27,9 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.util.CollectionUtils;
+
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
@@ -38,6 +46,11 @@ public class CategoryServiceImpl implements CategoryService {
     @Autowired
     CategoryRepository categoryRepository;
 
+    private Gson gson = new GsonBuilder().disableHtmlEscaping()
+            .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)
+            .registerTypeAdapter(DateTime.class,new DateTimeConverter())
+            .setDateFormat("yyyy-MM-dd HH:mm:ss")
+            .create();;
     /**
      * 查询类目列表
      *
@@ -72,10 +85,10 @@ public class CategoryServiceImpl implements CategoryService {
                             .getBody()
                             .toDataList(CategoryDTO.class,banmaerpProperties);
             categoryDTOList.forEach(categoryDTO -> categoryDTO.setBanmaerpProperties(banmaerpProperties));
-            List<CategoryDTO> categoryDTOS = categoryRepository.saveAll(categoryDTOList);
-            //categoryRepository.saveAllAndFlush(categoryDTOS);
+//            List<CategoryDTO> categoryDTOS = categoryRepository.saveAll(categoryDTOList);
+//            categoryRepository.flush();
+            List<CategoryDTO> categoryDTOS =categoryRepository.saveAllAndFlush(categoryDTOList);
             //低版本的spring boot没有saveAllAndFlush
-            categoryRepository.flush();
         }else {
             pageNumber = BanmaParamsUtils.checkPageNum(pageNumber,false);
             Specification<CategoryDTO> specification = createSpecification(ids, name, parentId, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy,banmaerpProperties);
@@ -102,9 +115,9 @@ public class CategoryServiceImpl implements CategoryService {
         List<CategoryDTO> categoryDTOList = getCategoryList(null, null, null, pageNumber, pageSize, null,
                         null, null, null, null,true, banmaerpProperties).getContent();
         categoryDTOList.forEach(categoryDTO -> categoryDTO.setBanmaerpProperties(banmaerpProperties));
-        List<CategoryDTO> categoryDTOS = categoryRepository.saveAll(categoryDTOList);
-        //categoryDTOS=categoryRepository.saveAllAndFlush(categoryDTOS);
-        categoryRepository.flush();
+//      List<CategoryDTO> categoryDTOS = categoryRepository.saveAll(categoryDTOList);
+//      categoryRepository.flush();
+        List<CategoryDTO> categoryDTOS = categoryRepository.saveAllAndFlush(categoryDTOList);
         return categoryDTOS;
     }
 
@@ -136,9 +149,9 @@ public class CategoryServiceImpl implements CategoryService {
     @CheckBanmaerpProperties
     public List<CategoryDTO> saveCategoryList(List<CategoryDTO> categoryDTOList, BanmaerpProperties banmaerpProperties) {
         categoryDTOList.forEach(categoryDTO -> categoryDTO.setBanmaerpProperties(banmaerpProperties));
-        List<CategoryDTO> categoryDTOS = categoryRepository.saveAll(categoryDTOList);
-        //categoryDTOS=categoryRepository.saveAllAndFlush(categoryDTOS);
-        categoryRepository.flush();
+        //List<CategoryDTO> categoryDTOS = categoryRepository.saveAll(categoryDTOList);
+        //categoryRepository.flush();
+        List<CategoryDTO> categoryDTOS = categoryRepository.saveAllAndFlush(categoryDTOList);
         return categoryDTOS;
     }
 
@@ -148,6 +161,23 @@ public class CategoryServiceImpl implements CategoryService {
         categoryDTO.setBanmaerpProperties(banmaerpProperties);
         return categoryRepository.saveAndFlush(categoryDTO);
     }
+
+    @Override
+    @CheckBanmaerpProperties
+    public CategoryDTO createCategory(CategoryDTO categoryDTO, BanmaerpProperties banmaerpProperties) {
+        String apiUrl = BanmaerpURL.banmaerp_category_POST;
+        apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        String requestBodyJson = gson.toJson(categoryDTO);
+        BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.POST,apiUrl,requestBodyJson);
+        httpHeaders = banmaTokenUtils.banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
+        httpHeaders.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        HttpEntity requestBody = new HttpEntity(requestBodyJson,httpHeaders);
+        return  httpClients.restTemplateWithBanmaMasterToken(banmaerpProperties)
+                .exchange(BanmaerpURL.banmaerp_gateway.concat(apiUrl), HttpMethod.POST, requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<CategoryDTO>>() {})
+                .getBody().getData();
+    }
+
     private Specification<CategoryDTO> createSpecification(String ids, String name, String parentId, DateTime searchTimeStart
             , DateTime searchTimeEnd, String searchTimeField, String sortField, String sortBy,BanmaerpProperties banmaerpProperties) {
         return (root, criteriaQuery, criteriaBuilder) -> {

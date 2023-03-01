@@ -116,9 +116,9 @@ public class StoreServiceImpl implements StoreService {
                             .getBody()
                             .toDataList(StoreDTO.class,banmaerpProperties);
             storeDTOList.forEach(storeDTO -> storeDTO.setBanmaerpProperties(banmaerpProperties));
-            List<StoreDTO> storeDTOS = storeRepository.saveAll(storeDTOList);
-            //storeRepository.saveAllAndFlush(storeDTOS);
-            storeRepository.flush();
+//            List<StoreDTO> storeDTOS = storeRepository.saveAll(storeDTOList);
+//            storeRepository.flush();
+            List<StoreDTO> storeDTOS = storeRepository.saveAllAndFlush(storeDTOList);
         }else {
             pageNumber = BanmaParamsUtils.checkPageNum(pageNumber,false);
             Specification<StoreDTO> specification = createSpecification(ids, name, platform, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy,banmaerpProperties);
@@ -145,8 +145,9 @@ public class StoreServiceImpl implements StoreService {
         List<StoreDTO> storeDTOList =
                 getStoretList(null, null, null, pageNumber, pageSize, null, null,
                         null, null, null,true, banmaerpProperties).getContent();
-        List<StoreDTO> storeDTOS = storeRepository.saveAll(storeDTOList);
-        storeRepository.flush();
+//        List<StoreDTO> storeDTOS = storeRepository.saveAll(storeDTOList);
+//        storeRepository.flush();
+        List<StoreDTO> storeDTOS =storeRepository.saveAllAndFlush(storeDTOList);
         return storeDTOS;
     }
 
@@ -202,9 +203,9 @@ public class StoreServiceImpl implements StoreService {
     @CheckBanmaerpProperties
     public List<StoreDTO> saveStoreList(List<StoreDTO> storeDTOList, BanmaerpProperties banmaerpProperties) {
         storeDTOList.forEach(storeDTO -> storeDTO.setBanmaerpProperties(banmaerpProperties));
-        List<StoreDTO> storeDTOS = storeRepository.saveAll(storeDTOList);
-        //storeDTOS=storeRepository.saveAllAndFlush(storeDTOS);
-        storeRepository.flush();
+//        List<StoreDTO> storeDTOS = storeRepository.saveAll(storeDTOList);
+//        storeRepository.flush();
+        List<StoreDTO> storeDTOS = storeRepository.saveAllAndFlush(storeDTOList);
         return storeDTOS;
     }
 

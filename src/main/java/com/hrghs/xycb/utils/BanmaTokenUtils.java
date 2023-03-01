@@ -7,7 +7,9 @@ import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.domains.BanmaerpSigningVO;
 import com.hrghs.xycb.domains.BanmaerpURL;
 import com.hrghs.xycb.domains.enums.BanmaerpAuthEnums;
+import com.hrghs.xycb.services.BanmaerpPropertiesService;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +30,8 @@ import reactor.core.publisher.Mono;
 
 import java.nio.charset.Charset;
 import java.time.Duration;
+import java.util.TimeZone;
+
 import static com.hrghs.xycb.domains.BanmaerpProperties.*;
 import static com.hrghs.xycb.domains.BanmaerpURL.banmaerp_GetToken_GET;
 import static com.hrghs.xycb.domains.BanmaerpURL.banmaerp_RefreshToken_GET;
@@ -50,6 +54,9 @@ public class BanmaTokenUtils {
     @Lazy
     private ReactiveRedisOperations<String,TokenResponseDTO> tokenRespReactiveRedisOperations;
 
+    @Autowired
+    @Lazy
+    private BanmaerpPropertiesService banmaerpPropertiesService;
     /**
      * @param banmaerpProperties
      * @return
@@ -75,6 +82,9 @@ public class BanmaTokenUtils {
                 //.map(banmaErpResponseDTO -> banmaErpResponseDTO.getData());
     }
 
+    public void initBmerpAppInfos(){
+        banmaerpPropertiesService.initBmerpAppInfos();
+    }
     /**
      * get token from redis and check its validity when it's present in redis,
      * otherwise retrieve token from banmaerp via api
@@ -102,7 +112,8 @@ public class BanmaTokenUtils {
     }
     private TokenResponseDTO validateToken(TokenResponseDTO _tokenResponseDTO,BanmaerpProperties banmaerpProperties,String redisKey){
         TokenResponseDTO tokenResponseDTO = _tokenResponseDTO;
-        if (tokenResponseDTO.getAccessTokenExpiryTime().toLocalDateTime().isBefore(LocalDateTime.now())){
+        //if (tokenResponseDTO.getAccessTokenExpiryTime().toLocalDateTime().isBefore(LocalDateTime.now())){UTC
+        if (tokenResponseDTO.getAccessTokenExpiryTime().isBefore(DateTime.now())){
             String refreshTokenUri =String.format(banmaerp_RefreshToken_GET,tokenResponseDTO.getRefreshToken());
             BanmaerpSigningVO banmaerpSigningVO = banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,refreshTokenUri,null);
             HttpHeaders httpHeaders = new HttpHeaders();
@@ -112,7 +123,7 @@ public class BanmaTokenUtils {
                             requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<TokenResponseDTO>>() {})
                     .getBody().getData();
         }
-        long timeDiff = tokenResponseDTO.getAccessTokenExpiryTime().getMillis() - DateTime.now().getMillis() - 1000;
+        long timeDiff = tokenResponseDTO.getAccessTokenExpiryTime().getMillis() - DateTime.now().getMillis() - 60000;
         tokenRespReactiveRedisOperations.opsForValue()
                 .set(redisKey,tokenResponseDTO, Duration.ofMillis(timeDiff))
                 .subscribe();

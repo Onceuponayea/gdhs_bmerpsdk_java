@@ -23,6 +23,7 @@ public class BanmaerpURL {
     public final static String banmaerp_ssoRegister_POST = "/v1/sso/Register";
     public final static String banmaerp_categorylist_GET = "/v1/category?IDs=%s&Name=%S&ParentID=%s&PageNumber=%d&PageSize=%d&SearchTimeStart=%s&SearchTimeEnd=%s&SearchTimeField=%s&SortField=%s&SortBy=%s";
     public final static String banmaerp_category_GET = "/v1/category/%s";
+    public final static String banmaerp_category_POST= "/v1/category";
     public final static String banmaerp_storelist_GET = "/v1/store?ids=%s&name=%s&platform=%s&PageNumber=%d&PageSize=%d&SearchTimeStart=%s" +
             "&SearchTimeEnd=%s&SearchTimeField=%s&SortField=%s&SortBy=%s";
     public final static String banmaerp_storelist_GET_Simple = "/v1/store?PageNumber=%d";

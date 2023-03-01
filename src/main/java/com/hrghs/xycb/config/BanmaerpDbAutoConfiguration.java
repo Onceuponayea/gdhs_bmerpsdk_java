@@ -52,7 +52,6 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.concurrent.ScheduledExecutorService;
-
 import static com.alibaba.druid.pool.DruidAbstractDataSource.DEFAULT_MIN_EVICTABLE_IDLE_TIME_MILLIS;
 import static com.hrghs.xycb.domains.Constants.*;
 
@@ -258,7 +257,9 @@ public class BanmaerpDbAutoConfiguration {
         jpaPros.put(JPA_PROS_HIBERNATE_DIALECT, MySQL8Dialect.class.getName());
         jpaPros.put(JPA_PROS_HIBERNATE_ALLOW_UPDATE_OUTSIDE_TRANSACATION,true);
         jpaPros.put(JPA_PROS_HIBERNATE_TRANSACTIONMANAGER_COORDINATE_CLASS,"jdbc");//full name: org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl
-        jpaPros.put(JPA_PROS_HIBERNATE_TRANSACTIONMANAGER_LOOKUP_CLASS,"com.atomikos.icatch.jta.hibernate3.TransactionManagerLookup");
+        //jpaPros.put(JPA_PROS_HIBERNATE_TRANSACTIONMANAGER_LOOKUP_CLASS,"com.atomikos.icatch.jta.hibernate3.TransactionManagerLookup");
+        //com.atomikos.icatch.jta.hibernate.TransactionManagerLookup
+        //
         factoryBean.setJpaProperties(jpaPros);
         factoryBean.afterPropertiesSet();
         return factoryBean.getObject();

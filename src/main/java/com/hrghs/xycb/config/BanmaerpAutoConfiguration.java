@@ -217,10 +217,6 @@ public class BanmaerpAutoConfiguration implements BeanDefinitionRegistryPostProc
     public BanmaerpPropertiesService banmaerpPropertiesService(){
         return new BanmaerpPropertiesServiceImpl();
     }
-    @Bean
-    public EventService eventService(){
-            return new EventService();
-    }
 
     private BeanFactory beanFactory;
 

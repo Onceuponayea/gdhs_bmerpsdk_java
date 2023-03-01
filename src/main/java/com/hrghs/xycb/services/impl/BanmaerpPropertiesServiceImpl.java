@@ -3,6 +3,7 @@ package com.hrghs.xycb.services.impl;
 import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.repositories.BanmaerpPropertiesRepository;
 import com.hrghs.xycb.services.BanmaerpPropertiesService;
+import com.hrghs.xycb.services.EventService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.data.redis.core.ScanOptions;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.util.List;
 
@@ -27,6 +29,15 @@ public class BanmaerpPropertiesServiceImpl implements BanmaerpPropertiesService 
     @Autowired
     @Lazy
     private ReactiveRedisOperations<String,BanmaerpProperties> redisOperations;
+    @Autowired
+    @Lazy
+    private EventService eventService;
+
+    @Override
+    public void initBmerpAppInfos(){
+        logger.warn("BanmaErp APP Infos does not initialised properly, re-initialising again!");
+        eventService.initBmerpAppInfos();
+    }
 
     @Autowired
     private ApplicationContext applicationContext;

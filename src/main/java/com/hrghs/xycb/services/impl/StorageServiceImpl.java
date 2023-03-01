@@ -233,9 +233,9 @@ public class StorageServiceImpl implements StorageService {
     @CheckBanmaerpProperties
     public List<StorageDTO> saveAll(List<StorageDTO> storageDTOList, BanmaerpProperties banmaerpProperties) {
         storageDTOList.forEach(storageDTO -> storageDTO.setBanmaerpProperties(banmaerpProperties));
-        List<StorageDTO> storageDTOS = storageRepository.saveAll(storageDTOList);
-        //storageDTOS = storageRepository.saveAllAndFlush(storageDTOS);
-        storageRepository.flush();
+        //List<StorageDTO> storageDTOS = storageRepository.saveAll(storageDTOList);
+        //storageRepository.flush();
+        List<StorageDTO> storageDTOS = storageRepository.saveAllAndFlush(storageDTOList);
         return storageDTOS;
     }
 

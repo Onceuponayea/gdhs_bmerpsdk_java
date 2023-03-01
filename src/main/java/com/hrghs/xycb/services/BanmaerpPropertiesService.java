@@ -6,6 +6,8 @@ import java.util.List;
 
 public interface BanmaerpPropertiesService {
 
+    public void initBmerpAppInfos();
+
     public BanmaerpProperties getByPhone(Long phone);
 
     public BanmaerpProperties getPlatformProperties();

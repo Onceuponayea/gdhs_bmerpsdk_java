@@ -1,8 +1,7 @@
 package com.hrghs.xycb.services;
 
 import com.hrghs.xycb.domains.BanmaerpProperties;
-import com.hrghs.xycb.domains.banmaerpDTO.AccountDTO;
-import com.hrghs.xycb.domains.banmaerpDTO.DataAccessDTO;
+import com.hrghs.xycb.domains.banmaerpDTO.*;
 import com.hrghs.xycb.domains.enums.BanmaerpAccountEnums;
 import com.hrghs.xycb.repositories.BanmaerpPropertiesRepository;
 import net.javacrumbs.shedlock.core.SchedulerLock;
@@ -67,26 +66,33 @@ public class ScheduleService {
                     String[] keys = taskState.split(UNDERSCORE);
                     Integer pageNum = Integer.parseInt(keys[1]);
                     Integer pageSize = Integer.parseInt(keys[2]);
+                    //把新的页码和页数增加1并保存到新的set中,然后回写到redis中
+                    //todo  判断是否大于或者等于pageSize，如果有，页码才递增
                     switch (keys[0]){
                         case BANMAERP_FIELD_PRODUCTS:
                             logger.info("synchronising Product list from BanmaErp for {},  page {} and size {}",banmaerpProperties.getX_BANMA_MASTER_APP_ACCOUNT(),pageNum,pageSize);
-                            productService.getAndSaveProductList(pageNum,pageSize,banmaerpProperties);
+                            List<ProductDTO> productDTOList = productService.getAndSaveProductList(pageNum,pageSize,banmaerpProperties);
+                            pageNum= (productDTOList.size()>=pageSize?pageNum+1:pageNum);
                             break;
                         case BANMAERP_FIELD_ORDERS:
                             logger.info("synchronising Order list from BanmaErp for {},  page {} and size {}",banmaerpProperties.getX_BANMA_MASTER_APP_ACCOUNT(),pageNum,pageSize);
-                            orderService.getAndSaveOrderList(pageNum,pageSize,banmaerpProperties);
+                            List<OrderDTO> orderDTOList = orderService.getAndSaveOrderList(pageNum,pageSize,banmaerpProperties);
+                            pageNum=(orderDTOList.size()>=pageSize?pageNum+1:pageNum);
                             break;
                         case BANMAERP_FIELD_STORES:
                             logger.info("synchronising Store list from BanmaErp for {},  page {} and size {}",banmaerpProperties.getX_BANMA_MASTER_APP_ACCOUNT(),pageNum,pageSize);
-                            storeService.getAndSaveStoretList(pageNum,pageSize,banmaerpProperties);
+                            List<StoreDTO> storeDTOList = storeService.getAndSaveStoretList(pageNum,pageSize,banmaerpProperties);
+                            pageNum=(storeDTOList.size()>=pageSize?pageNum+1:pageNum);
                             break;
                         case BANMAERP_FIELD_CATEGORYS:
                             logger.info("synchronising Category list from BanmaErp for {},  page {} and size {}",banmaerpProperties.getX_BANMA_MASTER_APP_ACCOUNT(),pageNum,pageSize);
-                            categoryService.getAndSaveCategoryList(pageNum,pageSize,banmaerpProperties);
+                            List<CategoryDTO> categoryDTOList =  categoryService.getAndSaveCategoryList(pageNum,pageSize,banmaerpProperties);
+                            pageNum=(categoryDTOList.size()>=pageSize?pageNum+1:pageNum);
                             break;
                         case BANMAERP_FIELD_ACCOUNTS:
                             logger.info("synchronising Account list from BanmaErp for {},  page {} and size {}",banmaerpProperties.getX_BANMA_MASTER_APP_ACCOUNT(),pageNum,pageSize);
-                            accountService.getAndSaveAccountList(pageNum,pageSize,banmaerpProperties);
+                            List<AccountDTO> accountDTOList =  accountService.getAndSaveAccountList(pageNum,pageSize,banmaerpProperties);
+                            pageNum=(accountDTOList.size()>=pageSize?pageNum+1:pageNum);
                             break;
                         case BANMAERP_FIELD_DATAACCESS:
                             List<AccountDTO> accountDTOS = accountService.findAllByUserState(BanmaerpAccountEnums.UserState.Normal);
@@ -95,10 +101,9 @@ public class ScheduleService {
                                 logger.info("synchronising Store privileges for Account {}, Phone: {}",accountDTO.getRealName(),accountDTO.getPhone());
                                 dataAccessDTOS.add(accountService.getDataAccess(accountDTO,true,banmaerpProperties));
                             });
+
                             break;
                     }
-                    //把新的页码和页数增加1并保存到新的set中,然后回写到redis中
-                    pageNum++;
                     String newTaskState =keys[0].concat(UNDERSCORE).concat(pageNum.toString())
                             .concat(UNDERSCORE).concat(pageSize.toString()).concat(UNDERSCORE)
                             .concat(LocalDateTime.now().toString());

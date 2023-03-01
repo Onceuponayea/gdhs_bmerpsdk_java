@@ -6,33 +6,27 @@ import com.hrghs.xycb.utils.BanmaTokenUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.ReactiveRedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.http.HttpRequest;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.retry.RetryPolicy;
 import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
-
 import static com.hrghs.xycb.domains.Constants.*;
 import static jodd.util.StringPool.*;
 
 public class RestTemplateInterceptor implements ClientHttpRequestInterceptor {
 
     public RestTemplateInterceptor(){}
+    public final static Integer REST_TEMPLATE_MAX_RETRIES=1;
 
     public RestTemplateInterceptor(ReactiveRedisOperations<String, TokenResponseDTO> arg
             , BanmaTokenUtils arg3, RedisTemplate<String,BanmaerpProperties> arg4){
@@ -61,16 +55,24 @@ public class RestTemplateInterceptor implements ClientHttpRequestInterceptor {
              * 2、java.net.UnknownHostException
              * 3、TOO_MANY_REQUESTS**/
             ClientHttpResponse response = execution.execute(request,body);
-            String redisKey = redisTemplate.keys(bmerpProps_redisKey_pattern).toArray(new String[0])[0];
-            if (!StringUtils.hasText(redisKey)){
-                logger.error("redis key {} has been mysteriously taken away, couldn't find {} !",bmerpProps_redisKey_pattern,redisKey);
+            logger.info("exception for request {}, either access_token are different from redis or too many request or remote host is offline" +
+                    ", retry the request again!", request.getURI());
+            String[] redisKeys_bmerpAppInfo = redisTemplate.keys(bmerpProps_redisKey_pattern).toArray(new String[0]);
+            if (redisKeys_bmerpAppInfo.length==0){
+                //未知原因导致redis取banma appInfo为空
+                banmaTokenUtils.initBmerpAppInfos();
+                redisKeys_bmerpAppInfo = redisTemplate.keys(bmerpProps_redisKey_pattern).toArray(new String[0]);
+            }
+            String redisKey_bmerpAppInfo = redisKeys_bmerpAppInfo[0];
+            if (!StringUtils.hasText(redisKey_bmerpAppInfo)){
+                logger.error("redis key for banmaerp property {} has been mysteriously taken away, couldn't find {} !",bmerpProps_redisKey_pattern,redisKey_bmerpAppInfo);
             }else {
             /** 所有的retry请求都需要appID,从redis获取到 **/
                 switch (response.getStatusCode()){
                     //case FORBIDDEN:
                     case TOO_MANY_REQUESTS:
                     case UNAUTHORIZED:
-                        response = retryUnauthorized(request,body,execution,redisKey);
+                        response = retryUnauthorized(request,body,execution,redisKey_bmerpAppInfo);
                         break;
                 }
             }
@@ -80,10 +82,11 @@ public class RestTemplateInterceptor implements ClientHttpRequestInterceptor {
         }
     }
     private ClientHttpResponse retryUnauthorized(HttpRequest request, byte[] body, ClientHttpRequestExecution execution
-            ,String redisKey){
-        BanmaerpProperties banmaerpProperties = redisTemplate.opsForValue().get(redisKey);
+            ,String redisKey_bmerpAppInfo) throws IOException {
+        BanmaerpProperties banmaerpProperties = redisTemplate.opsForValue().get(redisKey_bmerpAppInfo);
         RetryTemplate retryTemplate = new RetryTemplate();
-        retryTemplate.setRetryPolicy(new SimpleRetryPolicy(1));
+
+        retryTemplate.setRetryPolicy(new SimpleRetryPolicy(REST_TEMPLATE_MAX_RETRIES));
         retryTemplate.setBackOffPolicy(new ExponentialBackOffPolicy());
         /** webclient,不走restTemplate, 如果还401, 则说明是要嘛ip要嘛账号真的不能登录 **/
         TokenResponseDTO tokenResponseDTO =banmaTokenUtils.getBanmaErpMasterTokenMono(banmaerpProperties).block();
@@ -94,13 +97,9 @@ public class RestTemplateInterceptor implements ClientHttpRequestInterceptor {
         String accessToken = tokenResponseDTO.getAccessToken();
         request.getHeaders().set(BanmaerpProperties.BANMA_HEADER_ACCESSTOKEN,accessToken);
         return retryTemplate.execute(context -> {
-            try {
-                logger.info("exception for request {}, either access_token are different from redis or too many request or remote host is offline" +
+                logger.warn("exception for request {}, either access_token are different from redis or too many request or remote host is offline" +
                         ", retry the request again!", request.getURI());
                 return execution.execute(request,body);
-            } catch (Throwable e) {
-                throw new RuntimeException(e);
-            }
         });
     }
 }

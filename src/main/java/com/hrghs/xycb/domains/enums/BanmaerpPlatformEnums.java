@@ -6,11 +6,11 @@ public class BanmaerpPlatformEnums {
 
     public enum Platform {
         Amazon("Amazon"),EBay("EBay"),Aliexpress("Aliexpress"),Wish("Wish"),Shopee("Shopee"),
-        Rakuten("Rakuten"),Shopify("Shopify"),Shoplazza("Shoplazza"),Lazada("Lazada"),Yahoo("Yahoo"),
+        Rakuten("Rakuten"),Shopify("Shopify"),Shoplazza("Shoplazza"),Lazada("Lazada"),Yahoo("Yahoo"),ShoplineV2("ShoplineV2"),
         MeShop("MeShop"),AllValue("AllValue"),Shopline("Shopline"),Walmart("Walmart"),WooCommerce("WooCommerce"),
-        Fordeal("Fordeal"),Shopyy("Shopyy"),FunPinPin("FunPinPin"),Magento("Magento"),ShopeeGlobal("ShopeeGlobal"),
-        Shoplus("Shoplus"),LeadongShop("LeadongShop"),Shoprises("Shoprises"),Qoo10("Qoo10"),
-        ShopExpress("ShopExpress"),TwoCshop("TwoCshop"),Self("Self");
+        Fordeal("Fordeal"),Shopyy("Shopyy"),FunPinPin("FunPinPin"),Magento("Magento"),AlibabaGlobal("AlibabaGlobal"),ShopeeGlobal("ShopeeGlobal"),
+        Shoplus("Shoplus"),LeadongShop("LeadongShop"),Shoprises("Shoprises"),Qoo10("Qoo10"),Coupang("Coupang"),Mercadolibre("Mercadolibre")
+        ,TiktokShop("TiktokShop"),ShopExpress("ShopExpress"),TwoCshop("TwoCshop"),UeeShop("UeeShop"),Netsea("Netsea"),Self("Self");
         private String platform;
         Platform(String _platform){
             this.platform = _platform;

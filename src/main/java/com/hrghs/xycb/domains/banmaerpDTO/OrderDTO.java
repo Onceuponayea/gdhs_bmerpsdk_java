@@ -32,13 +32,14 @@ public class OrderDTO {
     @Id
     private UUID orderUUID;
 
-    @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER,orphanRemoval = true,optional = true)
+    @OneToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER,orphanRemoval = true,optional = false)
     @JoinColumn(name = "order_masterId", referencedColumnName = "id")
     @JsonManagedReference
     @JsonProperty(value = "Master")
     private OrderMasterDTO master;
 
 
+    //@OneToMany(mappedBy ="orderDTO" ,cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     @OneToMany(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
     @JsonProperty(value = "Details")
@@ -65,7 +66,8 @@ public class OrderDTO {
     private List<OrderAccessUsersDTO> accessUsers;
 
     @JsonIgnore
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    //@ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.REFRESH,fetch = FetchType.LAZY)
     @JoinColumn(name = "banma_master_app_id")
     private BanmaerpProperties banmaerpProperties;
 }

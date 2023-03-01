@@ -4,7 +4,7 @@
   <groupId>com.startup-union.net</groupId>
   <artifactId>spring-boot-starter-banmaerp</artifactId>
   <packaging>jar</packaging>
-  <version>1.4.7-SNAPSHOTS</version>
+  <version>1.5.4-SNAPSHOTS</version>
   <name>spring-boot-starter-banmaerp</name>
   <url>http://maven.apache.org</url>
   <properties>
@@ -19,7 +19,8 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>2.7.5</version>
+<!--    <version>2.7.5</version>-->
+    <version>2.7.8</version>
   </parent>
   <dependencies>
     <dependency>

@@ -41,14 +41,17 @@ public class EventService {
     @EventListener(ApplicationReadyEvent.class)
     public void ready(){
         logger.info("Banmaerp module integrating successfully!");
+        initBmerpAppInfos();
+    }
+    public void initBmerpAppInfos(){
         System.setProperty(DRUID_PROS_USE_PINGMETHOD,"false");
         BanmaerpProperties banmaerpProperties = banmaerpPropertiesService.getPlatformProperties();
         banmaerpPropertiesService.saveBanmaerpProperties(banmaerpProperties);
         banmaerpPropertiesService.findAll().parallelStream().forEach(bmerp_pros ->
                 bmerp_redisOps.opsForValue().set(BANMAERP_FIELD_PREFIX.concat(COLON).concat(BANMAERP_FIELD_APPINFO)
-                        .concat(COLON).concat(bmerp_pros.getX_BANMA_MASTER_APP_ACCOUNT()).concat(DASH)
-                        .concat(bmerp_pros.getX_BANMA_MASTER_APP_ID())
-                        ,bmerp_pros)
+                                        .concat(COLON).concat(bmerp_pros.getX_BANMA_MASTER_APP_ACCOUNT()).concat(DASH)
+                                        .concat(bmerp_pros.getX_BANMA_MASTER_APP_ID())
+                                ,bmerp_pros)
                         .subscribe()
         );
     }

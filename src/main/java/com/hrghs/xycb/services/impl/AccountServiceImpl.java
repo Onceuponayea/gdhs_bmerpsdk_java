@@ -122,8 +122,9 @@ public class AccountServiceImpl implements AccountService {
                 accountDTO.setState(BanmaerpAccountEnums.UserState.Normal);
                 accountDTO.setBanmaerpProperties(banmaerpProperties);
             });
-            List<AccountDTO> accountDTOS = accountRepository.saveAll(accountDTOList);
+ //           List<AccountDTO> accountDTOS = accountRepository.saveAll(accountDTOList);
 //            accountRepository.flush();
+              List<AccountDTO> accountDTOS = accountRepository.saveAllAndFlush(accountDTOList);
         }else{
             pageNumber = BanmaParamsUtils.checkPageNum(pageNumber,false);
             Specification<AccountDTO> specification = createSpecification(ids, email, realName, phone, searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy,banmaerpProperties);
@@ -340,9 +341,9 @@ public class AccountServiceImpl implements AccountService {
     @CheckBanmaerpProperties
     public List<AccountDTO> saveAccountList(List<AccountDTO> accountDTOList, BanmaerpProperties banmaerpProperties) {
         accountDTOList.parallelStream().forEach(accountDTO -> accountDTO.setBanmaerpProperties(banmaerpProperties));
-        List<AccountDTO> accountDTOS =  accountRepository.saveAll(accountDTOList);
-        //accountDTOS=accountRepository.saveAllAndFlush(accountDTOS);
-        accountRepository.flush();
+        //List<AccountDTO> accountDTOS =  accountRepository.saveAll(accountDTOList);
+        //accountRepository.flush();
+        List<AccountDTO> accountDTOS =  accountRepository.saveAllAndFlush(accountDTOList);
         return accountDTOS;
     }
 

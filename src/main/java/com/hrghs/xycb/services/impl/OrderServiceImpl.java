@@ -8,6 +8,7 @@ import com.hrghs.xycb.domains.BanmaerpURL;
 import com.hrghs.xycb.domains.banmaerpDTO.*;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.domains.enums.BanmaerpOrderEnums;
+import com.hrghs.xycb.domains.enums.BanmaerpPlatformEnums;
 import com.hrghs.xycb.domains.resultSet.OrderStatistics;
 import com.hrghs.xycb.repositories.OrderFulfillmentRepository;
 import com.hrghs.xycb.repositories.OrderMasterRepository;
@@ -56,6 +57,7 @@ public class OrderServiceImpl implements OrderService {
     private OrderRepository orderRepository;
     @Autowired
     private OrderMasterRepository orderMasterRepository;
+
     /**
      * 查询订单列表
      *
@@ -197,9 +199,9 @@ public class OrderServiceImpl implements OrderService {
                 orderFulfillmentDTO.setOrderId(orderId);
                 orderFulfillmentDTO.setBanmaerpProperties(banmaerpProperties);
             });
-            orderFulfillmentDTOList = fulfillmentRepository.saveAll(orderFulfillmentDTOList);
-            //orderFulfillmentDTOList =fulfillmentRepository.saveAllAndFlush(orderFulfillmentDTOList);
-            fulfillmentRepository.flush();
+            //orderFulfillmentDTOList = fulfillmentRepository.saveAll(orderFulfillmentDTOList);
+            //fulfillmentRepository.flush();
+            orderFulfillmentDTOList =fulfillmentRepository.saveAllAndFlush(orderFulfillmentDTOList);
         }else{
             orderFulfillmentDTOList = fulfillmentRepository.findOrderFulfillmentDTOSByOrderId(orderId);
         }
@@ -234,9 +236,9 @@ public class OrderServiceImpl implements OrderService {
                 orderFulfillmentDTO.setOrderId(orderId);
                 orderFulfillmentDTO.setBanmaerpProperties(banmaerpProperties);
             });
-            orderTrackingDTOList = trackingRepository.saveAll(orderTrackingDTOList);
-            //orderTrackingDTOList = trackingRepository.saveAllAndFlush(orderTrackingDTOList);
-            trackingRepository.flush();
+            //orderTrackingDTOList = trackingRepository.saveAll(orderTrackingDTOList);
+            //trackingRepository.flush();
+            orderTrackingDTOList = trackingRepository.saveAllAndFlush(orderTrackingDTOList);
         }else{
             orderTrackingDTOList = trackingRepository.findOrderTrackingDTOSByOrderId(orderId);
         }
@@ -274,9 +276,11 @@ public class OrderServiceImpl implements OrderService {
         orderDTOList.forEach(orderDTO -> {
             orderDTO.getMaster().setOrderDTO(orderDTO);
             orderDTO.getMaster().setBanmaerpProperties(banmaerpProperties);
+            orderDTO.getDetails().forEach(orderDetail -> orderDetail.setOrderDTO(orderDTO));
         });
-        orderDTOList = orderRepository.saveAll(orderDTOList);
-        orderRepository.flush();
+//        orderDTOList = orderRepository.saveAll(orderDTOList);
+//        orderRepository.flush();
+        orderRepository.saveAllAndFlush(orderDTOList);
         return orderDTOList;
     }
 
@@ -457,7 +461,7 @@ public class OrderServiceImpl implements OrderService {
             if (platform != null && platform != "") {
                 predicateList.add(criteriaBuilder
                         .equal(root.get("master").get("platform"),
-                                platform));
+                                BanmaerpPlatformEnums.Platform.valueOf(platform)));
             }
 
             if (status != null && status != "") {

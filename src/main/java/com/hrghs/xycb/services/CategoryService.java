@@ -47,4 +47,6 @@ public interface CategoryService {
     List<CategoryDTO> saveCategoryList(List<CategoryDTO> categoryDTOList, BanmaerpProperties banmaerpProperties);
 
     CategoryDTO saveCategory(CategoryDTO categoryDTO, BanmaerpProperties banmaerpProperties);
+
+    CategoryDTO createCategory(CategoryDTO categoryDTO, BanmaerpProperties banmaerpProperties);
 }
