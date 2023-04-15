@@ -14,6 +14,7 @@ import com.hrghs.xycb.domains.BanmaerpSigningVO;
 import com.hrghs.xycb.domains.BanmaerpURL;
 import com.hrghs.xycb.domains.banmaerpDTO.*;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
+import com.hrghs.xycb.domains.enums.BanmaerpOrderEnums;
 import com.hrghs.xycb.repositories.*;
 import com.hrghs.xycb.services.ProductService;
 import com.hrghs.xycb.utils.BanmaParamsUtils;
@@ -109,7 +110,7 @@ public class ProductServiceImpl implements ProductService {
         if (remote){
             pageNumber = BanmaParamsUtils.checkPageNum(pageNumber,remote);
             String apiUrl = String.format(BanmaerpURL.banmaerp_productlist_GET, spuIds,source,spu,categoryId,title,supplier,costPriceStart,costPriceEnd,pageNumber, pageSize,
-                    searchTimeStart, searchTimeEnd, searchTimeField, sortField, sortBy);
+                    searchTimeStart==null?null:searchTimeStart.toLocalDateTime(), searchTimeEnd==null?null:searchTimeEnd.toLocalDateTime(), searchTimeField, sortField, sortBy);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
             BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
@@ -148,13 +149,13 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @CheckBanmaerpProperties
-    public List<ProductDTO> getAndSaveProductList(Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties) {
+    public Page<ProductDTO> getAndSaveProductList(LocalDateTime searchTimeStart,Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties) {
         pageSize = BanmaParamsUtils.checkPageSize(pageSize);
         pageNumber = BanmaParamsUtils.checkPageNum(pageNumber,true);
-        List<ProductDTO> productDTOS =
+        Page<ProductDTO> productDTOS =
                 getProductList(null,null,null,null,null,null,null,null
-                        ,pageNumber,pageSize,null,null,null,null,
-                        null,true,banmaerpProperties).getContent();
+                        ,pageNumber,pageSize,searchTimeStart.toDateTime(),null, BanmaerpOrderEnums.SearchTimeField.UpdateTime.name(),null,
+                        null,true,banmaerpProperties);
         String redisKey =BANMAERP_FIELD_PREFIX.concat(COLON).concat(BANMAERP_FIELD_TASK).concat(COLON)
                 .concat(banmaerpProperties.getX_BANMA_MASTER_APP_ID());
         String value = BANMAERP_FIELD_PRODUCTS.concat(UNDERSCORE).concat(pageNumber.toString())
@@ -165,8 +166,8 @@ public class ProductServiceImpl implements ProductService {
             redisTemplate.opsForSet().remove(redisKey,productTasks);
             redisTemplate.opsForSet().add(redisKey,value);
         }
-        List<ProductDTO> products = saveProducts(productDTOS,banmaerpProperties);
-        return products;
+        List<ProductDTO> products = saveProducts(productDTOS.getContent(),banmaerpProperties);
+        return productDTOS;
     }
 
 
@@ -288,7 +289,8 @@ public class ProductServiceImpl implements ProductService {
         pageSize = BanmaParamsUtils.checkPageSize(pageSize);
         if (remote){
             pageNumber = BanmaParamsUtils.checkPageNum(pageNumber,remote);
-            String apiUrl = String.format(BanmaerpURL.Banmaerp_product_skulist_GET, skuIds,code, spuId,costPriceStart,costPriceEnd,pageNumber,pageSize,searchTimeStart,searchTimeEnd,searchTimeField,sortField,sortBy);
+            String apiUrl = String.format(BanmaerpURL.Banmaerp_product_skulist_GET, skuIds,code, spuId,costPriceStart,costPriceEnd,pageNumber,pageSize,
+                    searchTimeStart==null?null:searchTimeStart.toLocalDateTime(),searchTimeEnd==null?null:searchTimeEnd.toLocalDateTime(),searchTimeField,sortField,sortBy);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
             BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
@@ -356,7 +358,8 @@ public class ProductServiceImpl implements ProductService {
                                                    String searchTimeField, String sortField, String sortBy,Boolean remote, BanmaerpProperties banmaerpProperties) {
         Page<ProductTagsDTO> productTagsDTOList = null;
         if (remote) {
-            String apiUrl = String.format(BanmaerpURL.Banmaerp_taglist_GET, name,pageNumber,pageSize,searchTimeStart,searchTimeEnd,searchTimeField,sortField,sortBy);
+            String apiUrl = String.format(BanmaerpURL.Banmaerp_taglist_GET, name,pageNumber,pageSize,
+                    searchTimeStart==null?null:searchTimeStart.toLocalDateTime(),searchTimeEnd==null?null:searchTimeEnd.toLocalDateTime(),searchTimeField,sortField,sortBy);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
             BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
@@ -395,7 +398,8 @@ public class ProductServiceImpl implements ProductService {
         pageSize = BanmaParamsUtils.checkPageSize(pageSize);
         if (remote){
             pageNumber = BanmaParamsUtils.checkPageNum(pageNumber,remote);
-            String apiUrl = String.format(BanmaerpURL.Banmaerp_supplierlist_GET, name,pageNumber,pageSize,searchTimeStart,searchTimeEnd,searchTimeField,sortField,sortBy);
+            String apiUrl = String.format(BanmaerpURL.Banmaerp_supplierlist_GET, name,pageNumber,pageSize,
+                    searchTimeStart==null?null:searchTimeStart.toLocalDateTime(),searchTimeEnd==null?null:searchTimeEnd.toLocalDateTime(),searchTimeField,sortField,sortBy);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
             BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);

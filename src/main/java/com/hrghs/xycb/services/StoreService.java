@@ -5,6 +5,7 @@ import com.hrghs.xycb.domains.banmaerpDTO.StoreDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.domains.enums.BanmaerpPlatformEnums;
 import org.joda.time.DateTime;
+import org.joda.time.LocalDateTime;
 import org.springframework.data.domain.Page;
 import org.springframework.lang.Nullable;
 import reactor.core.publisher.Mono;
@@ -52,7 +53,7 @@ public interface StoreService {
 
     Page<StoreDTO> getStoretList(Integer pageNumber, Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties);
 
-    List<StoreDTO> getAndSaveStoretList(Integer pageNumber, Integer pageSize,BanmaerpProperties banmaerpProperties);
+    Page<StoreDTO> getAndSaveStoretList(LocalDateTime lastPullTime, Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties);
 
     List<StoreDTO> getAllStores(Integer pageNum,List<StoreDTO> storeDTOList,BanmaerpProperties banmaerpProperties);
     /**

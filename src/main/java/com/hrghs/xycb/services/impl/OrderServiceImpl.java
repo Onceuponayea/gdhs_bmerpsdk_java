@@ -20,6 +20,7 @@ import com.hrghs.xycb.utils.BanmaTokenUtils;
 import com.hrghs.xycb.utils.BanmaEncryptionUtils;
 import com.hrghs.xycb.utils.HttpClientsUtils;
 import org.joda.time.DateTime;
+import org.joda.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
@@ -90,7 +91,8 @@ public class OrderServiceImpl implements OrderService {
         pageSize = BanmaParamsUtils.checkPageSize(pageSize);
         if (remote){
             pageNumber = BanmaParamsUtils.checkPageNum(pageNumber,remote);
-            String apiUrl = String.format(BanmaerpURL.banmaerp_order_GET, ids,storeId,platform,status,payStatus,holdStatus,refundStatus,inventoryStatus,countryCode,pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField,sortField,sortBy);
+            String apiUrl = String.format(BanmaerpURL.banmaerp_order_GET, ids,storeId,platform,status,payStatus,holdStatus,refundStatus,inventoryStatus,countryCode,pageNumber, pageSize,
+                    searchTimeStart==null?null:searchTimeStart.toLocalDateTime(), searchTimeEnd==null?null:searchTimeEnd.toLocalDateTime(), searchTimeField,sortField,sortBy);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
             BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
@@ -139,12 +141,13 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @CheckBanmaerpProperties
-    public List<OrderDTO> getAndSaveOrderList(Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties) {
-        List<OrderDTO> orderDTOList =
+    public Page<OrderDTO> getAndSaveOrderList(LocalDateTime lastPullTime, Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties) {
+        Page<OrderDTO> orderDTOList =
                 getOrderList(null,null, null, null, null, null, null, null,
-                        null, null, pageNumber, pageSize, null, null, null,
-                        null, null, true,banmaerpProperties).getContent();
-        return saveAll(orderDTOList,banmaerpProperties);
+                        null, null, pageNumber, pageSize, lastPullTime.toDateTime(), null, BanmaerpOrderEnums.SearchTimeField.UpdateTime.name(),
+                        null, null, true,banmaerpProperties);
+         saveAll(orderDTOList.getContent(),banmaerpProperties);
+         return orderDTOList;
     }
 
     /**

@@ -7,6 +7,7 @@ import com.hrghs.xycb.domains.banmaerpDTO.TokenResponseDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.domains.enums.BanmaerpAccountEnums;
 import org.joda.time.DateTime;
+import org.joda.time.LocalDateTime;
 import org.springframework.data.domain.Page;
 import java.util.List;
 
@@ -37,11 +38,11 @@ public interface AccountService {
             BanmaerpProperties banmaerpProperties
     );
 
-    Page<AccountDTO> getAccountList(Integer pageNumber,Boolean remote, BanmaerpProperties banmaerpProperties);
+    Page<AccountDTO> getAccountList(Integer pageNumber, Boolean remote, BanmaerpProperties banmaerpProperties);
 
     Page<AccountDTO> getAccountList(Integer pageNumber,Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties);
 
-    List<AccountDTO> getAndSaveAccountList(Integer pageNumber,Integer pageSize, BanmaerpProperties banmaerpProperties);
+    Page<AccountDTO> getAndSaveAccountList(LocalDateTime lastPullTime,Integer pageNumber,Integer pageSize, BanmaerpProperties banmaerpProperties);
 
     List<AccountDTO> findAll();
 

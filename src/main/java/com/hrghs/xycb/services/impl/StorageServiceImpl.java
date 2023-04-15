@@ -73,7 +73,7 @@ public class StorageServiceImpl implements StorageService {
         if (remote){
             pageNumber = BanmaParamsUtils.checkPageNum(pageNumber,remote);
             String apiUrl = String.format(BanmaerpURL.banmaerp_storagelist_GET,ids,name,fileType,fileCategoryId, pageNumber, pageSize,
-                    searchTimeStart, searchTimeEnd, searchTimeField,sortField,sortBy);
+                    searchTimeStart==null?null:searchTimeStart.toLocalDateTime(),searchTimeEnd==null?null:searchTimeEnd.toLocalDateTime(), searchTimeField,sortField,sortBy);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
             BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);

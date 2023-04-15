@@ -4,6 +4,7 @@ import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.CategoryDTO;
 import java.util.List;
 import org.joda.time.DateTime;
+import org.joda.time.LocalDateTime;
 import org.springframework.data.domain.Page;
 
 public interface CategoryService {
@@ -34,7 +35,7 @@ public interface CategoryService {
 
     Page<CategoryDTO> getCategoryList(Integer pageNumber,Integer pageSize, Boolean remote, BanmaerpProperties banmaerpProperties);
 
-    List<CategoryDTO> getAndSaveCategoryList(Integer pageNumber,Integer pageSize,BanmaerpProperties banmaerpProperties);
+    Page<CategoryDTO> getAndSaveCategoryList(LocalDateTime lastPullTime, Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties);
     /**
      * 查询单个类目
      *

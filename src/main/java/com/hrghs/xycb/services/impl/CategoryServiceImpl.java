@@ -13,11 +13,13 @@ import com.hrghs.xycb.domains.BanmaerpSigningVO;
 import com.hrghs.xycb.domains.BanmaerpURL;
 import com.hrghs.xycb.domains.banmaerpDTO.CategoryDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.ProductDTO;
+import com.hrghs.xycb.domains.enums.BanmaerpOrderEnums;
 import com.hrghs.xycb.repositories.CategoryRepository;
 import com.hrghs.xycb.utils.*;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.services.CategoryService;
 import org.joda.time.DateTime;
+import org.joda.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
@@ -73,7 +75,8 @@ public class CategoryServiceImpl implements CategoryService {
         pageSize = BanmaParamsUtils.checkPageSize(pageSize);
         if (remote){
             pageNumber = BanmaParamsUtils.checkPageNum(pageNumber,remote);
-            String apiUrl = String.format(BanmaerpURL.banmaerp_categorylist_GET, ids, name, parentId, pageNumber, pageSize, searchTimeStart, searchTimeEnd, searchTimeField,sortField,sortBy);
+            String apiUrl = String.format(BanmaerpURL.banmaerp_categorylist_GET, ids, name, parentId, pageNumber, pageSize,
+                    searchTimeStart==null?null:searchTimeStart.toLocalDateTime(), searchTimeEnd==null?null:searchTimeEnd.toLocalDateTime(), searchTimeField,sortField,sortBy);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
             BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
@@ -111,14 +114,14 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @CheckBanmaerpProperties
-    public List<CategoryDTO> getAndSaveCategoryList(Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties) {
-        List<CategoryDTO> categoryDTOList = getCategoryList(null, null, null, pageNumber, pageSize, null,
-                        null, null, null, null,true, banmaerpProperties).getContent();
+    public Page<CategoryDTO> getAndSaveCategoryList(LocalDateTime lastPullTime,Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties) {
+        Page<CategoryDTO> categoryDTOList = getCategoryList(null, null, null, pageNumber, pageSize, lastPullTime.toDateTime(),
+                null, BanmaerpOrderEnums.SearchTimeField.UpdateTime.name(), null, null,true, banmaerpProperties);
         categoryDTOList.forEach(categoryDTO -> categoryDTO.setBanmaerpProperties(banmaerpProperties));
 //      List<CategoryDTO> categoryDTOS = categoryRepository.saveAll(categoryDTOList);
 //      categoryRepository.flush();
-        List<CategoryDTO> categoryDTOS = categoryRepository.saveAllAndFlush(categoryDTOList);
-        return categoryDTOS;
+        List<CategoryDTO> categoryDTOS = categoryRepository.saveAllAndFlush(categoryDTOList.getContent());
+        return categoryDTOList;
     }
 
     /**

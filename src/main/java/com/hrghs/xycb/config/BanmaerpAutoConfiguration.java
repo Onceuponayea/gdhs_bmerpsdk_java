@@ -213,6 +213,10 @@ public class BanmaerpAutoConfiguration implements BeanDefinitionRegistryPostProc
         return new SsoServiceImpl();
     }
     @Bean
+    public EventService eventService(){
+        return new EventService();
+    }
+    @Bean
     @Lazy
     public BanmaerpPropertiesService banmaerpPropertiesService(){
         return new BanmaerpPropertiesServiceImpl();

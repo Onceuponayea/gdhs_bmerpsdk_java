@@ -14,6 +14,7 @@ import com.hrghs.xycb.domains.banmaerpDTO.StoreDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.TokenResponseDTO;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import com.hrghs.xycb.domains.enums.BanmaerpAccountEnums;
+import com.hrghs.xycb.domains.enums.BanmaerpOrderEnums;
 import com.hrghs.xycb.repositories.AccountRepository;
 import com.hrghs.xycb.repositories.BanmaerpPropertiesRepository;
 import com.hrghs.xycb.repositories.DataAccessRepository;
@@ -22,6 +23,7 @@ import com.hrghs.xycb.services.AccountService;
 import com.hrghs.xycb.services.StoreService;
 import com.hrghs.xycb.utils.*;
 import org.joda.time.DateTime;
+import org.joda.time.LocalDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -97,7 +99,7 @@ public class AccountServiceImpl implements AccountService {
         if (remote){
             pageNumber = BanmaParamsUtils.checkPageNum(pageNumber,remote);
             String apiUrl = String.format(BanmaerpURL.banmaerp_accountlist_GET,ids,email,realName,phone,pageNumber,pageSize,
-                    searchTimeStart, searchTimeEnd,searchTimeField,sortField,sortBy);
+                    searchTimeStart==null?null:searchTimeStart.toLocalDateTime(), searchTimeEnd==null?null:searchTimeEnd.toLocalDateTime(),searchTimeField,sortField,sortBy);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
             BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
@@ -141,16 +143,16 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     @CheckBanmaerpProperties
-    public Page<AccountDTO> getAccountList(Integer pageNumber, Integer pageSize,Boolean remote, BanmaerpProperties banmaerpProperties) {
+    public Page<AccountDTO> getAccountList( Integer pageNumber, Integer pageSize, Boolean remote, BanmaerpProperties banmaerpProperties) {
         return getAccountList(null,null,null,null,pageNumber,pageSize,null,null,null,null,null,remote,banmaerpProperties);
     }
 
     @Override
     @CheckBanmaerpProperties
-    public List<AccountDTO> getAndSaveAccountList(Integer pageNumber,Integer pageSize,BanmaerpProperties banmaerpProperties) {
-        List<AccountDTO> accountDTOS =getAccountList(null,null,null,null,pageNumber,null,null,null,null,null,null,true,banmaerpProperties)
-                .getContent();
-        accountDTOS.parallelStream().filter(accountDTO -> !accountDTO.getPhone().equalsIgnoreCase(banmaerpProperties.getX_BANMA_MASTER_APP_ACCOUNT()))
+    public Page<AccountDTO> getAndSaveAccountList(LocalDateTime lastPullTime,Integer pageNumber,Integer pageSize,BanmaerpProperties banmaerpProperties) {
+        Page<AccountDTO> accountDTOS =getAccountList(null,null,null,null,pageNumber,null,lastPullTime.toDateTime(),null, BanmaerpOrderEnums.SearchTimeField.UpdateTime.name(),
+                null,null,true,banmaerpProperties);
+        accountDTOS.getContent().parallelStream().filter(accountDTO -> !accountDTO.getPhone().equalsIgnoreCase(banmaerpProperties.getX_BANMA_MASTER_APP_ACCOUNT()))
             .forEach(accountDTO -> {
             DataAccessDTO dataAccessDTO = getDataAccess(accountDTO,true,banmaerpProperties);
             //todo 要把账号关联的店铺也一起写进数据库

@@ -5,6 +5,7 @@ import com.hrghs.xycb.annotations.CheckBanmaerpProperties;
 import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.DataAccessDTO;
 import com.hrghs.xycb.domains.banmaerpDTO.StoreDTO;
+import com.hrghs.xycb.domains.enums.BanmaerpOrderEnums;
 import com.hrghs.xycb.repositories.StoreRepository;
 import com.hrghs.xycb.services.AccountService;
 import com.hrghs.xycb.utils.BanmaParamsUtils;
@@ -17,6 +18,7 @@ import com.hrghs.xycb.domains.enums.BanmaerpPlatformEnums;
 import com.hrghs.xycb.services.StoreService;
 import com.hrghs.xycb.utils.BanmaEncryptionUtils;
 import org.joda.time.DateTime;
+import org.joda.time.LocalDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,7 +81,7 @@ public class StoreServiceImpl implements StoreService {
                                                                        @Nullable DateTime searchTimeStart, @Nullable DateTime searchTimeEnd, @Nullable String searchTimeField,
                                                                        @Nullable String sortField, @Nullable String sortBy,Boolean remote, BanmaerpProperties banmaerpProperties) {
         String apiUrl = String.format(BanmaerpURL.banmaerp_storelist_GET,ids,name,platform==null?"":platform.toString(),pageNumber,pageSize,
-                searchTimeStart, searchTimeEnd,searchTimeField,sortField,sortBy);
+                searchTimeStart==null?null:searchTimeStart.toLocalDateTime(),searchTimeEnd==null?null:searchTimeEnd.toLocalDateTime(),searchTimeField,sortField,sortBy);
         BanmaerpSigningVO banmaerpSigningVO = new BanmaerpSigningVO();
         Mono<WebClient> webClientMono = (banmaerpProperties==null)? httpClients.webClientWithBanmaMasterToken(): httpClients.webClientWithBanmaMasterToken(banmaerpProperties);
         //Mono<List<StoreDTO>> responseDTOMono =
@@ -104,7 +106,7 @@ public class StoreServiceImpl implements StoreService {
         if (remote){
             pageNumber = BanmaParamsUtils.checkPageNum(pageNumber,remote);
             String apiUrl = String.format(BanmaerpURL.banmaerp_storelist_GET,ids,name,platform==null?"":platform.toString(),pageNumber,pageSize,
-                    searchTimeStart, searchTimeEnd,searchTimeField,sortField,sortBy);
+                    searchTimeStart==null?null:searchTimeStart.toLocalDateTime(),searchTimeEnd==null?null:searchTimeEnd.toLocalDateTime(),searchTimeField,sortField,sortBy);
             apiUrl = encryptionUtils.rmEmptyParas(apiUrl);
             HttpHeaders httpHeaders = new HttpHeaders();
             BanmaerpSigningVO banmaerpSigningVO = banmaTokenUtils.banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,apiUrl,null);
@@ -141,14 +143,14 @@ public class StoreServiceImpl implements StoreService {
 
     @Override
     @CheckBanmaerpProperties
-    public List<StoreDTO> getAndSaveStoretList(Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties) {
-        List<StoreDTO> storeDTOList =
-                getStoretList(null, null, null, pageNumber, pageSize, null, null,
-                        null, null, null,true, banmaerpProperties).getContent();
+    public Page<StoreDTO> getAndSaveStoretList(LocalDateTime lastPullTime,Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties) {
+        Page<StoreDTO> storeDTOList =
+                getStoretList(null, null, null, pageNumber, pageSize, lastPullTime.toDateTime(), null,
+                        BanmaerpOrderEnums.SearchTimeField.UpdateTime.name(), null, null,true, banmaerpProperties);
 //        List<StoreDTO> storeDTOS = storeRepository.saveAll(storeDTOList);
 //        storeRepository.flush();
-        List<StoreDTO> storeDTOS =storeRepository.saveAllAndFlush(storeDTOList);
-        return storeDTOS;
+        List<StoreDTO> storeDTOS =storeRepository.saveAllAndFlush(storeDTOList.getContent());
+        return storeDTOList;
     }
 
     @Override

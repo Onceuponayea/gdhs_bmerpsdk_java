@@ -4,6 +4,7 @@ import com.hrghs.xycb.domains.BanmaerpProperties;
 import com.hrghs.xycb.domains.banmaerpDTO.*;
 import com.hrghs.xycb.domains.common.BanmaErpResponseDTO;
 import org.joda.time.DateTime;
+import org.joda.time.LocalDateTime;
 import org.springframework.data.domain.Page;
 import java.util.List;
 
@@ -60,7 +61,7 @@ public interface ProductService {
      * @param banmaerpProperties
      * @return
      */
-    List<ProductDTO> getAndSaveProductList(Integer pageNumber,Integer pageSize, BanmaerpProperties banmaerpProperties);
+    Page<ProductDTO> getAndSaveProductList(LocalDateTime searchTimeStart, Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties);
     /**
      * 查询单个产品
      * @param spuId 	SPUID（必填）

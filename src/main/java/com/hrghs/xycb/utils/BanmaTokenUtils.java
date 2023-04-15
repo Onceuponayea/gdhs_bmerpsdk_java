@@ -112,13 +112,13 @@ public class BanmaTokenUtils {
     }
     private TokenResponseDTO validateToken(TokenResponseDTO _tokenResponseDTO,BanmaerpProperties banmaerpProperties,String redisKey){
         TokenResponseDTO tokenResponseDTO = _tokenResponseDTO;
-        //if (tokenResponseDTO.getAccessTokenExpiryTime().toLocalDateTime().isBefore(LocalDateTime.now())){UTC
         if (tokenResponseDTO.getAccessTokenExpiryTime().isBefore(DateTime.now())){
             String refreshTokenUri =String.format(banmaerp_RefreshToken_GET,tokenResponseDTO.getRefreshToken());
             BanmaerpSigningVO banmaerpSigningVO = banmaerpSigningVO(banmaerpProperties,HttpMethod.GET,refreshTokenUri,null);
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders = banmaerpCommonHeaders(httpHeaders,banmaerpProperties,banmaerpSigningVO);
             HttpEntity requestBody = new HttpEntity(null,httpHeaders);
+            //todo invalid refresh_token 是否要特殊处理. 删除本地token还是一样提示invalid refreshToken.
             tokenResponseDTO = restTemplate.exchange(BanmaerpURL.banmaerp_gateway.concat(refreshTokenUri),HttpMethod.GET,
                             requestBody, new ParameterizedTypeReference<BanmaErpResponseDTO<TokenResponseDTO>>() {})
                     .getBody().getData();

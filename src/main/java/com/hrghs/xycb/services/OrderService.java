@@ -6,6 +6,7 @@ import com.hrghs.xycb.domains.banmaerpDTO.*;
 import com.hrghs.xycb.domains.enums.BanmaerpOrderEnums;
 import com.hrghs.xycb.domains.resultSet.OrderStatistics;
 import org.joda.time.DateTime;
+import org.joda.time.LocalDateTime;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -63,7 +64,7 @@ public interface OrderService {
      */
     Page<OrderDTO> getOrderList(Integer pageNumber, Integer pageSize, StoreDTO account);
 
-    List<OrderDTO> getAndSaveOrderList(Integer pageNumber,Integer pageSize,BanmaerpProperties banmaerpProperties);
+    Page<OrderDTO> getAndSaveOrderList(LocalDateTime lastPullTime, Integer pageNumber, Integer pageSize, BanmaerpProperties banmaerpProperties);
 
     /**
      * 查询单个订单
